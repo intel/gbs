@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+# vim: ai ts=4 sts=4 et sw=4
+#
+# Copyright (c) 2011 Intel, Inc.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; version 2 of the License
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc., 59
+# Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+import os, sys
+import io
+import ConfigParser
+
+from tizenpkg.__version__ import VERSION
+from tizenpkg import msger, cmdln, errors
+
+class TizenPkg(cmdln.Cmdln):
+    """
+    Usage: tizenpkg [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
+
+    tizenpkg - the command line tool for Tizen package developers
+    Try 'tizenpkg help SUBCOMAND' for help on a specific subcommand.
+
+    ${command_list}
+    global ${option_list}
+    ${help_list}
+    """
+
+    name = 'tizenpkg'
+    version = VERSION
+
+    def get_optparser(self):
+        optparser = cmdln.CmdlnOptionParser(self, version=self.version)
+        optparser.add_option('-d', '--debug', action='store_true', dest='debug', help='print debug message')
+        optparser.add_option('-v', '--verbose', action='store_true', dest='verbose', help='verbose information')
+        return optparser
+
+    def postoptparse(self):
+        if self.options.verbose:
+            msger.set_loglevel('verbose')
+
+        if self.options.debug:
+            msger.set_loglevel('debug')
+
+    @cmdln.alias("bl")
+    def do_build(self, argv):
+        """${cmd_name}: test building for current pkg
+
+        Usage:
+            tizenpkg build
+
+        ${cmd_option_list}
+        """
+
+        from tizenpkg import build
+        build.do()
+
+if __name__ == '__main__':
+    try:
+        mic = TizenPkg()
+        sys.exit(mic.main())
+
+    except KeyboardInterrupt:
+        msger.error('\n^C catched, program aborted.')
+
+    except errors.Usage, usage:
+        msger.error(str(usage))
+
+    except errors.Abort, msg:
+        msger.info(str(msg))
+
+    except errors.CmdError, err:
+        if msger.get_loglevel() == 'debug':
+            import traceback
+            msger.error(traceback.format_exc())
+        else:
+            msger.error('\n'+str(err))
