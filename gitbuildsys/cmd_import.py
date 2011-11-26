@@ -43,7 +43,6 @@ def do(opts, args):
     tmpdir = '%s/%s' % (TMPDIR, USER)
     specfile = None
 
-    #import pdb;pdb.set_trace()
     if len(args) != 1:
         msger.error('missning argument, please reference gbs import --help.')
     if args[0].endswith('.src.rpm'):
@@ -74,12 +73,15 @@ def do(opts, args):
     pkgname = utils.parse_spec(specfile, 'name')
     pkgversion = utils.parse_spec(specfile, 'version')
 
+#import pdb;pdb.set_trace()
     try:
         repo = git.Git('.')
     except errors.GitInvalid:
-        is_empty = True
-        msger.info("No git repository found, creating one.")
-        repo = git.Git.create(pkgname)
+        try:
+            repo = git.Git(pkgname)
+        except errors.GitInvalid:
+            msger.info("No git repository found, creating one.")
+            repo = git.Git.create(pkgname)
 
     tardir = tempfile.mkdtemp(prefix='%s/%s' % (tmpdir, pkgname))
 
@@ -90,16 +92,23 @@ def do(opts, args):
     msg = "Upstream version %s" % (pkgversion)
 
     os.chdir(repo.path)
-    msger.info('submit the upstream data as first commit')
-    commit = repo.commit_dir(upstream.unpacked, msg,
-                             author = {'name':COMM_NAME,
-                                         'email':COMM_EMAIL
-                                      }
-                            )
-    msger.info('create tag named: %s' % tag)
-    repo.create_tag(tag, msg, commit)
-    msger.info('create upstream branch')
-    repo.create_branch('upstream', commit)
+
+    if not repo.find_tag(tag):
+        commit = repo.commit_dir(upstream.unpacked, msg,
+                                 author = {'name':COMM_NAME,
+                                           'email':COMM_EMAIL
+                                          }
+                                )
+        if commit:
+            msger.info('submitted the upstream data as first commit')
+            msger.info('create tag named: %s' % tag)
+            repo.create_tag(tag, msg, commit)
+            msger.info('create upstream branch')
+            repo.create_branch('upstream', commit)
+        else:
+            msger.info('No changes between currentlly git repo and tar ball')
+    else:
+        msger.info('tag %s already exsit, so dont need update' % tag)
 
     packagingdir = '%s/packaging' % upstream.unpacked
     if not os.path.exists(packagingdir):
@@ -111,12 +120,13 @@ def do(opts, args):
             continue
         shutil.copy(f, packagingdir)
 
-    msger.info('submit packaging files as second commit')
     commit = repo.commit_dir(upstream.unpacked, 'packaging files for tizen',
                              author = {'name':COMM_NAME,
-                                          'email':COMM_EMAIL
+                                       'email':COMM_EMAIL
                                       }
                             )
+    if commit:
+        msger.info('submit packaging files as second commit')
     shutil.rmtree(tardir)
     if args[0].endswith('.src.rpm'):
         shutil.rmtree(srcrpmdir)

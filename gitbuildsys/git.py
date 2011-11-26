@@ -176,7 +176,6 @@ class Git:
         options = ['.', '-f']
         self._exec_git("add", options)
 
-        import pdb;pdb.set_trace()
         if self.is_clean():
             return None
 
