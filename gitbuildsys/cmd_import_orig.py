@@ -41,6 +41,8 @@ def do(opts, args):
 
     workdir = os.getcwd()
     tmpdir = '%s/%s' % (TMPDIR, USER)
+    if not os.path.exists(tmpdir):
+        os.makedirs(tmpdir)
 
     if len(args) != 1:
         msger.error('missing argument, please reference gbs import-orig --help.')

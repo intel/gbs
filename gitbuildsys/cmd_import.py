@@ -41,8 +41,10 @@ def do(opts, args):
 
     workdir = os.getcwd()
     tmpdir = '%s/%s' % (TMPDIR, USER)
-    specfile = None
+    if not os.path.exists(tmpdir):
+        os.makedirs(tmpdir)
 
+    specfile = None
     if len(args) < 1:
         msger.error('Missing argument, please reference gbs import --help.')
     if len(args) > 1:
