@@ -8,14 +8,26 @@ options:
     -h    print this info
 "
 
+INFO_COLOR='\e[0;32m' # green
+WARN_COLOR='\e[0;33m' # yellow
+ERR_COLOR='\e[0;31m' # red
+ASK_COLOR='\e[0;34m' # blue
+NO_COLOR='\e[0m'
+
+
 die()
 {
-    echo "Fatal Error:"
-    echo "    " "$@"
+    echo -e "${ERR_COLOR}Fatal Error:"
+    echo -e "    " "$@${NO_COLOR}"
     echo ""
-    echo "$Usage:"
+    echo "$USAGE"
     echo ""
     exit 
+}
+
+info_msg()
+{
+    echo -e "${INFO_COLOR}$@ ${NO_COLOR}"
 }
 
 # Run under release branch, update spec file version, input: new_version, spec
@@ -53,7 +65,7 @@ format_patches()
     patch_list=$(git format-patch $tag -o tizen-patches/)
 
     if [ -n "$patch_list" ]; then
-        echo "Patch(es) list"
+        info_msg "Patch(es) list"
         for patch in $patch_list
         do
             echo "    " $(basename $patch)
@@ -92,23 +104,25 @@ update_patches()
     
     if [ -n "$toberemove_patch" ]; then
         echo "----------------------------------------"
-        echo "The following patch(es) removed:"
+        info_msg "The following patch(es) removed:"
         for patch in $toberemove_patch
         do
             if [ -z "$silence_remove" ];then
-                read -p "Remove patch: $patch ?(Y/N)" yn
+                echo -n -e "${ASK_COLOR}Remove patch: $patch? ${NO_COLOR}(Y/n)"
+                read yn
             else
-                echo "Remove patch: $patch ?(Y/N)"y
+                info_msg "Remove patch: $patch ?(Y/n)"y
                 yn=$silence_remove
             fi
 
             case $yn in
-                [Yy]* )
-                    sed -i "/^Patch[0-9]*:.*$patch/ d" $spec                    
-                    rm $patch
+                [Nn]* )
+                    info_msg "Patch $patch kept."
                     ;;
                 * )
-                    echo "Patch $patch kept"
+                    sed -i "/^Patch[0-9]*:.*$patch/ d" $spec
+                    rm $patch
+                    info_msg "Patch $patch removed."
                     ;;
             esac
         done
@@ -174,7 +188,7 @@ update_patches()
 
         sed -i "s/##PATCH_INSTALL##/$INSTALL/" $spec
         echo "----------------------------------------"
-        echo "The following patch(es) added:"
+        info_msg "The following patch(es) added:"
         for patch in $newadd_patch
         do
             echo "    " $(basename $patch)
@@ -191,7 +205,7 @@ get_srctar_md5sum()
 {
     tag=$1
     project=$2
-    echo "Geting md5sum about package $project, at $tag"
+    info_msg "Geting md5sum about package $project, at $tag"
     string=`curl -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "tag", "value": "'$tag'"},{"name":"project", "value":"'$project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/srctar_md5sum/build"`
     sleep 0.5
     
@@ -228,9 +242,8 @@ get_srctar_md5sum()
         die 'Remote Server Exception'
     else
         srctar_md5sum=$(echo $string | sed 's/.*#!#\(.*\)#!#.*/\1/')
-        echo "md5sum info:"
-        echo -n "    "
-        echo $srctar_md5sum
+        info_msg "md5sum info:"
+        echo "    "  "$srctar_md5sum"
         echo ""
     fi
     
@@ -283,28 +296,30 @@ tag=$(git describe $git_obj --abbrev=0 --tags)
 git_url=`git config remote.origin.url`
 project=`basename $git_url`
 
+
+info_msg "Packaging at major release ${tag}, the other commit(s) formating as patch(es)"
 srctar_md5sum=""
 get_srctar_md5sum $tag $project
 
-echo "Generating patch(es) from $tag to $git_obj, stored under tizen-patches dir"
+info_msg "Generating patch(es) from $tag to $git_obj, stored under tizen-patches dir"
 format_patches $tag $git_obj
 
-echo "Switch to release branch"
+info_msg "Switch to release branch"
 git checkout release ||die "No release branch found."
 
 
-echo "Updating the sources file"
+info_msg "Updating the sources file"
 update_sources "$srctar_md5sum"
-echo "done."
+info_msg "done."
 
-echo "Updating version info in spec file"
+info_msg "Updating version info in spec file"
 update_version $tag
-echo "done."
+info_msg "done."
 
-echo "Updating patches in spec file"
+info_msg "Updating patches in spec file"
 update_patches
 rm tizen-patches -r
-echo "done."
+info_msg "done."
 
-echo "You're on release branch now."
-echo "All the changes to release branch are done, please check, commit them."
+info_msg "You're on release branch now."
+info_msg "All the changes to release branch are done, please check, commit them."
