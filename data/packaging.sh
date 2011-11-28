@@ -1,10 +1,9 @@
 #!/bin/bash
 
 USAGE="usage:
-    tizenpkg packaging <git object> [-s] [-f spec_file]
+    tizenpkg packaging <git object> [-s]
 options:
     -s    silence remove patch without question
-    -f    specify a spec file
     -h    print this info
 "
 
