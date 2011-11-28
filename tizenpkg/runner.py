@@ -19,7 +19,7 @@
 import os
 from subprocess import *
 
-from mic import msger
+import msger
 
 def runtool(cmdln_or_args, catch=1):
     """ wrapper for most of the subprocess calls
@@ -104,3 +104,16 @@ def outs(cmdln_or_args):
 def quiet(cmdln_or_args):
     return runtool(cmdln_or_args, catch=0)[0]
 
+def embed(cmdln_or_args):
+    # show all the message using msger.verbose
+
+    rc, out = runtool(cmdln_or_args, catch=3)
+
+    if isinstance(cmdln_or_args, list):
+        cmd = ' '.join(cmdln_or_args)
+    else:
+        cmd = cmdln_or_args
+
+    msger.debug('running command: "%s"' % cmd)
+    msger.raw(out)
+    return rc

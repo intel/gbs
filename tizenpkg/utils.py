@@ -18,7 +18,7 @@
 
 import os
 
-import .msger
+import msger
 
 def which(cmd):
     def is_exe(fpath):
@@ -45,3 +45,7 @@ def strip_end(text, suffix):
     if not text.endswith(suffix):
         return text
     return text[:-len(suffix)]
+
+def get_share_dir():
+    # TODO need to be better
+    return '/usr/share/tizenpkg/'

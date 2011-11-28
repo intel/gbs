@@ -21,7 +21,7 @@ import io
 import ConfigParser
 
 from tizenpkg.__version__ import VERSION
-from tizenpkg import msger, cmdln, errors
+from tizenpkg import msger, cmdln, errors, utils, runner
 
 class TizenPkg(cmdln.Cmdln):
     """
@@ -63,6 +63,20 @@ class TizenPkg(cmdln.Cmdln):
 
         from tizenpkg import build
         build.do()
+
+    @cmdln.alias("pk")
+    def do_packaging(self, argv):
+        """${cmd_name}: prepare packaging files for current pkg
+
+        Usage:
+            tizenpkg packaging
+
+        ${cmd_option_list}
+        """
+
+        # this command is a shell script wrapper
+        shpath = os.path.join(utils.get_share_dir(), 'packaging.sh')
+        runner.embed(['sh', shpath] + argv)
 
 if __name__ == '__main__':
     try:
