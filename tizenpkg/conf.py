@@ -18,6 +18,7 @@
 
 from __future__ import with_statement
 import os, sys
+import base64
 from ConfigParser import *
 import msger
 
@@ -189,7 +190,7 @@ class BrainConfigParser(SafeConfigParser):
 class ConfigMgr(object):
     DEFAULTS = {
         'hudson_user': 'hudsonuser',
-        'hudson_pass': 'pass_in_plaintxt',
+        'hudson_pass': '',
         'hudson_passx': '',
     }
 
@@ -197,6 +198,7 @@ class ConfigMgr(object):
 ; general settings
 hudson_user = $hudson_user
 hudson_pass = $hudson_pass
+hudson_passx = $hudson_passx
 
 [build]
 ; settings for build subcommand
@@ -230,23 +232,47 @@ hudson_pass = $hudson_pass
         self.cfgparser.read([fpath])
         self._check_passwd()
 
-    def get_default_conf(self):
+    def get_default_conf(self, defaults=None):
         from string import Template
-        return Template(self.DEFAULT_CONF_TEMPLATE).safe_substitute(self.DEFAULTS)
+        if not defaults:
+            defaults = self.DEFAULTS
+        return Template(self.DEFAULT_CONF_TEMPLATE).safe_substitute(defaults)
 
     def _new_conf(self, fpath):
         if msger.ask('Create config file %s using default values?' % fpath):
+            import getpass
+
+            defaults = self.DEFAULTS.copy()
+            defaults['hudson_user'] = raw_input('Username: ')
+            msger.info('Your password will be encoded before saving ...')
+            defaults['hudson_pass'] = ''
+            defaults['hudson_passx'] = base64.b64encode(getpass.getpass().encode('bz2'))
+
             with open(fpath, 'w') as wf:
-                wf.write(self.get_default_conf())
+                wf.write(self.get_default_conf(defaults))
             return True
 
         return False
 
     def _check_passwd(self):
-        pass
+        plainpass = self.get('hudson_pass')
+        if not plainpass:
+            # None or ''
+            return
+
+        msger.warning('plaintext password in config file will be replaced by encoded one')
+        self.set('hudson_passx', base64.b64encode(plainpass.encode('bz2')))
+        self.set('hudson_pass', '')
+        self.update()
 
     def get(self, opt, section='general'):
-        return self.cfgparser.get(section, opt)
+        try:
+            return self.cfgparser.get(section, opt)
+        except NoOptionError:
+            if opt in self.DEFAULTS:
+                return self.DEFAULTS[opt]
+            else:
+                return None
 
     def set(self, opt, val, section='general'):
         return self.cfgparser.set(section, opt, val)
