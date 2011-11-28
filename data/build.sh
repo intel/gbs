@@ -11,7 +11,8 @@ options:
 die()
 {
     echo "Fatal Error:"
-    echo "    " $1
+    echo -e "${ERR_COLOR}$@${NO_COLOR}"
+    echo ""
     echo "$USAGE"
     exit 
 }
@@ -74,7 +75,7 @@ do
     fi
 done
 
-    # Waiting until the job finished
+offset=0
 while [ Ture ]
 do
     result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/api/json"`
@@ -85,7 +86,6 @@ do
     
     length=`curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/" | cut -d ',' -f2|cut -d ':' -f2`
     curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/content" -d 'length'=$length -d 'offset'=$offset -G
-    string=`curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/content" -d 'length'=$length -d 'offset'=$offset -G`
     offset=$length
 done
 echo ""
@@ -93,12 +93,9 @@ echo ""
 result=`echo $result_json|python -mjson.tool |grep result|cut -d '"' -f4`
 
 if [  x$result != xSUCCESS ]; then
-    echo -e "${ERR_COLOR}=====LOG FROM REMOTE SERVER=============${NO_COLOR}"
-    curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/consoleText"
-    echo -e "${ERR_COLOR}========================================${NO_COLOR}"
     die 'Remote Server Exception'
 else
-    curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/consoleText"
+    echo ""
 fi
 
 rm package.tar.bz2
