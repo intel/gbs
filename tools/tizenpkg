@@ -22,6 +22,7 @@ import ConfigParser
 
 from tizenpkg.__version__ import VERSION
 from tizenpkg import msger, cmdln, errors, utils, runner
+from tizenpkg.conf import configmgr
 
 class TizenPkg(cmdln.Cmdln):
     """
@@ -61,8 +62,10 @@ class TizenPkg(cmdln.Cmdln):
         ${cmd_option_list}
         """
 
-        from tizenpkg import build
-        build.do()
+        print configmgr.get('hudson_user')
+        print configmgr.get('hudson_pass')
+        #from tizenpkg import build
+        #build.do()
 
     @cmdln.alias("pk")
     def do_packaging(self, argv):
