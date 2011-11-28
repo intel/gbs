@@ -105,15 +105,21 @@ def quiet(cmdln_or_args):
     return runtool(cmdln_or_args, catch=0)[0]
 
 def embed(cmdln_or_args):
-    # show all the message using msger.verbose
-
-    rc, out = runtool(cmdln_or_args, catch=3)
+    # embed shell script into python frame code
 
     if isinstance(cmdln_or_args, list):
-        cmd = ' '.join(cmdln_or_args)
+        args = cmdln_or_args
     else:
-        cmd = cmdln_or_args
+        import shlex
+        args = shlex.split(cmdln_or_args)
 
-    msger.debug('running command: "%s"' % cmd)
-    msger.raw(out)
-    return rc
+    try:
+        sts = call(args)
+    except OSError, e:
+        if e.errno == 2:
+            # [Errno 2] No such file or directory
+            msger.error('Cannot run command: %s, lost dependency?' % args[0])
+        else:
+            raise # relay
+
+    return sts
