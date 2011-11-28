@@ -208,9 +208,7 @@ get_srctar_md5sum()
     info_msg "Geting md5sum about package $project, at $tag"
     string=`curl -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "tag", "value": "'$tag'"},{"name":"project", "value":"'$project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/srctar_md5sum/build"`
     sleep 0.5
-    
     last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber"`
-
 
     # In case the last commit is not made by the user, supposed the last job triggered by '$user' is the one. 
     while [ ture ]
@@ -228,25 +226,31 @@ get_srctar_md5sum()
     # Waiting until the job finished
     while [ Ture ]
     do
-        length=`curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/srctar_md5sum/$build_id/console/" | cut -d ',' -f2|cut -d ':' -f2`
-        string=`curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/srctar_md5sum/$build_id/console/content" -d 'length'=$length -G`
-        echo $string|grep "Finished\:">/dev/null&&break
+        result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/api/json"`
+        status=$(echo $result_json|python -mjson.tool |grep "building.*false")
+        if [ -n "$status" ]; then
+            break
+        fi
+        echo -n '.'
+        sleep 1
     done
-
+    echo ""
     # Execuation result
-    result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$last_id/api/json"`
+    result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/api/json"`
     result=`echo $result_json|python -mjson.tool |grep result|cut -d '"' -f4`
-        
+    
     if [  x$result != xSUCCESS ]; then
-        curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/srctar_md5sum/$build_id/console/content" -d 'length'=$length -G
+        echo -e "${ERR_COLOR}=====LOG FROM REMOTE SERVER=============${NO_COLOR}"
+        curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/consoleText"
+        echo -e "${ERR_COLOR}========================================${NO_COLOR}"
         die 'Remote Server Exception'
     else
-        srctar_md5sum=$(echo $string | sed 's/.*#!#\(.*\)#!#.*/\1/')
+
+        srctar_md5sum=$(curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/consoleText" | sed -n 's/.*#!#\(.*\)#!#.*/\1/p')
         info_msg "md5sum info:"
         echo "    "  "$srctar_md5sum"
         echo ""
     fi
-    
 }
 
 update_sources()
