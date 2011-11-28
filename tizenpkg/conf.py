@@ -136,7 +136,7 @@ class BrainConfigParser(SafeConfigParser):
         if e:
             raise e
 
-    def set(self, section, option, value):
+    def set(self, section, option, value, replace_opt=None):
         """When set new value, need to update the readin file lines,
         which can be saved back to file later.
         """
@@ -160,7 +160,11 @@ class BrainConfigParser(SafeConfigParser):
         SafeConfigParser.set(self, section, option, value)
         
         # If the code reach here, it means the section and key are ok
-        kname = "%s.%s" % (section, option)
+        if replace_opt is None:
+            kname = "%s.%s" % (section, option)
+        else:
+            kname = "%s.%s" % (section, replace_opt)
+
         line = '%s = %s\n' %(option, value)
         if kname in self._opt_linenos:
             # update an old key
@@ -261,8 +265,7 @@ hudson_passx = $hudson_passx
             return
 
         msger.warning('plaintext password in config file will be replaced by encoded one')
-        self.set('hudson_passx', base64.b64encode(plainpass.encode('bz2')))
-        self.set('hudson_pass', '')
+        self.set('hudson_passx', base64.b64encode(plainpass.encode('bz2')), replace_opt='hudson_pass')
         self.update()
 
     def get(self, opt, section='general'):
@@ -274,8 +277,8 @@ hudson_passx = $hudson_passx
             else:
                 return None
 
-    def set(self, opt, val, section='general'):
-        return self.cfgparser.set(section, opt, val)
+    def set(self, opt, val, section='general', replace_opt=None):
+        return self.cfgparser.set(section, opt, val, replace_opt)
 
     def update(self):
         self.cfgparser.update()
