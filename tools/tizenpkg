@@ -24,6 +24,24 @@ from tizenpkg.__version__ import VERSION
 from tizenpkg import msger, cmdln, errors, utils, runner
 from tizenpkg.conf import configmgr
 
+def _fall_to_shell(cmdname):
+    def raw_wrapper(f):
+        return f
+
+    def sh_wrapper(f):
+        def _run_embed_sh(self, argv):
+            # this command is a shell script wrapper
+            shpath = os.path.join(utils.get_share_dir(), cmdname + '.sh')
+            runner.embed(['sh', shpath] + list(argv))
+        return _run_embed_sh
+
+    cmdmod = 'tizenpkg.cmd_' + cmdname
+    try:
+        __import__(cmdmod)
+        return raw_wrapper
+    except ImportError:
+        return sh_wrapper
+
 class TizenPkg(cmdln.Cmdln):
     """
     Usage: tizenpkg [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
@@ -53,7 +71,10 @@ class TizenPkg(cmdln.Cmdln):
             msger.set_loglevel('debug')
 
     @cmdln.alias("bl")
-    def do_build(self, argv):
+    @cmdln.option('-s', '--silent', action='store_true',
+                  help='run in slient mode')
+    @_fall_to_shell('build')
+    def do_build(self, subcmd, opts, *args):
         """${cmd_name}: test building for current pkg
 
         Usage:
@@ -62,13 +83,12 @@ class TizenPkg(cmdln.Cmdln):
         ${cmd_option_list}
         """
 
-        print configmgr.get('hudson_user')
-        print configmgr.get('hudson_pass')
-        #from tizenpkg import build
-        #build.do()
+        from tizenpkg import cmd_build as cmd
+        cmd.do(opts, args)
 
     @cmdln.alias("pk")
-    def do_packaging(self, argv):
+    @_fall_to_shell('packaging')
+    def do_packaging(self, subcmd, opts, *args):
         """${cmd_name}: prepare packaging files for current pkg
 
         Usage:
@@ -77,9 +97,8 @@ class TizenPkg(cmdln.Cmdln):
         ${cmd_option_list}
         """
 
-        # this command is a shell script wrapper
-        shpath = os.path.join(utils.get_share_dir(), 'packaging.sh')
-        runner.embed(['sh', shpath] + argv)
+        from tizenpkg import cmd_packaging as cmd
+        cmd.do(opts, args)
 
 if __name__ == '__main__':
     try:
