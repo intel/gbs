@@ -259,16 +259,16 @@ hudson_passx = $hudson_passx
         return False
 
     def _check_passwd(self):
-        plainpass = self.get('hudson_pass')
+        plainpass = self._get('hudson_pass')
         if not plainpass:
             # None or ''
             return
 
         msger.warning('plaintext password in config file will be replaced by encoded one')
-        self.set('hudson_passx', base64.b64encode(plainpass.encode('bz2')), replace_opt='hudson_pass')
+        self.set('hudson_pass', base64.b64encode(plainpass.encode('bz2')))
         self.update()
 
-    def get(self, opt, section='general'):
+    def _get(self, opt, section='general'):
         try:
             return self.cfgparser.get(section, opt)
         except NoOptionError:
@@ -277,7 +277,21 @@ hudson_passx = $hudson_passx
             else:
                 return None
 
+    def get(self, opt, section='general'):
+        if opt == 'hudson_pass':
+            opt = 'hudson_passx'
+            val = self._get(opt, section)
+            if val:
+                return base64.b64decode(val).decode('bz2')
+            else:
+                return val
+        else:
+            return self._get(opt, section)
+
     def set(self, opt, val, section='general', replace_opt=None):
+        if opt == 'hudson_pass':
+            opt = 'hudson_passx'
+            replace_opt = 'hudson_pass'
         return self.cfgparser.set(section, opt, val, replace_opt)
 
     def update(self):

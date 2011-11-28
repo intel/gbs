@@ -113,6 +113,30 @@ class TizenPkg(cmdln.Cmdln):
         from tizenpkg import cmd_import as cmd
         cmd.do(opts, args)
 
+    @cmdln.alias("cfg")
+    @cmdln.option('-s', '--section', metavar='SECTION', default='general',
+                  help='specify the section inside config file, default as "general"')
+    def do_getconfig(self, subcmd, opts, *args):
+        """${cmd_name}: query values of config file
+
+        Usage:
+            tizenpkg getconfig <opt1> [<opt2> ...]
+
+        ${cmd_option_list}
+        """
+
+        if not args:
+            raise errors.Usage('argument(s) expected')
+
+        for arg in args:
+            val = configmgr.get(arg, section=opts.section)
+            if val:
+                msger.verbose('The value of opt "%s" in [%s] is:' % (arg, opts.section))
+                msger.raw(val)
+            else:
+                msger.verbose('No value for opt key "%s" in [%s]' % (arg, opts.section))
+                msger.raw('') # we need a blank line
+
 if __name__ == '__main__':
     try:
         mic = TizenPkg()
