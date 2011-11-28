@@ -100,6 +100,19 @@ class TizenPkg(cmdln.Cmdln):
         from tizenpkg import cmd_packaging as cmd
         cmd.do(opts, args)
 
+    @_fall_to_shell('import')
+    def do_import(self, subcmd, opts, *args):
+        """${cmd_name}: import new tarballs for current pkg
+
+        Usage:
+            tizenpkg import
+
+        ${cmd_option_list}
+        """
+
+        from tizenpkg import cmd_import as cmd
+        cmd.do(opts, args)
+
 if __name__ == '__main__':
     try:
         mic = TizenPkg()
