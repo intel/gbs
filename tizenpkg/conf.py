@@ -21,6 +21,7 @@ import os, sys
 import base64
 from ConfigParser import *
 import msger
+import errors
 
 class BrainConfigParser(SafeConfigParser):
     """Standard ConfigParser derived class which can reserve most of the
@@ -275,7 +276,7 @@ hudson_passx = $hudson_passx
             if opt in self.DEFAULTS:
                 return self.DEFAULTS[opt]
             else:
-                return None
+                raise errors.ConfigError('no opt: %s in section %s' % (opt, section))
 
     def get(self, opt, section='general'):
         if opt == 'hudson_pass':
