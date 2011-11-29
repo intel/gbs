@@ -7,8 +7,8 @@ else
 	TAG = "HEAD"
 endif
 
-ifeq (${PREFIX}, "")
-	PREFIX = "/usr/local"
+ifndef PREFIX
+    PREFIX = "/usr"
 endif
 
 all:
