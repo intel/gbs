@@ -162,17 +162,21 @@ class BrainConfigParser(SafeConfigParser):
         
         # If the code reach here, it means the section and key are ok
         if replace_opt is None:
-            kname = "%s.%s" % (section, option)
+            o_kname = "%s.%s" % (section, option)
+            n_kname = "%s.%s" % (section, option)
         else:
-            kname = "%s.%s" % (section, replace_opt)
+            o_kname = "%s.%s" % (section, option)
+            n_kname = "%s.%s" % (section, replace_opt)
 
         line = '%s = %s\n' %(option, value)
-        if kname in self._opt_linenos:
+        if n_kname in self._opt_linenos:
             # update an old key
-            self._flines[self._opt_linenos[kname][0]-1] = line
-            if len(self._opt_linenos[kname]) > 1:
+            self._flines[self._opt_linenos[n_kname][0]-1] = line
+            if len(self._opt_linenos[n_kname]) > 1:
                 # multiple lines value, remote the rest
-                del self._flines[self._opt_linenos[kname][1]-1:self._opt_linenos[kname][-1]]
+                for ln in range(self._opt_linenos[n_kname][1]-1,
+                                self._opt_linenos[n_kname][-1]):
+                    self._flines[ln] = None
         else:
             # new key
             line += '\n' # one more blank line
@@ -180,7 +184,14 @@ class BrainConfigParser(SafeConfigParser):
             if nextsec == -1:
                 self._flines.append(line)
             else:
+                # FIXME
                 self._flines.insert(nextsec, line)
+
+        # remove old opt if need
+        if o_kname != n_kname and o_kname in self._opt_linenos:
+            for ln in range(self._opt_linenos[o_kname][0]-1,
+                            self._opt_linenos[o_kname][-1]):
+                self._flines[ln] = None
 
     def update(self):
         """Update the original config file using updated values"""
@@ -189,7 +200,9 @@ class BrainConfigParser(SafeConfigParser):
             return
 
         fp = open(self._fpname, 'w')
-        fp.writelines(self._flines)
+        for line in self._flines:
+            if line is not None:
+                fp.write(line)
         fp.close()
 
 class ConfigMgr(object):
