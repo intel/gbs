@@ -259,7 +259,6 @@ update_sources()
     echo "$srctar_md5sum" > sources
 }
 
-
 while :
 do
     case $1 in
@@ -285,9 +284,9 @@ if [ -z "$git_obj" ]; then
 
 fi
 
-user=`git config tizen.username`
-passwd=`git config tizen.password`
-HUDSON_SERVER=`git config tizen.hudson`
+user=$(tizenpkg cfg user)
+passwd=$(tizenpkg cfg passwd)
+HUDSON_SERVER=$(tizenpkg cfg src_server)
 
 #git branch -a|sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'|grep "master" > /dev/null 2>&1 || die "Please run this command under master branch"
 

@@ -32,28 +32,19 @@ done
 
 git branch -a|sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'|grep "release" > /dev/null 2>&1 || die "Please run this command under release branch"
 
-git status|grep "modified">/dev/null 2>&1 &&die "Please save you local changes before this command, eg git commit"
+git status|grep "modified">/dev/null 2>&1 &&echo "Warning: You local changes doesn't commit yet."
 
-
+# Get project name from git url
 git_url=`git config remote.origin.url`
-
 prj_name=`basename $git_url`
 
-
+# tar the local changes
 tar jcf package.tar.bz2 `git ls-files`
-user=`git config tizen.username`
-passwd=`git config tizen.password`
-HUDSON_SERVER=`git config tizen.hudson`
 
-if ! [[ $user && $passwd && $HUDSON_SERVER  ]]; then
-    echo "-------------------------------------"
-    echo "[tizen]"
-    echo "        username = USERNAME"
-    echo "        password = CLEAR PASSWORD"
-    echo "        hudson = HUDSON Server"
-    echo "-------------------------------------"
-    die "No tizen configuration found, please add the above section to your git config file (~/.gitconfig or .git/config)"
-fi
+# get user name/passwd from tizenpkg.conf
+user=$(tizenpkg cfg user)
+passwd=$(tizenpkg cfg passwd)
+HUDSON_SERVER=$(tizenpkg cfg src_server)
 
 echo "Submiting your changes to build server"
 
