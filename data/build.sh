@@ -48,7 +48,7 @@ HUDSON_SERVER=$(tizenpkg cfg src_server)
 
 echo "Submiting your changes to build server"
 
-curl -s -i -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"obsproject","value":"'$target_obsproject'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build" 
+curl -s -i -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build" 
 
 sleep 0.5
 last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/lastBuild/buildNumber"`
