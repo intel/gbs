@@ -1,7 +1,8 @@
 #!/bin/bash
 
 USAGE="usage:
-    tizenpkg packaging [git tag/commit id] [-s] [-t tag]
+    tizenpkg packaging [git tag/commit id] [-s] [-t tag] [-f spec file]
+
 Packaging master branch, convert the files to release branch
 from the given tag or commit id, by default it's the HEAD.
 options:
@@ -9,6 +10,7 @@ options:
     -t    specify a tag as the major release, source package
           will generate at this tag, by default it's the most
           recent tag found from the given commit id.
+    -f    specify the spec file
     -h    print this info
 "
 
@@ -39,18 +41,9 @@ info_msg()
 update_version()
 {
     tag=$1
-    spec=$2
 
     version=${tag#v}
     
-    if [ -z "$spec" -a $(ls *.spec|wc -l) != '1' ]; then
-        die "Found none or more the one spec file, please create or specify one"
-    fi
-
-    # Get spec file if not specified
-    if [ -z "$spec" ]; then
-        spec=$(ls *.spec)
-    fi
     # Validation check
     grep "^Version:" $spec > /dev/null ||die "Invalid spec file format: There must be a line 'Version:   x.x.x' "
 
@@ -292,9 +285,6 @@ if [ -z "$git_obj" ]; then
 
 fi
 
-user=$(tizenpkg cfg user)
-passwd=$(tizenpkg cfg passwd)
-HUDSON_SERVER=$(tizenpkg cfg src_server)
 
 #git branch -a|sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'|grep "master" > /dev/null 2>&1 || die "Please run this command under master branch"
 
@@ -304,6 +294,10 @@ git describe $git_obj --tags >/dev/null || die "No tags found"
 if [ -z "$tag" ];then
     tag=$(git describe $git_obj --abbrev=0 --tags)
 fi
+
+user=$(tizenpkg cfg user)
+passwd=$(tizenpkg cfg passwd)
+HUDSON_SERVER=$(tizenpkg cfg src_server)
 
 git_url=`git config remote.origin.url`
 project=`basename $git_url`
@@ -319,6 +313,32 @@ format_patches $tag $git_obj
 info_msg "Switch to release branch"
 git checkout release ||die "No release branch found."
 
+# Ask user specify one spec file if found more than one
+if [ -z "$spec" -a $(ls *.spec|wc -l) -gt '1' ]; then
+    echo -e "${ASK_COLOR}Found none or more the one spec file, please specify one${NO_COLOR}"
+    while :
+    do
+        ls *.spec|grep spec -n
+        read -p "Select one by numer?" num
+        case $num in
+            [0-9])
+                if [ $num -gt $(ls *.spec|wc -l) ]; then
+                    continue
+                fi
+                spec=$(ls *.spec|grep spec -n|sed -n "/$num/ p"|cut -d ":" -f2 )
+                break
+                ;;
+            *)
+                echo "${ASK_COLOR}Please select one of them by the number${NO_COLOR}"
+                ;;
+        esac
+    done
+fi
+
+# Get spec file if not specified
+if [ -z "$spec" ]; then
+    spec=$(ls *.spec)
+fi
 
 info_msg "Updating the sources file"
 update_sources "$srctar_md5sum"
