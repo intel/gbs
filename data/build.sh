@@ -1,11 +1,13 @@
 #!/bin/bash
 USAGE="usage:
     tizenpkg build [target OBS project]
+
 Build package at remote build server, the default target OBS project
 is home:<user_id>:branches:Trunk
 
 options:
-    -h    print this info
+    -v/--verbose   verbose mode
+    -h/--help      print this info
 "
 
 die()
@@ -20,7 +22,9 @@ die()
 while :
 do
     case $1 in
-        -h) echo "$USAGE"
+        -v|--verbose) verbose=true
+            ;;
+        -h|--help) echo "$USAGE"
             exit
             ;;
         *) target_obsproject=$1
@@ -48,13 +52,13 @@ HUDSON_SERVER=$(tizenpkg cfg src_server)
 
 echo "Submiting your changes to build server"
 
-curl -s -i -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build" 
+curl -s -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build" 
 
 sleep 0.5
 last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/lastBuild/buildNumber"`
 
 # In case the last commit is not made by the user, supposed the last job triggered by '$user' is the one. 
-while [ ture ]
+while :
 do
     result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/$last_id/api/json"`
     username=`echo $result_json|python -mjson.tool |grep "userName" |cut -d'"' -f4`
@@ -67,7 +71,7 @@ do
 done
 
 offset=0
-while [ Ture ]
+while :
 do
     result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/api/json"`
     status=$(echo $result_json|python -mjson.tool |grep "building.*false")
@@ -75,9 +79,15 @@ do
         break
     fi
     
-    length=`curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/" | cut -d ',' -f2|cut -d ':' -f2`
-    curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/content" -d 'length'=$length -d 'offset'=$offset -G
-    offset=$length
+    sleep 0.5
+    if [ -n "$verbose" ]; then
+        length=`curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/" | cut -d ',' -f2|cut -d ':' -f2`
+        curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/content" -d 'length'=$length -d 'offset'=$offset -G
+        offset=$length
+    else
+        echo -n '.'
+    fi
+
 done
 echo ""
 
@@ -86,7 +96,7 @@ result=`echo $result_json|python -mjson.tool |grep result|cut -d '"' -f4`
 if [  x$result != xSUCCESS ]; then
     die 'Remote Server Exception'
 else
-    echo ""
+    echo "Your local changes has been submitted to build server."
 fi
 
 rm package.tar.bz2
