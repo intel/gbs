@@ -1,9 +1,14 @@
 #!/bin/bash
 
 USAGE="usage:
-    tizenpkg packaging <git object> [-s]
+    tizenpkg packaging [git tag/commit id] [-s] [-t tag]
+Packaging master branch, convert the files to release branch
+from the given tag or commit id, by default it's the HEAD.
 options:
     -s    silence remove patch without question
+    -t    specify a tag as the major release, source package
+          will generate at this tag, by default it's the most
+          recent tag found from the given commit id.
     -h    print this info
 "
 
@@ -266,6 +271,9 @@ do
         -f) spec="$2"
             shift
             ;;
+        -t) tag="$2"
+            shift
+            ;;
         -h) echo "$USAGE"
             exit
             ;;
@@ -293,7 +301,9 @@ HUDSON_SERVER=$(tizenpkg cfg src_server)
 git rev-parse $git_obj > /dev/null 2>&1|| die "Invalid git object $git_obj"
 git describe $git_obj --tags >/dev/null || die "No tags found"
 
-tag=$(git describe $git_obj --abbrev=0 --tags)
+if [ -z "$tag" ];then
+    tag=$(git describe $git_obj --abbrev=0 --tags)
+fi
 
 git_url=`git config remote.origin.url`
 project=`basename $git_url`
