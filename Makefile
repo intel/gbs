@@ -25,15 +25,11 @@ dist-gz:
 	git archive --format=tar --prefix=tizenpkg-$(TAGVER)/ $(TAG) | \
 		gzip  > tizenpkg-$(TAGVER).tar.gz
 
-install: all install-data
+install: all
 	python setup.py install --prefix=${PREFIX}
 
 dev: all
 	python setup.py develop --prefix=${PREFIX}
-
-install-data:
-	install -d ${DESTDIR}/usr/share/tizenpkg/
-	install -m 644 data/* ${DESTDIR}/usr/share/tizenpkg/
 
 clean:
 	rm -rf build/

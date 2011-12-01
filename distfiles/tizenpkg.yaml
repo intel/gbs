@@ -1,0 +1,24 @@
+Name: tizenpkg
+Summary: The command line tools for Tizen package developers
+Version: 0.1
+Release: 1
+Group: Development/Tools
+License: GPLv2
+URL: http://www.tizen.org
+Description: |
+    The command line tools for Tizen package developers will
+    be used to do packaging related tasks. 
+
+Sources:
+    - "%{name}-%{version}.tar.gz"
+Builder: python
+BuildArch: noarch
+SupportOtherDistros: yes
+
+Requires:
+    - python >= 2.5
+    - git-core
+    - curl
+
+PkgBR:
+    - python-devel

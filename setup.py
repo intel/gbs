@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os, sys
+import glob
 from distutils.core import setup
 try:
     import setuptools
@@ -50,6 +51,6 @@ setup(name='tizenpkg',
       url='http://git.tizen.org/',
       scripts=['tools/tizenpkg'],
       packages=['tizenpkg'],
-      package_data={'tizenpkg': ['data/*']},
+      data_files = [('/usr/share/tizenpkg', glob.glob('data/*'))],
      )
 
