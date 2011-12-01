@@ -49,10 +49,10 @@ tar jcf package.tar.bz2 `git ls-files`
 user=$(tizenpkg cfg user)
 passwd=$(tizenpkg cfg passwd)
 HUDSON_SERVER=$(tizenpkg cfg src_server)
-
+passwdx=$(tizenpkg cfg passwdx)
 echo "Submiting your changes to build server"
 
-curl -s -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build" 
+curl -s -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject';passwdx='$passwdx'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build" 
 
 sleep 0.5
 last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/lastBuild/buildNumber"`
