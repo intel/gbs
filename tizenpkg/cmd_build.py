@@ -28,6 +28,7 @@ import git
 import runner
 import msger
 import srcserver as ss
+from conf import configmgr
 
 def do(opts, args):
 
@@ -50,8 +51,9 @@ def do(opts, args):
                                 "value": prjname})
 
     # obsproject:obsprj
+    passwdx = configmgr.get('passwdx')
     params['parameter'].append({"name": "parameters",
-                                "value": "obsproject='%s'" %opts.obsprj})
+                                "value": "obsproject='%s';passwdx='%s'" %(opts.obsprj, passwdx)})
 
     # prepare package.tar.bz2
     tarfp = 'package.tar.bz2'
