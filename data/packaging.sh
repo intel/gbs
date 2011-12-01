@@ -221,7 +221,7 @@ get_srctar_md5sum()
                 last_prj=`echo $result_json|python -mjson.tool |grep "project" -A1|tail -1|cut -d'"' -f4`
                 last_user=`echo $result_json|python -mjson.tool |grep "userName" |cut -d'"' -f4`
                 if [ "$last_prj" == "$project" -o "$last_user" != "$user" ]; then
-                    build_id=$ret_id
+                    last_id=$ret_id
                     echo ''
                     break
                 fi
@@ -232,6 +232,7 @@ get_srctar_md5sum()
             fi
         done
     fi
+    build_id=$last_id
     echo 'Processing your request'
     # Waiting until the job finished
     while [ true ]
