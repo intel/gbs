@@ -71,14 +71,16 @@ class TizenPkg(cmdln.Cmdln):
             msger.set_loglevel('debug')
 
     @cmdln.alias("bl")
-    @cmdln.option('-s', '--silent', action='store_true',
-                  help='run in slient mode')
+    @cmdln.option('-p', '--obsprj', default='',
+                  help='The corresponding project name in remote OBS server. ' \
+                       'If not specified, "home:<userid>:branches:Trunk" will' \
+                       ' be used.')
     @_fall_to_shell('build')
     def do_build(self, subcmd, opts, *args):
         """${cmd_name}: test building for current pkg
 
         Usage:
-            tizenpkg build
+            tizenpkg build [OBS_project]
 
         ${cmd_option_list}
         """
@@ -87,6 +89,8 @@ class TizenPkg(cmdln.Cmdln):
         cmd.do(opts, args)
 
     @cmdln.alias("pk")
+    @cmdln.option('-s', '--silent', action='store_true',
+                  help='run in slient mode')
     @_fall_to_shell('packaging')
     def do_packaging(self, subcmd, opts, *args):
         """${cmd_name}: prepare packaging files for current pkg
