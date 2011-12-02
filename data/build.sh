@@ -98,8 +98,7 @@ do
     if [ -n "$status" ]; then
         break
     fi
-    
-    sleep 1
+
     if [ -n "$verbose" ]; then
         length=`curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/" | cut -d ',' -f2|cut -d ':' -f2`
         curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/content" -d 'length'=$length -d 'offset'=$offset -G
@@ -107,6 +106,7 @@ do
     else
         echo -n '.'
     fi
+    sleep 1
 
 done
 echo ""
@@ -114,6 +114,7 @@ echo ""
 result=`echo $result_json|python -mjson.tool |grep result|cut -d '"' -f4`
 
 if [  x$result != xSUCCESS ]; then
+    curl -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/consoleText" -G
     die 'Remote Server Exception'
 else
     echo "Your local changes has been submitted to build server."
