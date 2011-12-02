@@ -204,7 +204,7 @@ get_srctar_md5sum()
     project=$2
     info_msg "Geting md5sum about package $project, at $tag"
     string=`curl -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "tag", "value": "'$tag'"},{"name":"project", "value":"'$project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/srctar_md5sum/build"`
-    sleep 0.5
+    sleep 2
 
     last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber"`
     result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$last_id/api/json"`
