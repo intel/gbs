@@ -206,6 +206,12 @@ get_srctar_md5sum()
     string=`curl -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "tag", "value": "'$tag'"},{"name":"project", "value":"'$project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/srctar_md5sum/build"`
     sleep 2
 
+    echo $string|grep '302' > /dev/null
+    if [ $? != 0 ]; then
+        echo $string
+        die "Server Error, please check you tizenpkg configuration"
+    fi
+    
     last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber"`
     result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$last_id/api/json"`
     last_prj=`echo $result_json|python -mjson.tool |grep "project" -A1|tail -1|cut -d'"' -f4`
