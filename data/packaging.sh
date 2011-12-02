@@ -314,8 +314,12 @@ passwd=$(tizenpkg cfg passwd)
 HUDSON_SERVER=$(tizenpkg cfg src_server)
 
 git_url=`git config remote.origin.url`
-project=`basename $git_url`
-
+echo $git_url|grep ^ssh  > /dev/null
+if [ $? == 0 ]; then
+    project=`basename $git_url`
+else
+    project=$(echo $git_url|cut -d ':' -f2)
+fi
 
 info_msg "Packaging at major release ${tag}, the other commit(s) formating as patch(es)"
 srctar_md5sum=""

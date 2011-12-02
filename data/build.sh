@@ -40,7 +40,12 @@ git status|grep "modified">/dev/null 2>&1 &&echo "Warning: You local changes doe
 
 # Get project name from git url
 git_url=`git config remote.origin.url`
-prj_name=`basename $git_url`
+echo $git_url|grep ^ssh > /dev/null
+if [ $? == 0 ]; then
+    prj_name=`basename $git_url`
+else
+    prj_name=$(echo $git_url|cut -d ':' -f2)
+fi
 
 # tar the local changes
 tar jcf package.tar.bz2 `git ls-files`
@@ -54,7 +59,7 @@ echo "Submiting your changes to build server"
 
 curl -s -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject';passwdx='$passwdx'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build" 
 
-sleep 0.5
+sleep 1
 last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/lastBuild/buildNumber"`
 
 # In case the last commit is not made by the user, supposed the last job triggered by '$user' is the one. 
@@ -79,7 +84,7 @@ do
         break
     fi
     
-    sleep 0.5
+    sleep 1
     if [ -n "$verbose" ]; then
         length=`curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/" | cut -d ',' -f2|cut -d ':' -f2`
         curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/content" -d 'length'=$length -d 'offset'=$offset -G
