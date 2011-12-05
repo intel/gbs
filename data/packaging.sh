@@ -204,8 +204,14 @@ get_srctar_md5sum()
     project=$2
     info_msg "Geting md5sum about package $project, at $tag"
     string=`curl -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "tag", "value": "'$tag'"},{"name":"project", "value":"'$project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/srctar_md5sum/build"`
-    sleep 0.5
+    sleep 2
 
+    echo $string|grep '302' > /dev/null
+    if [ $? != 0 ]; then
+        echo $string
+        die "Server Error, please check you tizenpkg configuration"
+    fi
+    
     last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber"`
     result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$last_id/api/json"`
     last_prj=`echo $result_json|python -mjson.tool |grep "project" -A1|tail -1|cut -d'"' -f4`
@@ -314,8 +320,12 @@ passwd=$(pkghelper cfg passwd)
 HUDSON_SERVER=$(pkghelper cfg src_server)
 
 git_url=`git config remote.origin.url`
-project=`basename $git_url`
-
+echo $git_url|grep ^ssh  > /dev/null
+if [ $? == 0 ]; then
+    project=`basename $git_url`
+else
+    project=$(echo $git_url|cut -d ':' -f2)
+fi
 
 info_msg "Packaging at major release ${tag}, the other commit(s) formating as patch(es)"
 srctar_md5sum=""
