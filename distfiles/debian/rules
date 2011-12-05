@@ -6,14 +6,12 @@
 build: build-stamp
 build-stamp:
 	dh_testdir
-
 	python setup.py build
 
 clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
-
 	dh_clean
 
 install: build
@@ -21,13 +19,12 @@ install: build
 	dh_testroot
 	dh_clean -k
 	dh_installdirs
-
 	# Installing package
-	mkdir -p $(CURDIR)/debian/tizenpkg /usr/bin
-	#make DESTDIR=$(CURDIR)/debian/tizenpkg installman
-	#make DESTDIR=$(CURDIR)/debian/tizenpkg installconf
-	#make DESTDIR=$(CURDIR)/debian/tizenpkg installsymlinks
-	python setup.py install --root=$(CURDIR)/debian/tizenpkg --prefix=/usr
+	mkdir -p $(CURDIR)/debian/pkghelper /usr/bin
+	#make DESTDIR=$(CURDIR)/debian/pkghelper installman
+	#make DESTDIR=$(CURDIR)/debian/pkghelper installconf
+	#make DESTDIR=$(CURDIR)/debian/pkghelper installsymlinks
+	python setup.py install --root=$(CURDIR)/debian/pkghelper --prefix=/usr --install-layout=deb
 
 binary-indep: build install
 	dh_testdir
@@ -40,7 +37,6 @@ binary-indep: build install
 	dh_strip
 	dh_compress
 	dh_fixperms
-	dh_pysupport
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol

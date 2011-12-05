@@ -1,6 +1,6 @@
 #!/bin/bash
 USAGE="usage:
-    tizenpkg build [target OBS project]
+    pkghelper build [target OBS project]
 
 Build package at remote build server, the default target OBS project
 is home:<user_id>:branches:Trunk
@@ -45,11 +45,11 @@ prj_name=`basename $git_url`
 # tar the local changes
 tar jcf package.tar.bz2 `git ls-files`
 
-# get user name/passwd from tizenpkg.conf
-user=$(tizenpkg cfg user)
-passwd=$(tizenpkg cfg passwd)
-HUDSON_SERVER=$(tizenpkg cfg src_server)
-passwdx=$(tizenpkg cfg passwdx)
+# get user name/passwd from pkghelper.conf
+user=$(pkghelper cfg user)
+passwd=$(pkghelper cfg passwd)
+HUDSON_SERVER=$(pkghelper cfg src_server)
+passwdx=$(pkghelper cfg passwdx)
 echo "Submiting your changes to build server"
 
 curl -s -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject';passwdx='$passwdx'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build" 

@@ -9,7 +9,7 @@ try:
 except ImportError:
     pass
 
-MOD_NAME = 'tizenpkg'
+MOD_NAME = 'pkghelper'
 
 version_path = 'VERSION'
 if not os.path.isfile(version_path):
@@ -43,14 +43,14 @@ if sys.version_info[:2] > (2, 5):
         except:
             pass
 
-setup(name='tizenpkg',
+setup(name='pkghelper',
       version = version,
       description='The command line tools for Tizen package developers',
       author='Jian-feng Ding, Huaxu Wan',
       author_email='jian-feng.ding@intel.com, huaxu.wan@intel.com',
       url='http://git.tizen.org/',
-      scripts=['tools/tizenpkg'],
-      packages=['tizenpkg'],
-      data_files = [('/usr/share/tizenpkg', glob.glob('data/*'))],
+      scripts=['tools/pkghelper'],
+      packages=['pkghelper'],
+      data_files = [('/usr/share/pkghelper', glob.glob('data/*'))],
      )
 

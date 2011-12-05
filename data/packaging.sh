@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USAGE="usage:
-    tizenpkg packaging [git tag/commit id] [-s] [-t tag] [-f spec file]
+    pkghelper packaging [git tag/commit id] [-s] [-t tag] [-f spec file]
 
 Packaging master branch, convert the files to release branch
 from the given tag or commit id, by default it's the HEAD.
@@ -309,9 +309,9 @@ if [ -z "$tag" ];then
     tag=$(git describe $git_obj --abbrev=0 --tags)
 fi
 
-user=$(tizenpkg cfg user)
-passwd=$(tizenpkg cfg passwd)
-HUDSON_SERVER=$(tizenpkg cfg src_server)
+user=$(pkghelper cfg user)
+passwd=$(pkghelper cfg passwd)
+HUDSON_SERVER=$(pkghelper cfg src_server)
 
 git_url=`git config remote.origin.url`
 project=`basename $git_url`

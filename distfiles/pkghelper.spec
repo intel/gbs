@@ -6,7 +6,7 @@
 # << macros
 
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
-Name:       tizenpkg
+Name:       pkghelper
 Summary:    The command line tools for Tizen package developers
 Version:    0.1
 Release:    1
@@ -15,7 +15,7 @@ License:    GPLv2
 BuildArch:  noarch
 URL:        http://www.tizen.org
 Source0:    %{name}-%{version}.tar.gz
-Source100:  tizenpkg.yaml
+Source100:  pkghelper.yaml
 Requires:   python >= 2.5
 Requires:   git-core
 Requires:   curl
@@ -67,6 +67,7 @@ rm -rf $RPM_BUILD_ROOT
 # >> files
 %doc README.rst
 %{python_sitelib}/*
+%dir %{_datadir}/%{name}
 %{_datadir}/%{name}/*
 %{_bindir}/*
 # << files
