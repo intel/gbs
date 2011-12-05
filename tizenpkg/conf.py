@@ -207,7 +207,7 @@ class BrainConfigParser(SafeConfigParser):
 
 class ConfigMgr(object):
     DEFAULTS = {
-        'src_server': 'http://my.sourceserver/',
+        'src_server': 'https://code.tizen.org/robot',
         'user': 'my_user_id',
         'passwd': '',
         'passwdx': '',
