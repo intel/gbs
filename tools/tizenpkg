@@ -32,7 +32,12 @@ def _fall_to_shell(cmdname):
         def _run_embed_sh(self, argv):
             # this command is a shell script wrapper
             shpath = os.path.join(utils.get_share_dir(), cmdname + '.sh')
-            runner.embed(['bash', shpath] + list(argv)[1:])
+            cmdlist = ['bash', shpath]
+            if msger.get_loglevel() == 'debug':
+                cmdlist.append('-d')
+            elif msger.get_loglevel() == 'verbose':
+                cmdlist.append('-v')
+            runner.embed(cmdlist + list(argv)[1:])
         return _run_embed_sh
 
     cmdmod = 'tizenpkg.cmd_' + cmdname
