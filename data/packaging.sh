@@ -209,7 +209,7 @@ get_srctar_md5sum()
     echo $string|grep '302' > /dev/null
     if [ $? != 0 ]; then
         echo $string
-        die "Server Error, please check you tizenpkg configuration"
+        die "Server Error, please check your pkghelper configuration"
     fi
     
     last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber"`
