@@ -1,17 +1,18 @@
 #!/bin/bash
 
-USAGE="usage:
-    tizenpkg packaging [git tag/commit id] [-s] [-t tag] [-f spec file]
+USAGE="Usage:
+    tizenpkg packaging [-s] [git-tag/commit-id] [-t release-tag] [-f specfile]
 
 Packaging master branch, convert the files to release branch
-from the given tag or commit id, by default it's the HEAD.
-options:
+from the given tag or commit-id, by default using HEAD.
+
+Options:
     -s    silence remove patch without question
-    -t    specify a tag as the major release, source package
-          will generate at this tag, by default it's the most
-          recent tag found from the given commit id.
-    -f    specify the spec file
-    -h    print this info
+    -t    specify the tag for the major release, source package
+          will be generated at this tag. By default it's the most
+          recent tag found near HEAD or the given base tag/commit-id.
+    -f    specify the spec file in case of multiple ones exist in one project
+    -h    print this help info
 "
 
 INFO_COLOR='\e[0;32m' # green
@@ -25,8 +26,6 @@ die()
 {
     echo -e "${ERR_COLOR}Fatal Error:"
     echo -e "    " "$@${NO_COLOR}"
-    echo ""
-    echo "$USAGE"
     echo ""
     exit 
 }
@@ -45,7 +44,7 @@ update_version()
     version=${tag#v}
     
     # Validation check
-    grep "^Version:" $spec > /dev/null ||die "Invalid spec file format: There must be a line 'Version:   x.x.x' "
+    grep "^Version:" $spec > /dev/null ||die 'Invalid spec file: no "Version" directive defined'
 
     cp $spec $spec.origin
     
@@ -62,7 +61,7 @@ format_patches()
     patch_list=$(git format-patch $tag -o tizen-patches/)
 
     if [ -n "$patch_list" ]; then
-        info_msg "Patch(es) list"
+        info_msg "Patch list:"
         for patch in $patch_list
         do
             echo "    " $(basename $patch)
@@ -82,7 +81,7 @@ format_patches()
 update_patches()
 {
     if [ -z "$spec" ]; then
-        die "Internal Error, no spec file found"
+        die "no spec file found, abort!"
     fi
 
     # Find the patches to be kept
@@ -101,7 +100,7 @@ update_patches()
 
     if [ -n "$toberemove_patch" ]; then
         echo "----------------------------------------"
-        info_msg "The following patch(es) removed:"
+        info_msg "The following patches were removed:"
         for patch in $toberemove_patch
         do
             if [ -z "$silence_remove" ];then
@@ -144,7 +143,7 @@ update_patches()
     if [  -n "$newadd_patch" ]; then
         # Find the insert line num
         line_num=$(grep Patch[0-9]* -r $spec -n|tail -1|cut -d':' -f1)
-        # No patch. Inster after Source
+        # No patch. Insert after Source
         if [ -z "$line_num" ]; then
             line_num=$(grep Source[0-9]* -r $spec -n|tail -1|cut -d':' -f1)
             num=0
@@ -179,13 +178,13 @@ update_patches()
             line_num=$(expr $line_num + 1)
         fi
 
-        [ -n "$line_num" ] || die "Can not insert the patch installation command, please complete it by manual"
+        [ -n "$line_num" ] || die "Can not update %patch commands of spec file, please do it manually."
 
         sed -i "$line_num i "##PATCH_INSTALL##"" $spec
 
         sed -i "s/##PATCH_INSTALL##/$INSTALL/" $spec
         echo "----------------------------------------"
-        info_msg "The following patch(es) added:"
+        info_msg "The following patches were added:"
         for patch in $newadd_patch
         do
             echo "    " $(basename $patch)
@@ -203,14 +202,14 @@ get_srctar_md5sum()
 {
     tag=$1
     project=$2
-    info_msg "Geting md5sum about package $project, at $tag"
+    info_msg "Getting md5sum value for package $project at ref $tag, from server ..."
     string=`curl -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "tag", "value": "'$tag'"},{"name":"project", "value":"'$project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/srctar_md5sum/build"`
     sleep 2
 
     echo $string|grep '302' > /dev/null
     if [ $? != 0 ]; then
         echo $string
-        die "Server Error, please check your tizenpkg configuration"
+        die "Server Error, please check your tizenpkg configuration."
     fi
     
     last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber"`
@@ -219,7 +218,7 @@ get_srctar_md5sum()
     last_user=`echo $result_json|python -mjson.tool |grep "userName" |cut -d'"' -f4`
     # In case the last commit is not made by the user, supposed the last job triggered by '$user' is the one.
     if [ "$last_prj" != "$project" -o "$last_user" != "$user" ]; then
-        echo "Your request has been put in queue waiting to process"
+        echo "Your request has been put in waiting queue of server, waiting to active ..."
         while [ true ]
         do
             ret_id=$(curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber") 
@@ -240,7 +239,7 @@ get_srctar_md5sum()
         done
     fi
     build_id=$last_id
-    echo 'Processing your request'
+    echo 'Serve is processing your request, waiting for the result ...'
     # Waiting until the job finished
     while [ true ]
     do
@@ -258,14 +257,14 @@ get_srctar_md5sum()
     result=`echo $result_json|python -mjson.tool |grep result|cut -d '"' -f4`
     
     if [  x$result != xSUCCESS ]; then
-        echo -e "${ERR_COLOR}=====LOG FROM REMOTE SERVER=============${NO_COLOR}"
+        echo -e "${ERR_COLOR}==== LOG FROM REMOTE SERVER ============${NO_COLOR}"
         curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/consoleText"
         echo -e "${ERR_COLOR}========================================${NO_COLOR}"
         die 'Remote Server Exception'
     else
 
         srctar_md5sum=$(curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/consoleText" | sed -n 's/.*#!#\(.*\)#!#.*/\1/p')
-        info_msg "md5sum info:"
+        info_msg "md5sum output:"
         echo "    "  "$srctar_md5sum"
         echo ""
     fi
@@ -327,11 +326,12 @@ else
     project=$(echo $git_url|cut -d ':' -f2)
 fi
 
-info_msg "Packaging at major release ${tag}, the other commit(s) formating as patch(es)"
+info_msg "Packaging for major release ${tag}"
 srctar_md5sum=""
 get_srctar_md5sum $tag $project
 
-info_msg "Generating patch(es) from $tag to $git_obj, stored under tizen-patches dir"
+info_msg "Generating patches from $tag to $git_obj ..."
+#info_msg " stored under tizen-patches dir"
 format_patches $tag $git_obj
 
 info_msg "Switch to release branch"
@@ -339,11 +339,11 @@ git checkout release ||die "No release branch found."
 
 # Ask user specify one spec file if found more than one
 if [ -z "$spec" -a $(ls *.spec|wc -l) -gt '1' ]; then
-    echo -e "${ASK_COLOR}Found none or more the one spec file, please specify one${NO_COLOR}"
+    echo -e "${ASK_COLOR}Found multiple spec files, please select one${NO_COLOR}"
     while :
     do
         ls *.spec|grep spec -n
-        read -p "Select one by numer?" num
+        read -p "which?" num
         case $num in
             [0-9])
                 if [ $num -gt $(ls *.spec|wc -l) ]; then
@@ -353,7 +353,7 @@ if [ -z "$spec" -a $(ls *.spec|wc -l) -gt '1' ]; then
                 break
                 ;;
             *)
-                echo "${ASK_COLOR}Please select one of them by the number${NO_COLOR}"
+                echo "${ASK_COLOR}Please select one using number${NO_COLOR}"
                 ;;
         esac
     done
@@ -364,18 +364,17 @@ if [ -z "$spec" ]; then
     spec=$(ls *.spec)
 fi
 
-info_msg "Updating the sources file"
+info_msg 'Updating the "sources" file ...'
 update_sources "$srctar_md5sum"
-info_msg "done."
 
-info_msg "Updating version info in spec file"
+info_msg "Updating version info in spec file ..."
 update_version $tag
-info_msg "done."
 
-info_msg "Updating patches in spec file"
+info_msg "Updating patches in spec file ..."
 update_patches
-rm tizen-patches -r
-info_msg "done."
 
-info_msg "You're on release branch now."
-info_msg "All the changes to release branch are done, please check, commit them."
+# cleanup
+rm tizen-patches -r
+
+info_msg "You're in release branch now."
+info_msg "All the changes in release branch are done automatically, please confirm them and do commit."
