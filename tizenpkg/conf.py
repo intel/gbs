@@ -242,7 +242,7 @@ passwdx = $passwdx
 
         if not fpath:
             # use the default path
-            fpath = os.path.expanduser('~/.pkghelper.conf')
+            fpath = os.path.expanduser('~/.tizenpkg.conf')
 
         if not os.path.exists(fpath):
             if not self._new_conf(fpath):

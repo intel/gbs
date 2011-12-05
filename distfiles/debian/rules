@@ -20,11 +20,11 @@ install: build
 	dh_clean -k
 	dh_installdirs
 	# Installing package
-	mkdir -p $(CURDIR)/debian/pkghelper /usr/bin
-	#make DESTDIR=$(CURDIR)/debian/pkghelper installman
-	#make DESTDIR=$(CURDIR)/debian/pkghelper installconf
-	#make DESTDIR=$(CURDIR)/debian/pkghelper installsymlinks
-	python setup.py install --root=$(CURDIR)/debian/pkghelper --prefix=/usr --install-layout=deb
+	mkdir -p $(CURDIR)/debian/tizenpkg /usr/bin
+	#make DESTDIR=$(CURDIR)/debian/tizenpkg installman
+	#make DESTDIR=$(CURDIR)/debian/tizenpkg installconf
+	#make DESTDIR=$(CURDIR)/debian/tizenpkg installsymlinks
+	python setup.py install --root=$(CURDIR)/debian/tizenpkg --prefix=/usr --install-layout=deb
 
 binary-indep: build install
 	dh_testdir

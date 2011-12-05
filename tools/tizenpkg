@@ -20,9 +20,9 @@ import os, sys
 import io
 import ConfigParser
 
-from pkghelper.__version__ import VERSION
-from pkghelper import msger, cmdln, errors, utils, runner
-from pkghelper.conf import configmgr
+from tizenpkg.__version__ import VERSION
+from tizenpkg import msger, cmdln, errors, utils, runner
+from tizenpkg.conf import configmgr
 
 def _fall_to_shell(cmdname):
     def raw_wrapper(f):
@@ -35,7 +35,7 @@ def _fall_to_shell(cmdname):
             runner.embed(['bash', shpath] + list(argv)[1:])
         return _run_embed_sh
 
-    cmdmod = 'pkghelper.cmd_' + cmdname
+    cmdmod = 'tizenpkg.cmd_' + cmdname
     try:
         __import__(cmdmod)
         return raw_wrapper
@@ -44,17 +44,17 @@ def _fall_to_shell(cmdname):
 
 class TizenPkg(cmdln.Cmdln):
     """
-    Usage: pkghelper [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
+    Usage: tizenpkg [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
 
-    pkghelper - the command line tool for Tizen package developers
-    Try 'pkghelper help SUBCOMAND' for help on a specific subcommand.
+    tizenpkg - the command line tool for Tizen package developers
+    Try 'tizenpkg help SUBCOMAND' for help on a specific subcommand.
 
     ${command_list}
     global ${option_list}
     ${help_list}
     """
 
-    name = 'pkghelper'
+    name = 'tizenpkg'
     version = VERSION
 
     def get_optparser(self):
@@ -80,12 +80,12 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: test building for current pkg
 
         Usage:
-            pkghelper build [OBS_project]
+            tizenpkg build [OBS_project]
 
         ${cmd_option_list}
         """
 
-        from pkghelper import cmd_build as cmd
+        from tizenpkg import cmd_build as cmd
         cmd.do(opts, args)
 
     @cmdln.alias("pk")
@@ -96,12 +96,12 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: prepare packaging files for current pkg
 
         Usage:
-            pkghelper packaging
+            tizenpkg packaging
 
         ${cmd_option_list}
         """
 
-        from pkghelper import cmd_packaging as cmd
+        from tizenpkg import cmd_packaging as cmd
         cmd.do(opts, args)
 
     @_fall_to_shell('import')
@@ -109,12 +109,12 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: import new tarballs for current pkg
 
         Usage:
-            pkghelper import
+            tizenpkg import
 
         ${cmd_option_list}
         """
 
-        from pkghelper import cmd_import as cmd
+        from tizenpkg import cmd_import as cmd
         cmd.do(opts, args)
 
     @cmdln.alias("cfg")
@@ -124,7 +124,7 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: query values of config file
 
         Usage:
-            pkghelper getconfig <opt1> [<opt2> ...]
+            tizenpkg getconfig <opt1> [<opt2> ...]
 
         ${cmd_option_list}
         """

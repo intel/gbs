@@ -1,7 +1,7 @@
 Format: 1.0
-Source: pkghelper
+Source: tizenpkg
 Version: 0.1
-Binary: pkghelper
+Binary: tizenpkg
 Maintainer: Jian-feng Ding <jian-feng.ding@intel.com>
 Architecture: all
 Standards-Version: 3.7.1

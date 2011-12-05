@@ -18,12 +18,12 @@ tag:
 	git tag $(VERSION)
 
 dist-bz2:
-	git archive --format=tar --prefix=pkghelper-$(TAGVER)/ $(TAG) | \
-		bzip2  > pkghelper-$(TAGVER).tar.bz2
+	git archive --format=tar --prefix=tizenpkg-$(TAGVER)/ $(TAG) | \
+		bzip2 > tizenpkg-$(TAGVER).tar.bz2
 
 dist-gz:
-	git archive --format=tar --prefix=pkghelper-$(TAGVER)/ $(TAG) | \
-		gzip  > pkghelper-$(TAGVER).tar.gz
+	git archive --format=tar --prefix=tizenpkg-$(TAGVER)/ $(TAG) | \
+		gzip > tizenpkg-$(TAGVER).tar.gz
 
 install: all
 	python setup.py install --prefix=${PREFIX}

@@ -1,4 +1,4 @@
-Source: pkghelper
+Source: tizenpkg
 Section: devel
 Priority: extra
 Maintainer: Jian-feng Ding <jian-feng.ding@intel.com>
@@ -6,7 +6,7 @@ Build-Depends: debhelper (>= 7.0.15), python-dev
 Standards-Version: 3.8.0
 Homepage: http://www.tizen.org
 
-Package: pkghelper
+Package: tizenpkg
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends},
  git-core,
