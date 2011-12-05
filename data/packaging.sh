@@ -273,8 +273,9 @@ get_srctar_md5sum()
 update_sources()
 {
     srctar_md5sum=$@
-    mv sources sources.origin
-    echo "$srctar_md5sum" > sources
+    cp sources sources.origin
+    sed -i "/[0-9a-f]*\ *$project-.*/d" sources
+    echo "$srctar_md5sum" >> sources
 }
 
 while :
