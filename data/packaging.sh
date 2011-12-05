@@ -88,7 +88,7 @@ update_patches()
     # Find the patches to be kept
     for patch in $patch_list
     do
-        line=$(grep "Patch[0-9]*:.*$(basename $patch|sed 's/[0-9]*-//')" $spec)
+        line=$(grep "Patch[0-9]*:.*$(basename ${patch%.patch}|sed 's/[0-9]*-//')" $spec)
         if [ -n "$line" ]; then
             sed -i "s/$line/#PATCHKEPT#$line/" $spec
         else
@@ -98,7 +98,7 @@ update_patches()
 
     # Remove old patches
     toberemove_patch=$(grep "^Patch[0-9]*:" $spec |awk '{print $2}')
-    
+
     if [ -n "$toberemove_patch" ]; then
         echo "----------------------------------------"
         info_msg "The following patch(es) removed:"
@@ -118,7 +118,7 @@ update_patches()
                     ;;
                 * )
                     sed -i "/^Patch[0-9]*:.*$patch/ d" $spec
-                    rm $patch
+                    git rm $patch
                     info_msg "Patch $patch removed."
                     ;;
             esac
@@ -190,6 +190,7 @@ update_patches()
         do
             echo "    " $(basename $patch)
             mv $patch .
+            git add $patch
         done
         echo "----------------------------------------"
     fi # end of insert new add patch section
@@ -298,7 +299,6 @@ do
     esac
     shift
 done
-
 
 if [ -z "$git_obj" ]; then
     git_obj=$(git log --format="%h" -n 1)
