@@ -142,14 +142,14 @@ update_patches()
     # no new patch 
     if [  -n "$newadd_patch" ]; then
         # Find the insert line num
-        line_num=$(grep Patch[0-9]* -r $spec -n|tail -1|cut -d':' -f1)
+        line_num=$(grep "^Patch[0-9]*" -r $spec -n|tail -1|cut -d':' -f1)
         # No patch. Insert after Source
         if [ -z "$line_num" ]; then
             line_num=$(grep Source[0-9]* -r $spec -n|tail -1|cut -d':' -f1)
             num=0
         else
             # The first patch number
-            num=$(grep Patch[0-9]* $spec |tail -1|sed 's/Patch\([0-9]*\):.*/\1/')
+            num=$(grep "^Patch[0-9]*" $spec |sed 's/Patch\([0-9]*\):.*/\1/' |sort -n |tail -1)
             num=$(expr $num + 1)
         fi
 
