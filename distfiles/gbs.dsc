@@ -1,7 +1,7 @@
 Format: 1.0
-Source: tizenpkg
+Source: gbs
 Version: 0.1
-Binary: tizenpkg
+Binary: gbs
 Maintainer: Jian-feng Ding <jian-feng.ding@intel.com>
 Architecture: all
 Standards-Version: 3.7.1

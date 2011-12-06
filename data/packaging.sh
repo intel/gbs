@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USAGE="Usage:
-    tizenpkg packaging [-s] [git-tag/commit-id] [-t release-tag] [-f specfile]
+    gbs packaging [-s] [git-tag/commit-id] [-t release-tag] [-f specfile]
 
 Packaging master branch, convert the files to release branch
 from the given tag or commit-id, by default using HEAD.
@@ -209,7 +209,7 @@ get_srctar_md5sum()
     echo $string|grep '302' > /dev/null
     if [ $? != 0 ]; then
         echo $string
-        die "Server Error, please check your tizenpkg configuration."
+        die "Server Error, please check your gbs configuration."
     fi
     
     last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber"`
@@ -315,9 +315,9 @@ if [ -z "$tag" ];then
     tag=$(git describe $git_obj --abbrev=0 --tags)
 fi
 
-user=$(tizenpkg cfg user)
-passwd=$(tizenpkg cfg passwd)
-HUDSON_SERVER=$(tizenpkg cfg src_server)
+user=$(gbs cfg user)
+passwd=$(gbs cfg passwd)
+HUDSON_SERVER=$(gbs cfg src_server)
 
 git_url=`git config remote.origin.url`
 echo $git_url|grep ^ssh  > /dev/null

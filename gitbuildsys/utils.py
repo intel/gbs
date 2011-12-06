@@ -48,4 +48,4 @@ def strip_end(text, suffix):
 
 def get_share_dir():
     # TODO need to be better
-    return '/usr/share/tizenpkg/'
+    return '/usr/share/gbs/'

@@ -20,9 +20,9 @@ import os, sys
 import io
 import ConfigParser
 
-from tizenpkg.__version__ import VERSION
-from tizenpkg import msger, cmdln, errors, utils, runner
-from tizenpkg.conf import configmgr
+from gitbuildsys.__version__ import VERSION
+from gitbuildsys import msger, cmdln, errors, utils, runner
+from gitbuildsys.conf import configmgr
 
 def _fall_to_shell(cmdname):
     def raw_wrapper(f):
@@ -40,7 +40,7 @@ def _fall_to_shell(cmdname):
             runner.embed(cmdlist + list(argv)[1:])
         return _run_embed_sh
 
-    cmdmod = 'tizenpkg.cmd_' + cmdname
+    cmdmod = 'gitbuildsys.cmd_' + cmdname
     try:
         __import__(cmdmod)
         return raw_wrapper
@@ -49,17 +49,17 @@ def _fall_to_shell(cmdname):
 
 class TizenPkg(cmdln.Cmdln):
     """
-    Usage: tizenpkg [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
+    Usage: gbs [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
 
-    tizenpkg - the command line tool for Tizen package developers
-    Try 'tizenpkg help SUBCOMAND' for help on a specific subcommand.
+    gbs - the command line tool for Tizen package developers
+    Try 'gbs help SUBCOMAND' for help on a specific subcommand.
 
     ${command_list}
     global ${option_list}
     ${help_list}
     """
 
-    name = 'tizenpkg'
+    name = 'gbs'
     version = VERSION
 
     def get_optparser(self):
@@ -85,12 +85,12 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: test building for current pkg
 
         Usage:
-            tizenpkg build [OBS_project]
+            gbs build [OBS_project]
 
         ${cmd_option_list}
         """
 
-        from tizenpkg import cmd_build as cmd
+        from gitbuildsys import cmd_build as cmd
         cmd.do(opts, args)
 
     @cmdln.alias("pk")
@@ -101,12 +101,12 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: prepare packaging files for current pkg
 
         Usage:
-            tizenpkg packaging
+            gbs packaging
 
         ${cmd_option_list}
         """
 
-        from tizenpkg import cmd_packaging as cmd
+        from gitbuildsys import cmd_packaging as cmd
         cmd.do(opts, args)
 
     @_fall_to_shell('import')
@@ -114,12 +114,12 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: import new tarballs for current pkg
 
         Usage:
-            tizenpkg import
+            gbs import
 
         ${cmd_option_list}
         """
 
-        from tizenpkg import cmd_import as cmd
+        from gitbuildsys import cmd_import as cmd
         cmd.do(opts, args)
 
     @cmdln.alias("cfg")
@@ -129,7 +129,7 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: query values of config file
 
         Usage:
-            tizenpkg getconfig <opt1> [<opt2> ...]
+            gbs getconfig <opt1> [<opt2> ...]
 
         ${cmd_option_list}
         """

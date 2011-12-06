@@ -1,6 +1,6 @@
 #!/bin/bash
 USAGE="usage:
-    tizenpkg build [target OBS project]
+    gbs build [target OBS project]
 
 Build package at remote build server, the default target OBS project
 is home:<user_id>:branches:Trunk
@@ -50,11 +50,11 @@ fi
 # tar the local changes
 tar jcf package.tar.bz2 `git ls-files`
 
-# get user name/passwd from tizenpkg.conf
-user=$(tizenpkg cfg user)
-passwd=$(tizenpkg cfg passwd)
-HUDSON_SERVER=$(tizenpkg cfg src_server)
-passwdx=$(tizenpkg cfg passwdx)
+# get user name/passwd from gbs.conf
+user=$(gbs cfg user)
+passwd=$(gbs cfg passwd)
+HUDSON_SERVER=$(gbs cfg src_server)
+passwdx=$(gbs cfg passwdx)
 echo "Submiting your changes to build server"
 
 ret_string=$(curl -i -s -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject';passwdx='$passwdx'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build")
@@ -63,7 +63,7 @@ echo $ret_string|grep '302' > /dev/null
 
 if [ $? != 0 ]; then
     echo $ret_string
-    die "Server Error, please check your tizenpkg configuration"
+    die "Server Error, please check your gbs configuration"
 fi
 
 sleep 2

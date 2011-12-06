@@ -9,7 +9,7 @@ try:
 except ImportError:
     pass
 
-MOD_NAME = 'tizenpkg'
+MOD_NAME = 'gitbuildsys'
 
 version_path = 'VERSION'
 if not os.path.isfile(version_path):
@@ -43,14 +43,14 @@ if sys.version_info[:2] > (2, 5):
         except:
             pass
 
-setup(name='tizenpkg',
+setup(name='gbs',
       version = version,
       description='The command line tools for Tizen package developers',
       author='Jian-feng Ding, Huaxu Wan',
       author_email='jian-feng.ding@intel.com, huaxu.wan@intel.com',
-      url='http://git.tizen.org/',
-      scripts=['tools/tizenpkg'],
-      packages=['tizenpkg'],
-      data_files = [('/usr/share/tizenpkg', glob.glob('data/*'))],
+      url='https://git.tizen.org/',
+      scripts=['tools/gbs'],
+      packages=[MOD_NAME],
+      data_files = [('/usr/share/gbs', glob.glob('data/*'))],
      )
 
