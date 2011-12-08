@@ -56,8 +56,7 @@ passwd=$(gbs cfg passwd)
 HUDSON_SERVER=$(gbs cfg src_server)
 passwdx=$(gbs cfg passwdx)
 echo "Submiting your changes to build server"
-
-ret_string=$(curl -i -s -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject';passwdx='$passwdx'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build")
+ret_string=$(curl -k -i -s -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject';passwdx='$passwdx'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build")
 
 echo $ret_string|grep '302' > /dev/null
 
@@ -68,8 +67,8 @@ fi
 
 sleep 2
 
-last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/lastBuild/buildNumber"`
-result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/$last_id/api/json"`
+last_id=`curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/build/lastBuild/buildNumber"`
+result_json=`curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/build/$last_id/api/json"`
 last_prj=`echo $result_json|python -mjson.tool |grep "pkg" -A1|tail -1|cut -d'"' -f4`
 last_user=`echo $result_json|python -mjson.tool |grep "userName" |cut -d'"' -f4`
     # In case the last commit is not made by the user, supposed the last job triggered by '$user' is the one.
@@ -77,9 +76,9 @@ if [ "$last_prj" != "$prj_name" -o "$last_user" != "$user" ]; then
     echo "Your request has been put in queue waiting to process"
     while [ true ]
     do
-        ret_id=$(curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/lastBuild/buildNumber") 
+        ret_id=$(curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/build/lastBuild/buildNumber") 
         if [ "$last_id" != "$ret_id" ]; then
-            result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/$ret_id/api/json"`
+            result_json=`curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/build/$ret_id/api/json"`
             last_prj=`echo $result_json|python -mjson.tool |grep "pkg" -A1|tail -1|cut -d'"' -f4`
             last_user=`echo $result_json|python -mjson.tool |grep "userName" |cut -d'"' -f4`
             if [ "$last_prj" == "$prj_name" -o "$last_user" != "$user" ]; then
@@ -100,15 +99,15 @@ build_id=$last_id
 offset=0
 while :
 do
-    result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/api/json"`
+    result_json=`curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/api/json"`
     status=$(echo $result_json|python -mjson.tool |grep "building.*false")
     if [ -n "$status" ]; then
         break
     fi
 
     if [ -n "$verbose" ]; then
-        length=`curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/" | cut -d ',' -f2|cut -d ':' -f2`
-        curl -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/content" -d 'length'=$length -d 'offset'=$offset -G
+        length=`curl -k -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/" | cut -d ',' -f2|cut -d ':' -f2`
+        curl -k -s -u$user:$passwd "$HUDSON_SERVER/rest/projects/build/$build_id/console/content" -d 'length'=$length -d 'offset'=$offset -G
         offset=$length
     else
         echo -n '.'
@@ -121,7 +120,7 @@ echo ""
 result=`echo $result_json|python -mjson.tool |grep result|cut -d '"' -f4`
 
 if [  x$result != xSUCCESS ]; then
-    curl -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/consoleText" -G
+    curl -k -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/consoleText" -G
     die 'Remote Server Exception'
 else
     echo "Your local changes has been submitted to build server."

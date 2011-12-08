@@ -203,7 +203,7 @@ get_srctar_md5sum()
     tag=$1
     project=$2
     info_msg "Getting md5sum value for package $project at ref $tag, from server ..."
-    string=`curl -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "tag", "value": "'$tag'"},{"name":"project", "value":"'$project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/srctar_md5sum/build"`
+    string=`curl -k -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "tag", "value": "'$tag'"},{"name":"project", "value":"'$project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/srctar_md5sum/build"`
     sleep 2
 
     echo $string|grep '302' > /dev/null
@@ -212,8 +212,8 @@ get_srctar_md5sum()
         die "Server Error, please check your gbs configuration."
     fi
     
-    last_id=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber"`
-    result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$last_id/api/json"`
+    last_id=`curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber"`
+    result_json=`curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$last_id/api/json"`
     last_prj=`echo $result_json|python -mjson.tool |grep "project" -A1|tail -1|cut -d'"' -f4`
     last_user=`echo $result_json|python -mjson.tool |grep "userName" |cut -d'"' -f4`
     # In case the last commit is not made by the user, supposed the last job triggered by '$user' is the one.
@@ -221,9 +221,9 @@ get_srctar_md5sum()
         echo "Your request has been put in waiting queue of server, waiting to active ..."
         while [ true ]
         do
-            ret_id=$(curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber") 
+            ret_id=$(curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber") 
             if [ "$last_id" != "$ret_id" ]; then
-                result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$ret_id/api/json"`
+                result_json=`curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$ret_id/api/json"`
                 last_prj=`echo $result_json|python -mjson.tool |grep "project" -A1|tail -1|cut -d'"' -f4`
                 last_user=`echo $result_json|python -mjson.tool |grep "userName" |cut -d'"' -f4`
                 if [ "$last_prj" == "$project" -o "$last_user" != "$user" ]; then
@@ -243,7 +243,7 @@ get_srctar_md5sum()
     # Waiting until the job finished
     while [ true ]
     do
-        result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/api/json"`
+        result_json=`curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/api/json"`
         status=$(echo $result_json|python -mjson.tool |grep "building.*false")
         if [ -n "$status" ]; then
             break
@@ -253,17 +253,17 @@ get_srctar_md5sum()
     done
     echo ""
     # Execuation result
-    result_json=`curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/api/json"`
+    result_json=`curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/api/json"`
     result=`echo $result_json|python -mjson.tool |grep result|cut -d '"' -f4`
     
     if [  x$result != xSUCCESS ]; then
         echo -e "${ERR_COLOR}==== LOG FROM REMOTE SERVER ============${NO_COLOR}"
-        curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/consoleText"
+        curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/consoleText"
         echo -e "${ERR_COLOR}========================================${NO_COLOR}"
         die 'Remote Server Exception'
     else
 
-        srctar_md5sum=$(curl -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/consoleText" | sed -n 's/.*#!#\(.*\)#!#.*/\1/p')
+        srctar_md5sum=$(curl -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/consoleText" | sed -n 's/.*#!#\(.*\)#!#.*/\1/p')
         info_msg "md5sum output:"
         echo "    "  "$srctar_md5sum"
         echo ""
