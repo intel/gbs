@@ -85,7 +85,7 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: test building for current pkg
 
         Usage:
-            gbs build [OBS_project]
+            gbs build [options] [OBS_project]
 
         ${cmd_option_list}
         """
@@ -101,7 +101,7 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: prepare packaging files for current pkg
 
         Usage:
-            gbs packaging
+            gbs packaging [options]
 
         ${cmd_option_list}
         """
@@ -109,12 +109,15 @@ class TizenPkg(cmdln.Cmdln):
         from gitbuildsys import cmd_packaging as cmd
         cmd.do(opts, args)
 
+    @cmdln.option('--obsprj', default=None,
+                  help='Specify OBS prj name if not the same as git')
+    @cmdln.alias("upload")
     @_fall_to_shell('import')
     def do_import(self, subcmd, opts, *args):
-        """${cmd_name}: import new tarballs for current pkg
+        """${cmd_name}: import/upload new tarballs for current pkg
 
         Usage:
-            gbs import
+            gbs import [options] <tarball>
 
         ${cmd_option_list}
         """

@@ -39,6 +39,7 @@ def _call_curl(api, *opts, **fields):
         cmdln += ' -F%s=%s ' % (k, v)
 
     cmdln += '%s/%s' % (SRCSERVER, api.lstrip('/'))
+    msger.debug('curl cmdln: '+cmdln)
 
     return runner.outs(cmdln)
 
@@ -47,7 +48,7 @@ def build_lastid():
 
 def build_trigger(params, tarfp):
     _call_curl('job/build/build',
-               '-i', 
+               '-i',
                name=tarfp,
                file0='@'+tarfp,
                Submit='Build',
@@ -75,4 +76,12 @@ def build_mylastresult():
             break
 
     return json.loads(retstr)
+
+def upload(params, tarfp):
+    _call_curl('job/upload/build',
+               '-i',
+               name='pkg.tar.bz2', # must wrong here, plz FIXME
+               file0='@'+tarfp,
+               Submit='Build',
+               json="%s" % json.dumps(params))
 

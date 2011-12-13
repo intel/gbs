@@ -16,20 +16,28 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+import os
+
 import runner
+import errors
 
 __all__ = ['config', 'branch', 'status', 'ls_files']
 
+def _run_git(cmd, args=[]):
+    if not os.path.isdir('.git'):
+        raise errors.GitInvalid(os.getcwd())
+
+    return runner.outs(['git', cmd] + args)
+
 def config(*args):
-    return runner.outs(['git', 'config'] + list(args))
+    return _run_git('config', list(args))
 
 def branch(all=False, current=False, *args):
-    cmdln = ['git', 'branch']
+    args = list(args)
     if all:
-        cmdln.append('-a')
-    cmdln += list(args)
+        args.insert(0, '-a')
 
-    branches = runner.outs(cmdln).splitlines()
+    branches = _run_git('branch', args).splitlines()
 
     curbr = ''
     for br in branches:
@@ -45,7 +53,7 @@ def branch(all=False, current=False, *args):
         return branches
 
 def status(*args):
-    outs = runner.outs(['git', 'status', '-s'] + list(args))
+    outs = _run_git('status', ['-s'] + list(args))
 
     sts = {}
     for line in outs.splitlines():
@@ -58,4 +66,5 @@ def status(*args):
     return sts
 
 def ls_files():
-    return runner.outs('git ls-files').splitlines()
+    return _run_git('ls-files').splitlines()
+

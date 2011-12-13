@@ -34,7 +34,7 @@ if sys.version_info[:2] > (2, 5):
     if len(sys.argv) > 1 and 'install' in sys.argv:
         try:
             import platform
-            (dist, ver, id) = platform.linux_distribution()
+            (dist, ver, rid) = platform.linux_distribution()
 
             # for debian-like distros, mods will be installed to
             # ${PYTHONLIB}/dist-packages
