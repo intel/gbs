@@ -87,7 +87,7 @@ update_patches()
     # Find the patches to be kept
     for patch in $patch_list
     do
-        line=$(grep "Patch[0-9]*:.*$(basename ${patch%.patch}|sed 's/[0-9]*-//')" $spec)
+        line=$(grep "Patch[0-9]\+:.*$(basename ${patch%.patch}|sed 's/[0-9]*-//')" $spec)
         if [ -n "$line" ]; then
             sed -i "s/$line/#PATCHKEPT#$line/" $spec
         else
@@ -96,7 +96,7 @@ update_patches()
     done
 
     # Remove old patches
-    toberemove_patch=$(grep "^Patch[0-9]*:" $spec |awk '{print $2}')
+    toberemove_patch=$(grep "^Patch[0-9]\+:" $spec |awk '{print $2}')
 
     if [ -n "$toberemove_patch" ]; then
         echo "----------------------------------------"
@@ -129,7 +129,7 @@ update_patches()
     sed -i "s/^#PATCHKEPT#//g" $spec
 
     # Remove the install part
-    install_list=$(grep "^%patch[0-9]*" $spec|cut -d ' ' -f1|sed 's/%p/P/')
+    install_list=$(grep "^%patch[0-9]\+" $spec|cut -d ' ' -f1|sed 's/%p/P/')
     for install in $install_list
     do
         grep "$install:" $spec > /dev/null
@@ -142,14 +142,14 @@ update_patches()
     # no new patch 
     if [  -n "$newadd_patch" ]; then
         # Find the insert line num
-        line_num=$(grep "^Patch[0-9]*" -r $spec -n|tail -1|cut -d':' -f1)
+        line_num=$(grep "^Patch[0-9]\+" $spec -n|tail -1|cut -d':' -f1)
         # No patch. Insert after Source
         if [ -z "$line_num" ]; then
-            line_num=$(grep Source[0-9]* -r $spec -n|tail -1|cut -d':' -f1)
+            line_num=$(grep "^Source[0-9]\+" $spec -n|tail -1|cut -d':' -f1)
             num=0
         else
             # The first patch number
-            num=$(grep "^Patch[0-9]*" $spec |sed 's/Patch\([0-9]*\):.*/\1/' |sort -n |tail -1)
+            num=$(grep "^Patch[0-9]\+" $spec |sed -n 's/Patch\([0-9]*\):.*/\1/' |sort -n |tail -1)
             num=$(expr $num + 1)
         fi
 
@@ -170,7 +170,7 @@ update_patches()
         sed -i "s/##PATCH_ADD##/$PATCH/" $spec
 
         # Locate the line num of the patches installation command
-        line_num=$(grep -n "^%patch[0-9]*"  $spec |tail -1|cut -d':' -f1)
+        line_num=$(grep -n "^%patch[0-9]\+"  $spec |tail -1|cut -d':' -f1)
         # No found. trying to insert before %build
         if [ -z "$line_num" ]; then
             line_num=$(grep -n "%build" $spec |tail -1|cut -d':' -f1)
@@ -189,7 +189,7 @@ update_patches()
         do
             echo "    " $(basename $patch)
             mv $patch .
-            git add $patch
+            git add $(basename $patch)
         done
         echo "----------------------------------------"
     fi # end of insert new add patch section
