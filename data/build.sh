@@ -34,9 +34,9 @@ do
     shift
 done
 
-git branch -a|sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'|grep "release" > /dev/null 2>&1 || die "Please run this command under release branch"
+git branch -a|sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'|grep "release" > /dev/null 2>&1 || die "Please run this command under the release branch"
 
-git status|grep "modified">/dev/null 2>&1 &&echo "Warning: You local changes doesn't commit yet."
+git status|grep "modified">/dev/null 2>&1 &&echo "Warning: Uncommited local changes found. Please commit local changes before running this command."
 
 # Get project name from git url
 git_url=`git config remote.origin.url`
@@ -123,7 +123,7 @@ if [  x$result != xSUCCESS ]; then
     curl -L -k -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/consoleText" -G
     die 'Remote Server Exception'
 else
-    echo "Your local changes has been submitted to build server."
+    echo "Your local changes have been submitted to the build server."
 fi
 
 rm package.tar.bz2

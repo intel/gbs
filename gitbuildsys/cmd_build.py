@@ -33,10 +33,10 @@ from conf import configmgr
 def do(opts, args):
 
     if not os.path.isdir('.git'):
-        msger.error('must run this command under a git tree')
+        msger.error('You must run this command under a git tree')
 
     if git.branch(all=False, current=True)[0] != 'release':
-        msger.error('must run this command under release branch')
+        msger.error('You must run this command under the release branch')
 
     gitsts = git.status()
     if 'M ' in gitsts or ' M' in gitsts:
@@ -65,7 +65,7 @@ def do(opts, args):
     params['parameter'].append({"name": tarfp,
                                 "file": "file0"})
 
-    msger.info("Submiting your changes to build server ...")
+    msger.info("Submiting your changes to the build server...")
     ss.build_trigger(params, tarfp)
 
     time.sleep(0.5)
@@ -75,5 +75,5 @@ def do(opts, args):
         msger.error('remote server exception')
 
     os.remove(tarfp)
-    msger.info('your local changes has been submitted to build server.')
+    msger.info('Your local changes have been submitted to the build server.')
 

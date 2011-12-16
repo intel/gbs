@@ -48,7 +48,7 @@ def do(opts, args):
                 {"name": "pkg", "value": tarname}
              ]}
 
-    msger.info('uploading tarball %s to src server ...' % tarfp)
+    msger.info('Uploading tarball %s to the source server...' % tarfp)
     ss.upload(params, tarfp)
     # TODO need to check the result and get the md5sum
     # TODO update sources automatically?
