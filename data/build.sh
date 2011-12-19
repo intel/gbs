@@ -1,6 +1,6 @@
 #!/bin/bash
 USAGE="usage:
-    gbs build [target OBS project]
+    gbs build [options] [target OBS project]
 
 Build package at remote build server, the default target OBS project
 is home:<user_id>:branches:Trunk
@@ -22,12 +22,14 @@ die()
 while :
 do
     case $1 in
-        -v|--verbose) verbose=true
+        -v|-d|--verbose) verbose=true
             ;;
         -h|--help) echo "$USAGE"
             exit
             ;;
-        *) target_obsproject=$1
+        [a-zA-Z0-9]*) target_obsproject=$1
+            ;;
+        *)
             break
             ;;
     esac
