@@ -18,6 +18,7 @@
 
 """Implementation of subcmd: import
 """
+raise ImportError('skip me')
 
 import os
 
