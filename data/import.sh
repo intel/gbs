@@ -57,7 +57,7 @@ source_tarball_name=$(basename $source_tarball)
 file $source_tarball|grep "compressed data" > /dev/null || die "Invalid file type: $(file $source_tarball|cut -d':' -f2) \n    Only compressed data file supported."
 
 info_msg "Uploading the tarball to the source server...."
-ret_string=$(curl -L -k -i -s -u$user:$passwd -Fname=source_tarball -Ffile0=@$source_tarball -Fjson='{"parameter": [{"name": "source_tarball", "file": "file0"},{"name":"pkg", "value":"'$source_tarball_name'"},{"name":"parameters","value":""}]}' -FSubmit=Build "$HUDSON_SERVER/job/import/build")
+ret_string=$(curl -L -k -i -u$user:$passwd -Fname=source_tarball -Ffile0=@$source_tarball -Fjson='{"parameter": [{"name": "source_tarball", "file": "file0"},{"name":"pkg", "value":"'$source_tarball_name'"},{"name":"parameters","value":""}]}' -FSubmit=Build "$HUDSON_SERVER/job/import/build")
 
 echo $ret_string|grep '302' > /dev/null
 

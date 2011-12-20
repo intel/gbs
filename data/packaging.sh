@@ -36,12 +36,9 @@ info_msg()
 }
 
 # Run under release branch, update spec file version, input: new_version, spec
-# Global env: spec
+# Global env: version
 update_version()
 {
-    tag=$1
-
-    version=${tag#v}
     
     # Validation check
     grep "^Version:" $spec > /dev/null ||die 'Invalid spec file: no "Version" directive defined'
@@ -200,10 +197,11 @@ update_patches()
 # Golbal evn: srctar_md5sum
 get_srctar_md5sum()
 {
-    tag=$1
+    version=$1
     project=$2
+    commitid=$3
     info_msg "Getting md5sum value for package $project at ref $tag, from server ..."
-    string=`curl -L -k -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "tag", "value": "'$tag'"},{"name":"project", "value":"'$project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/srctar_md5sum/build"`
+    string=$(curl -L -k -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "version", "value": "'$version'"},{"name":"project", "value":"'$project'"},{"name":"parameters","value":"commitid='$commitid'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/packaging/build")
     sleep 2
 
     echo $string|grep '302' > /dev/null
@@ -212,8 +210,8 @@ get_srctar_md5sum()
         die "Server Error, please check your gbs configuration."
     fi
     
-    last_id=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber"`
-    result_json=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$last_id/api/json"`
+    last_id=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/packaging/lastBuild/buildNumber"`
+    result_json=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/packaging/$last_id/api/json"`
     last_prj=`echo $result_json|python -mjson.tool |grep "project" -A1|tail -1|cut -d'"' -f4`
     last_user=`echo $result_json|python -mjson.tool |grep "userName" |cut -d'"' -f4`
     # In case the last commit is not made by the user, supposed the last job triggered by '$user' is the one.
@@ -221,9 +219,9 @@ get_srctar_md5sum()
         echo "Your request has been put in waiting queue of server, waiting to active ..."
         while [ true ]
         do
-            ret_id=$(curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/lastBuild/buildNumber") 
+            ret_id=$(curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/packaging/lastBuild/buildNumber") 
             if [ "$last_id" != "$ret_id" ]; then
-                result_json=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$ret_id/api/json"`
+                result_json=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/packaging/$ret_id/api/json"`
                 last_prj=`echo $result_json|python -mjson.tool |grep "project" -A1|tail -1|cut -d'"' -f4`
                 last_user=`echo $result_json|python -mjson.tool |grep "userName" |cut -d'"' -f4`
                 if [ "$last_prj" == "$project" -o "$last_user" != "$user" ]; then
@@ -243,7 +241,7 @@ get_srctar_md5sum()
     # Waiting until the job finished
     while [ true ]
     do
-        result_json=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/api/json"`
+        result_json=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/packaging/$build_id/api/json"`
         status=$(echo $result_json|python -mjson.tool |grep "building.*false")
         if [ -n "$status" ]; then
             break
@@ -253,17 +251,17 @@ get_srctar_md5sum()
     done
     echo ""
     # Execuation result
-    result_json=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/api/json"`
+    result_json=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/packaging/$build_id/api/json"`
     result=`echo $result_json|python -mjson.tool |grep result|cut -d '"' -f4`
     
     if [  x$result != xSUCCESS ]; then
         echo -e "${ERR_COLOR}==== LOG FROM REMOTE SERVER ============${NO_COLOR}"
-        curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/consoleText"
+        curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/packaging/$build_id/consoleText"
         echo -e "${ERR_COLOR}========================================${NO_COLOR}"
         die 'Remote Server Exception'
     else
 
-        srctar_md5sum=$(curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/srctar_md5sum/$build_id/consoleText" | sed -n 's/.*#!#\(.*\)#!#.*/\1/p')
+        srctar_md5sum=$(curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/packaging/$build_id/consoleText" | sed -n 's/.*#!#\(.*\)#!#.*/\1/p')
         info_msg "md5sum output:"
         echo "    "  "$srctar_md5sum"
         echo ""
@@ -275,7 +273,7 @@ update_sources()
     srctar_md5sum=$@
     cp sources sources.origin
     sed -i "/[0-9a-f]*\ *$project-.*/d" sources
-    echo "$1  $2" >> sources
+    echo "$1" >> sources
 }
 
 while :
@@ -315,6 +313,9 @@ if [ -z "$tag" ];then
     tag=$(git describe $git_obj --abbrev=0 --tags)
 fi
 
+commitid=$(git rev-list -1 $tag)
+version=${tag#v}
+
 user=$(gbs cfg user)
 passwd=$(gbs cfg passwd)
 HUDSON_SERVER=$(gbs cfg src_server)
@@ -329,7 +330,7 @@ fi
 
 info_msg "Packaging for major release ${tag}"
 srctar_md5sum=""
-get_srctar_md5sum $tag $project
+get_srctar_md5sum $version $project $commitid
 
 info_msg "Generating patches from $tag to $git_obj ..."
 #info_msg " stored under tizen-patches dir"
@@ -369,7 +370,7 @@ info_msg 'Updating the "sources" file ...'
 update_sources "$srctar_md5sum"
 
 info_msg "Updating version info in spec file ..."
-update_version $tag
+update_version
 
 info_msg "Updating patches in spec file ..."
 update_patches

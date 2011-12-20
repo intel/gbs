@@ -1,11 +1,12 @@
 #!/bin/bash
 USAGE="usage:
-    gbs build [options] [target OBS project]
+    gbs build [options] [target OBS project] [-t tag]
 
 Build package at remote build server, the default target OBS project
 is home:<user_id>:branches:Trunk
 
 options:
+    -t/--tag       local tag for test build
     -v/--verbose   verbose mode
     -h/--help      print this info
 "
@@ -24,12 +25,18 @@ do
     case $1 in
         -v|-d|--verbose) verbose=true
             ;;
+        -t|--tag) tag=$2
+            shift
+            ;;
         -h|--help) echo "$USAGE"
             exit
             ;;
         [a-zA-Z0-9]*) target_obsproject=$1
             ;;
         *)
+            if [ -n "$1" ]; then
+                die "Wrong parameters"
+            fi
             break
             ;;
     esac
@@ -57,8 +64,18 @@ user=$(gbs cfg user)
 passwd=$(gbs cfg passwd)
 HUDSON_SERVER=$(gbs cfg src_server)
 passwdx=$(gbs cfg passwdx)
+
+# If specified the tag, backend service will be forced to generate a source
+#   tar from this tag instead of search in source server, only used for
+#   test build
+
+if [ -n "$tag" ]; then
+    git rev-parse $tag > /dev/null 2>&1|| die "Invalid git object $tag"
+    commitid=$(git rev-list -1 $tag)
+fi
+
 echo "Submiting your changes to build server"
-ret_string=$(curl -L -k -i -s -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject';passwdx='$passwdx'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build")
+ret_string=$(curl -L -k -i -s -u$user:$passwd -Fname=package.tar.bz2 -Ffile0=@package.tar.bz2 -Fjson='{"parameter": [{"name": "package.tar.bz2", "file": "file0"},{"name":"pkg", "value":"'$prj_name'"},{"name":"parameters","value":"obsproject='$target_obsproject';passwdx='$passwdx';commitid='$commitid'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/build/build")
 
 echo $ret_string|grep '302' > /dev/null
 
