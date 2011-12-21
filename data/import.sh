@@ -1,10 +1,11 @@
 #!/bin/bash
 USAGE="usage:
-    gbs import [options] <tarball>
+    gbs import [-h] [-t project] <tarball>
 
 Import/upload new tarballs for current pkg
 
 Options:
+    -t/--target    specify the target project
     -h/--help      print this info
 "
 
@@ -33,6 +34,9 @@ do
     case $1 in
         -v|-d|--verbose) verbose=true
             ;;
+        -t|--target) target_project=$2
+            shift
+            ;;
         -h|--help) echo "$USAGE"
             exit
             ;;
@@ -53,11 +57,26 @@ passwdx=$(gbs cfg passwdx)
 
 source_tarball_name=$(basename $source_tarball)
 
+if [ -z "$target_project" ]; then
+# Get project name from git url
+    git_url=`git config remote.origin.url`
+    echo $git_url|grep ^ssh > /dev/null
+    if [ $? == 0 ]; then
+        target_project=`basename $git_url`
+    else
+        target_project=$(echo $git_url|cut -d ':' -f2)
+    fi
+fi
+
+if [ -z "$target_project" ]; then
+    die "No target project found, please specify it by use -t parameter."
+fi
+
 # Only compressed data file support
 file $source_tarball|grep "compressed data" > /dev/null || die "Invalid file type: $(file $source_tarball|cut -d':' -f2) \n    Only compressed data file supported."
 
 info_msg "Uploading the tarball to the source server...."
-ret_string=$(curl -L -k -i -u$user:$passwd -Fname=source_tarball -Ffile0=@$source_tarball -Fjson='{"parameter": [{"name": "source_tarball", "file": "file0"},{"name":"pkg", "value":"'$source_tarball_name'"},{"name":"parameters","value":""}]}' -FSubmit=Build "$HUDSON_SERVER/job/import/build")
+ret_string=$(curl -L -k -i -u$user:$passwd -Fname=source_tarball -Ffile0=@$source_tarball -Fjson='{"parameter": [{"name": "source_tarball", "file": "file0"},{"name":"pkg", "value":"'$source_tarball_name'"},{"name":"parameters","value":"target_project='$target_project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/import/build")
 
 echo $ret_string|grep '302' > /dev/null
 
@@ -84,7 +103,7 @@ if [ "$last_prj" != "$source_tarball_name" -o "$last_user" != "$user" ]; then
             result_json=`curl -L -k -s -u$user:$passwd "$HUDSON_SERVER/job/import/$ret_id/api/json"`
             last_prj=`echo $result_json|python -mjson.tool |grep "pkg" -A1|tail -1|cut -d'"' -f4`
             last_user=`echo $result_json|python -mjson.tool |grep "userName" |cut -d'"' -f4`
-            if [ "$last_prj" == "$prj_name" -o "$last_user" != "$user" ]; then
+            if [ "$last_prj" == "$source_tarball_name" -o "$last_user" != "$user" ]; then
                 last_id=$ret_id
                 echo ''
                 break
