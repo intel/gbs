@@ -201,7 +201,7 @@ get_srctar_md5sum()
     project=$2
     commitid=$3
     info_msg "Getting md5sum value for package $project at ref $tag, from server ..."
-    string=$(curl -L -k -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "version", "value": "'$version'"},{"name":"project", "value":"'$project'"},{"name":"parameters","value":"commitid='$commitid'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/packaging/build")
+    string=$(curl -L -k -s -i -u$user:$passwd -Fjson='{"parameter": [{"name": "version", "value": "'$version'"},{"name":"project", "value":"'$project'"},{"name":"parameters","value":"commitid='$commitid';tag='$tag'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/packaging/build")
     sleep 2
 
     echo $string|grep '302' > /dev/null
