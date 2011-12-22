@@ -146,7 +146,7 @@ update_patches()
             num=0
         else
             # The first patch number
-            num=$(grep "^Patch[0-9]\+" $spec |sed -n 's/Patch\([0-9]*\):.*/\1/' |sort -n |tail -1)
+            num=$(grep "^Patch[0-9]\+" $spec |sed 's/Patch\([0-9]*\):.*/\1/' |sort -n |tail -1)
             num=$(expr $num + 1)
         fi
 
