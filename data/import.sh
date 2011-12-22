@@ -1,11 +1,11 @@
 #!/bin/bash
 USAGE="usage:
-    gbs import [-h] [-t project] <tarball>
+    gbs import [-h] [-p project] <tarball>
 
 Import/upload new tarballs for current pkg
 
 Options:
-    -t/--target    specify the target project
+    -p/--project    specify the target project
     -h/--help      print this info
 "
 
@@ -34,20 +34,22 @@ do
     case $1 in
         -v|-d|--verbose) verbose=true
             ;;
-        -t|--target) target_project=$2
+        -p|--project) target_project=$2
             shift
             ;;
         -h|--help) echo "$USAGE"
             exit
             ;;
-        *) source_tarball=$1
+        [a-zA-Z0-9]*) source_tarball=$1
+            ;;
+        *)
             break
             ;;
     esac
     shift
 done
 
-[ $# == 1 ] || die "Invalid parameters."
+[ $# == 0 ] || die "Invalid parameters."
 
 # get user name/passwd from gbs.conf
 user=$(gbs cfg user)
@@ -76,7 +78,7 @@ fi
 file $source_tarball|grep "compressed data" > /dev/null || die "Invalid file type: $(file $source_tarball|cut -d':' -f2) \n    Only compressed data file supported."
 
 info_msg "Uploading the tarball to the source server...."
-ret_string=$(curl -L -k -i -u$user:$passwd -Fname=source_tarball -Ffile0=@$source_tarball -Fjson='{"parameter": [{"name": "source_tarball", "file": "file0"},{"name":"pkg", "value":"'$source_tarball_name'"},{"name":"parameters","value":"target_project='$target_project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/import/build")
+ret_string=$(curl -L -k -i -# -u$user:$passwd -Fname=source_tarball -Ffile0=@$source_tarball -Fjson='{"parameter": [{"name": "source_tarball", "file": "file0"},{"name":"pkg", "value":"'$source_tarball_name'"},{"name":"parameters","value":"target_project='$target_project'"}]}' -FSubmit=Build "$HUDSON_SERVER/job/import/build")
 
 echo $ret_string|grep '302' > /dev/null
 
