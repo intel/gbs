@@ -40,7 +40,7 @@ do
         -h|--help) echo "$USAGE"
             exit
             ;;
-        [a-zA-Z0-9]*) source_tarball=$1
+        [a-zA-Z0-9\.]*) source_tarball=$1
             ;;
         *)
             break
