@@ -45,7 +45,7 @@ done
 
 git branch -a|sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'|grep "release" > /dev/null 2>&1 || die "Please run this command under the release branch"
 
-git status|grep "modified">/dev/null 2>&1 &&echo "Warning: Uncommited local changes found. Please commit local changes before running this command."
+git status|grep "modified">/dev/null 2>&1 &&echo "Warning: Uncommited local changes found.  Sending local changes to build remotely. "
 
 # Get project name from git url
 git_url=`git config remote.origin.url`

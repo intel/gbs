@@ -71,7 +71,7 @@ if [ -z "$target_project" ]; then
 fi
 
 if [ -z "$target_project" ]; then
-    die "No target project found, please specify it by use -t parameter."
+    die "No target project found, please specify it by use -p parameter."
 fi
 
 # Only compressed data file support
