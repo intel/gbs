@@ -63,6 +63,7 @@ tar jcf package.tar.bz2 `git ls-files`
 user=$(gbs cfg user)
 passwd=$(gbs cfg passwd)
 HUDSON_SERVER=$(gbs cfg src_server)
+BUILD_SERVER=$(gbs cfg build_server)
 passwdx=$(gbs cfg passwdx)
 
 # If specified the tag, backend service will be forced to generate a source
@@ -142,7 +143,15 @@ if [  x$result != xSUCCESS ]; then
     curl -L -k -u$user:$passwd "$HUDSON_SERVER/job/build/$build_id/consoleText" -G
     die 'Remote Server Exception'
 else
-    echo "Your local changes have been submitted to the build server."
+    if [ -z "$target_obsproject" ];
+    then
+	    #TODO:need to add logic for Tizen versions other than 'Trunk' when the time comes
+	    target_obsproject="home:$user:branches:Trunk"
+    fi
+    http_obsproject=`echo "$target_obsproject" | sed "s/ /\%3A/g"`
+
+    echo "Your local changes have been submitted to the build server. Follow the link to monitor the build progress:"
+    echo $BUILD_SERVER/project/show?project=$http_obsproject
 fi
 
 rm package.tar.bz2

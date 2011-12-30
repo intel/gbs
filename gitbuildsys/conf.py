@@ -207,10 +207,11 @@ class BrainConfigParser(SafeConfigParser):
 
 class ConfigMgr(object):
     DEFAULTS = {
-        'src_server': 'https://code.tizen.org/robot',
+        'src_server': 'https://saobs.jf.intel.com/hudson',
         'user': 'my_user_id',
         'passwd': '',
         'passwdx': '',
+	'build_server': 'https://build.saobs.jf.intel.com',
     }
 
     DEFAULT_CONF_TEMPLATE="""[general]
@@ -221,6 +222,7 @@ passwdx = $passwdx
 
 [build]
 ; settings for build subcommand
+build_server = $build_server
 
 [packaging]
 ; settings for packaging subcommand
@@ -269,6 +271,8 @@ passwdx = $passwdx
 
             with open(fpath, 'w') as wf:
                 wf.write(self.get_default_conf(defaults))
+            msger.info('Done. Your gbs config is now located at %s' % fpath)
+	    msger.warning('Don\'t forget to double-check the config for correct default values.')
             return True
 
         return False
