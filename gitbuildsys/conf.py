@@ -39,31 +39,29 @@ class BrainConfigParser(SafeConfigParser):
 
         return SafeConfigParser.read(self, filenames)
 
-    def _read(self, fp, fpname):
+    def _read(self, fp, fname):
         """Parse a sectioned setup file.
 
-        The sections in setup file contains a title line at the top,
-        indicated by a name in square brackets (`[]'), plus key/value
-        options lines, indicated by `name: value' format lines.
-        Continuations are represented by an embedded newline then
-        leading whitespace.  Blank lines, lines beginning with a '#',
-        and just about everything else are ignored.
+        Override the same method of parent class. Some code snip were
+        copied from standard ConfigParser module.
 
         Customization: save filename and corresponding lineno for all
         the sections and keys
         """
+
         # save the original filepath and contents
-        self._fpname = fpname
+        self._fpname = fname
         self._flines = fp.readlines()
         fp.seek(0)
+
         # init dict DS to store lineno
         self._sec_linenos = {}
         self._opt_linenos = {}
 
-        cursect = None                            # None, or a dictionary
+        cursect = None
         optname = None
         lineno = 0
-        e = None                                  # None, or an exception
+        e = None
         while True:
             line = fp.readline()
             if not line:
@@ -102,11 +100,13 @@ class BrainConfigParser(SafeConfigParser):
                         self._sections[sectname] = cursect
                     # So sections can't start with a continuation line
                     optname = None
-                # no section header in the file?
+
                 elif cursect is None:
-                    raise MissingSectionHeaderError(fpname, lineno, line)
-                # an option line?
+                    # no section header in the file?
+                    raise MissingSectionHeaderError(fname, lineno, line)
+
                 else:
+                    # an option line?
                     mo = self.OPTCRE.match(line)
                     if mo:
                         optname, vi, optval = mo.group('option', 'vi', 'value')
@@ -130,7 +130,7 @@ class BrainConfigParser(SafeConfigParser):
                         # raised at the end of the file and will contain a
                         # list of all bogus lines
                         if not e:
-                            e = ParsingError(fpname)
+                            e = ParsingError(fname)
                         e.append(lineno, repr(line))
 
         # if any parsing errors occurred, raise an exception
