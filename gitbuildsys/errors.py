@@ -39,7 +39,7 @@ class ConfigError(CmdError):
     keyword = '<config>'
 
 class GitInvalid(CmdError):
-    keywork = '<git>'
+    keyword = '<git>'
 
     def __str__(self):
         return 'Dir %s is not a valid git tree' % str(self.msg)
