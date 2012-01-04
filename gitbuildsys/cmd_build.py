@@ -22,6 +22,7 @@
 raise ImportError('skip me')
 
 import os
+import time
 import tarfile
 
 import git
