@@ -271,6 +271,7 @@ build_server = $build_server
 
             with open(fpath, 'w') as wf:
                 wf.write(self.get_default_conf(defaults))
+            os.chmod(fpath, 0600)
             msger.info('Done. Your gbs config is now located at %s' % fpath)
 	    msger.warning('Don\'t forget to double-check the config for correct default values.')
             return True
