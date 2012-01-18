@@ -43,8 +43,6 @@ update_version()
     # Validation check
     grep "^Version:" $spec > /dev/null ||die 'Invalid spec file: no "Version" directive defined'
 
-    cp $spec $spec.origin
-    
     sed -i "s/\(^Version:[\t ]*\).*/\1$version/g" $spec
 
 }
@@ -271,7 +269,6 @@ get_srctar_md5sum()
 update_sources()
 {
     srctar_md5sum=$@
-    cp sources sources.origin
     sed -i "/[0-9a-f]*\ *$project-.*/d" sources
     echo "$1" >> sources
 }
