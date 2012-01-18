@@ -60,13 +60,16 @@ passwdx=$(gbs cfg passwdx)
 source_tarball_name=$(basename $source_tarball)
 
 if [ -z "$target_project" ]; then
-# Get project name from git url
-    git_url=`git config remote.origin.url`
-    echo $git_url|grep ^ssh > /dev/null
-    if [ $? == 0 ]; then
-        target_project=`basename $git_url`
-    else
-        target_project=$(echo $git_url|cut -d ':' -f2)
+    # If project name is set in gitbuildsystem.project, use it, else use the default remote.origin.url
+    target_project=$(git config gitbuildsystem.project)
+    if [ -z "$target_project" ]; then
+        git_url=`git config remote.origin.url`
+        echo $git_url|grep ^ssh > /dev/null
+        if [ $? == 0 ]; then
+            target_project=$(echo $git_url|sed 's/ssh\:.*\:[0-9]*\/\(.*\)/\1/')
+        else
+            target_project=$(echo $git_url|cut -d ':' -f2)
+        fi
     fi
 fi
 

@@ -320,13 +320,21 @@ user=$(gbs cfg user)
 passwd=$(gbs cfg passwd)
 HUDSON_SERVER=$(gbs cfg src_server)
 
-git_url=`git config remote.origin.url`
-echo $git_url|grep ^ssh  > /dev/null
-if [ $? == 0 ]; then
-    project=`basename $git_url`
-else
-    project=$(echo $git_url|cut -d ':' -f2)
+# If project name is set in gitbuildsystem.project, use it, else use the default remote.origin.url
+project=$(git config gitbuildsystem.project)
+if [ -z "$project" ]; then
+
+    git_url=`git config remote.origin.url`
+    echo $git_url|grep ^ssh > /dev/null
+    if [ $? == 0 ]; then
+        project=$(echo $git_url|sed 's/ssh\:.*\:[0-9]*\/\(.*\)/\1/')
+    else
+        project=$(echo $git_url|cut -d ':' -f2)
+    fi
+    
 fi
+
+[ -z "$project" ] && die "Can't find the project name, you might need 'git config --add gitbuildsystem.project <project-name>' to set it."
 
 info_msg "Packaging for major release ${tag}"
 srctar_md5sum=""
