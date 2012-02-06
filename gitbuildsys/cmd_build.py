@@ -19,61 +19,92 @@
 """Implementation of subcmd: build
 """
 
-raise ImportError('skip me')
-
 import os
 import time
 import tarfile
+import tempfile
+import glob
+import shutil
 
-import git
-import runner
 import msger
+import runner
 from conf import configmgr
+import git
+import buildservice
+
+OSCRC_TEMPLATE = """[general]
+apiurl = %(api)s
+[%(apiurl)s]
+user=%(user)s
+passx=%(passwdx)s
+"""
+
+#SRCSERVER = configmgr.get('src_server')
+#USER = configmgr.get('user')
+#PASSWDX = configmgr.get('passwdx')
+
+SRCSERVER = 'https://api.saobs.jf.intel.com'
+USER = 'xiaoqiang'
+PASSWDX = 'QlpoOTFBWSZTWVyCeo8AAAKIAHJAIAAhhoGaAlNOLuSKcKEguQT1Hg=='
 
 def do(opts, args):
 
     if not os.path.isdir('.git'):
         msger.error('You must run this command under a git tree')
 
-    if git.branch(all=False, current=True)[0] != 'release':
-        msger.error('You must run this command under the release branch')
+    GIT = git.Git('.')
+    if GIT.get_branches()[0] != 'master':
+        msger.error('You must run this command under the master branch')
 
-    gitsts = git.status()
-    if 'M ' in gitsts or ' M' in gitsts:
-        msger.warning('local changes not committed')
+    # get temp dir from opts
+    #tmpdir = opts.tmpdir
 
-    params = {'parameter': []}
+    tmpdir = '/var/tmp/%s' % USER
+    if not os.path.exists(tmpdir):
+        os.makedirs(tmpdir)
 
-    # pkg:prjname
-    giturl = git.config('remote.origin.url')
-    prjname = os.path.basename(giturl)
-    params['parameter'].append({"name": "pkg",
-                                "value": prjname})
+    oscrc = OSCRC_TEMPLATE % {"api": SRCSERVER, "apiurl": SRCSERVER, "user": USER, "passwdx": PASSWDX}
+    (fd, oscrcpath) = tempfile.mkstemp(dir=tmpdir,prefix='.oscrc')
+    os.close(fd)
+    f = file(oscrcpath, 'w+')
+    f.write(oscrc)
+    f.close()
+    
+    specs = glob.glob('./packaging/*.spec')
+    if not specs:
+        msger.error('No spec file found, please add spec file to packaging directory')
 
-    # obsproject:obsprj
-    passwdx = configmgr.get('passwdx')
-    params['parameter'].append({"name": "parameters",
-                                "value": "obsproject='%s';passwdx='%s'" %(opts.obsprj, passwdx)})
+    specfile = specs[0]
+    ret, out = runner.runtool(['grep', '^Name', specfile])
+    name = out.split()[-1]
+    ret, out = runner.runtool(['grep', '^Version', specfile])
+    version = out.split()[-1]
 
-    # prepare package.tar.bz2
-    tarfp = 'package.tar.bz2'
+    bs = buildservice.BuildService(apiurl = SRCSERVER, oscrc = oscrcpath)
+
+    #obspkg = ObsPackage(tmpdir, SRCSERVER, "home:%s:branches:gbs:Trunk" % USER, name, oscrcpath)
+    #workdir = obspkg.get_workdir()
+    workdir = os.getcwd()
+    #obspkg.remove_all()
+
+    srcdir = "%s-%s" % (name, version)
+    os.mkdir(srcdir)
+    tarfp = '%s/%s-%s.tizen.tar.bz2' % (workdir, name, version)
     tar = tarfile.open(tarfp, 'w:bz2')
-    for f in git.ls_files():
-        tar.add(f)
+    for f in GIT.get_files():
+        if f.startswith('packaging'):
+            continue
+        dirname = "%s/%s" % (srcdir, os.path.dirname(f))
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+        shutil.copy(f, dirname)
+        tar.add("%s/%s" % (srcdir, f))
     tar.close()
+    shutil.rmtree(srcdir, ignore_errors = True)
+    
+    for f in glob.glob('packaging/*'):
+        shutil.copy(f, workdir)
 
-    params['parameter'].append({"name": tarfp,
-                                "file": "file0"})
-
-    msger.info("Submiting your changes to the build server...")
-    ss.build_trigger(params, tarfp)
-
-    time.sleep(0.5)
-    result = ss.build_mylastresult()
-
-    if result['result'] != 'SUCCESS':
-        msger.error('remote server exception')
-
-    os.remove(tarfp)
-    msger.info('Your local changes have been submitted to the build server.')
-
+    #obspkg.add_all()
+    #obspkg.commit ()
+    os.unlink(oscrcpath)
