@@ -28,7 +28,6 @@ import tarfile
 import git
 import runner
 import msger
-import srcserver as ss
 from conf import configmgr
 
 def do(opts, args):

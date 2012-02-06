@@ -208,28 +208,20 @@ class BrainConfigParser(SafeConfigParser):
 
 class ConfigMgr(object):
     DEFAULTS = {
-        'src_server': 'https://saobs.jf.intel.com/hudson',
+        'build_server': 'https://build.tizen.org',
         'user': 'my_user_id',
         'passwd': '',
         'passwdx': '',
-        'build_server': 'https://build.saobs.jf.intel.com',
     }
 
     DEFAULT_CONF_TEMPLATE="""[general]
 ; general settings
-src_server = $src_server
-user = $user
-passwdx = $passwdx
 
 [build]
 ; settings for build subcommand
 build_server = $build_server
-
-[packaging]
-; settings for packaging subcommand
-
-[import]
-; settings for import subcommand
+user = $user
+passwdx = $passwdx
 """
 
     # make the manager class as singleton
