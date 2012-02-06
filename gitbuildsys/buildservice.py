@@ -27,35 +27,13 @@ import urllib2
 import xml.etree.cElementTree as ElementTree
 from osc import conf, core
 
-def flag2bool(flag):
+class _Metafile:
     """
-    flag2bool(flag) -> Boolean
-
-    Returns a boolean corresponding to the string 'enable', or 'disable'
-    """
-    if flag == 'enable':
-        return True
-    elif flag == 'disable':
-        return False
-
-def bool2flag(b):
-    """
-    bool2flag(b) -> String
-
-    Returns 'enable', or 'disable' according to boolean value b
-    """
-    if b == True:
-        return 'enable'
-    elif b == False:
-        return 'disable'
-
-
-class metafile:
-    """
-    metafile(url, input, change_is_required=False, file_ext='.xml')
+    _Metafile(url, input, change_is_required=False, file_ext='.xml')
 
     Implementation on osc.core.metafile that does not print to stdout
     """
+
     def __init__(self, url, input, change_is_required=False, file_ext='.xml'):
         self.url = url
         self.change_is_required = change_is_required
@@ -80,10 +58,143 @@ class metafile:
         os.unlink(self.filename)
         return True
 
+# helper functions for class _ProjectFlags
+def _flag2bool(flag):
+    """
+    _flag2bool(flag) -> Boolean
+    Returns a boolean corresponding to the string 'enable', or 'disable'
+    """
+
+    if flag == 'enable':
+        return True
+    elif flag == 'disable':
+        return False
+
+def _bool2flag(b):
+    """
+    _bool2flag(b) -> String
+
+    Returns 'enable', or 'disable' according to boolean value b
+    """
+    if b == True:
+        return 'enable'
+    elif b == False:
+        return 'disable'
+
+class _ProjectFlags(object):
+    """
+    _ProjectFlags(bs, project)
+
+    Represents the flags in project through the BuildService object bs
+    """
+
+    def __init__(self, bs, project):
+        self.bs = bs
+        self.tree = ElementTree.fromstring(self.bs.getProjectMeta(project))
+
+        # The "default" flags, when undefined
+        self.defaultflags = {'build': True,
+                             'publish': True,
+                             'useforbuild': True,
+                             'debuginfo': False}
+
+        # Figure out what arches and repositories are defined
+        self.arches = {}
+        self.repositories = {}
+
+        # Build individual repository list
+        for repository in self.tree.findall('repository'):
+            repodict = {'arches': {}}
+            self.__init_flags_in_dict(repodict)
+            for arch in repository.findall('arch'):
+                repodict['arches'][arch.text] = {}
+                self.__init_flags_in_dict(repodict['arches'][arch.text])
+                # Add placeholder in global arches
+                self.arches[arch.text] = {}
+            self.repositories[repository.get('name')] = repodict
+
+        # Initialise flags in global arches
+        for archdict in self.arches.values():
+            self.__init_flags_in_dict(archdict)
+
+        # A special repository representing the global and global arch flags
+        self.allrepositories = {'arches': self.arches}
+        self.__init_flags_in_dict(self.allrepositories)
+
+        # Now populate the structures from the xml data
+        for flagtype in ('build', 'publish', 'useforbuild', 'debuginfo'):
+            flagnode = self.tree.find(flagtype)
+            if flagnode:
+                for node in flagnode:
+                    repository = node.get('repository')
+                    arch = node.get('arch')
+
+                    if repository and arch:
+                        self.repositories[repository]['arches'][arch][flagtype] = _flag2bool(node.tag)
+                    elif repository:
+                        self.repositories[repository][flagtype] = _flag2bool(node.tag)
+                    elif arch:
+                        self.arches[flagtype] = _flag2bool(node.tag)
+                    else:
+                        self.allrepositories[flagtype] = _flag2bool(node.tag)
+
+    def __init_flags_in_dict(self, d):
+        """
+        __init_flags_in_dict(d)
+
+        Initialize all build flags to None in d
+        """
+        d.update({'build': None,
+                  'publish': None,
+                  'useforbuild': None,
+                  'debuginfo': None})
+
+    def save(self):
+        """
+        save()
+
+        Save flags
+        """
+
+        for flagtype in ('build', 'publish', 'useforbuild', 'debuginfo'):
+            # Clear if set
+            flagnode = self.tree.find(flagtype)
+            if flagnode:
+                self.tree.remove(flagnode)
+
+            # Generate rule nodes
+            rulenodes = []
+
+            # globals
+            if self.allrepositories[flagtype] != None:
+                rulenodes.append(ElementTree.Element(_bool2flag(self.allrepositories[flagtype])))
+            for arch in self.arches:
+                if self.arches[arch][flagtype] != None:
+                    rulenodes.append(ElementTree.Element(_bool2flag(self.arches[arch][flagtype]), arch=arch))
+
+            # repositories
+            for repository in self.repositories:
+                if self.repositories[repository][flagtype] != None:
+                    rulenodes.append(ElementTree.Element(_bool2flag(self.repositories[repository][flagtype]), repository=repository))
+                for arch in self.repositories[repository]['arches']:
+                    if self.repositories[repository]['arches'][arch][flagtype] != None:
+                        rulenodes.append(ElementTree.Element(_bool2flag(self.repositories[repository]['arches'][arch][flagtype]), arch=arch, repository=repository))
+
+            # Add nodes to tree
+            if rulenodes:
+                from pprint import pprint
+                pprint(rulenodes)
+                flagnode = ElementTree.Element(flagtype)
+                self.tree.insert(3, flagnode)
+                for rulenode in rulenodes:
+                    flagnode.append(rulenode)
+
+        print ElementTree.tostring(self.tree)
+
 class BuildService():
     "Interface to Build Service API"
-    def __init__(self, apiurl=None, oscrc=None):
 
+    def __init__(self, apiurl=None, oscrc=None):
         if oscrc:
             try:
                 conf.get_config(override_conffile = oscrc)
@@ -118,7 +229,9 @@ class BuildService():
         return self.genRequestInfo(reqid, show_detail)
 
     def isNewPackage(self, dst_project, dst_package):
-        # Check whether the dst pac is a new one
+        """Check whether the dst pac is a new one
+        """
+
         new_pkg = False
         try:
             core.meta_exists(metatype = 'pkg',
@@ -133,8 +246,11 @@ class BuildService():
         return new_pkg
 
     def genRequestInfo(self, reqid, show_detail = True):
+        """Generate formated diff info for request,
+        mainly used by notification mails from BOSS
+        """
 
-        def gen_request_diff():
+        def _gen_request_diff():
             """ Recommanded getter: request_diff can get req diff info even if req is accepted/declined
             """
             reqdiff = ''
@@ -155,7 +271,7 @@ class BuildService():
 
             return reqdiff
 
-        def gen_server_diff(req):
+        def _gen_server_diff(req):
             """ Reserved getter: get req diff, if and only if the recommanded getter failed 
             """
             reqdiff = ''
@@ -234,6 +350,9 @@ class BuildService():
 
             return reqdiff
 
+        ####################################
+        # function implementation start here
+
         req = core.get_request(self.apiurl, reqid)
         try:
             req.reviews = []
@@ -242,9 +361,9 @@ class BuildService():
             reqinfo = u''
 
         if show_detail:
-            diff = gen_request_diff()
+            diff = _gen_request_diff()
             if diff is None:
-                diff = gen_server_diff(req)
+                diff = _gen_server_diff(req)
 
             reqinfo += diff
 
@@ -444,7 +563,7 @@ class BuildService():
             watchlist = ElementTree.SubElement(person, 'watchlist')
         ElementTree.SubElement(watchlist, 'project', name=str(project))
 
-        f = metafile(url, ElementTree.tostring(person))
+        f = _Metafile(url, ElementTree.tostring(person))
         f.sync()
 
     def unwatchProject(self, project):
@@ -464,7 +583,7 @@ class BuildService():
                 watchlist.remove(node)
                 break
 
-        f = metafile(url, ElementTree.tostring(person))
+        f = _Metafile(url, ElementTree.tostring(person))
         f.sync()
 
     def getRepoState(self, project):
@@ -535,12 +654,16 @@ class BuildService():
         return status
 
     def getProjectDiff(self, src_project, dst_project):
+        diffs = []
+
         packages = self.getPackageList(src_project)
         for src_package in packages:
             diff = core.server_diff(self.apiurl,
                                 dst_project, src_package, None,
                                 src_project, src_package, None, False)
-            print diff
+            diffs.append(diff)
+
+        return '\n'.join(diffs)
 
     def getPackageList(self, prj, deleted=None):
         query = {}
@@ -558,6 +681,7 @@ class BuildService():
 
         Returns a list of binaries for a particular target and package
         """
+
         (repo, arch) = target.split('/')
         return core.get_binarylist(self.apiurl, project, repo, arch, package)
 
@@ -567,6 +691,7 @@ class BuildService():
 
         Get binary 'file' for 'project' and 'target' and save it as 'path'
         """
+
         (repo, arch) = target.split('/')
         core.get_binary_file(self.apiurl, project, repo, arch, file, target_filename=path, package=package)
 
@@ -578,6 +703,7 @@ class BuildService():
 
         If offset is greater than 0, return only text after that offset. This allows live streaming
         """
+
         (repo, arch) = target.split('/')
         u = core.makeurl(self.apiurl, ['build', project, repo, arch, package, '_log?nostream=1&start=%s' % offset])
         return core.http_GET(u).read()
@@ -590,6 +716,7 @@ class BuildService():
         'hostarch', and 'status'. If the worker is building, the dict will additionally contain the
         keys 'project', 'package', 'target', and 'starttime'
         """
+
         url = core.makeurl(self.apiurl, ['build', '_workerstatus'])
         f = core.http_GET(url)
         tree = ElementTree.parse(f).getroot()
@@ -616,6 +743,7 @@ class BuildService():
         Returns the number of jobs in the wait queue as a list of (arch, count)
         pairs
         """
+
         url = core.makeurl(self.apiurl, ['build', '_workerstatus'])
         f = core.http_GET(url)
         tree = ElementTree.parse(f).getroot()
@@ -629,6 +757,7 @@ class BuildService():
         getSubmitRequests() -> list of dicts
 
         """
+
         url = core.makeurl(self.apiurl, ['search', 'request', '?match=submit'])
         f = core.http_GET(url)
         tree = ElementTree.parse(f).getroot()
@@ -658,6 +787,7 @@ class BuildService():
         Rebuild 'package' in 'project' for 'target'. If 'code' is specified,
         all targets with that code will be rebuilt
         """
+
         if target:
             (repo, arch) = target.split('/')
         else:
@@ -671,6 +801,7 @@ class BuildService():
 
         Abort build of a package or all packages in a project
         """
+
         if target:
             (repo, arch) = target.split('/')
         else:
@@ -685,6 +816,7 @@ class BuildService():
         Get build history of package for target as a list of tuples of the form
         (time, srcmd5, rev, versrel, bcnt)
         """
+
         (repo, arch) = target.split('/')
         u = core.makeurl(self.apiurl, ['build', project, repo, arch, package, '_history'])
         f = core.http_GET(u)
@@ -712,6 +844,7 @@ class BuildService():
         Each log is a tuple of the form (rev, srcmd5, version, time, user,
         comment)
         """
+
         u = core.makeurl(self.apiurl, ['source', project, package, '_history'])
         f = core.http_GET(u)
         root = ElementTree.parse(f).getroot()
@@ -742,6 +875,7 @@ class BuildService():
 
         Get XML metadata for project
         """
+
         return ''.join(core.show_project_meta(self.apiurl, project))
 
     def getProjectData(self, project, tag):
@@ -750,6 +884,7 @@ class BuildService():
         
         Return a string list if node has text, else return the values dict list
         """
+
         data = []
         tree = ElementTree.fromstring(self.getProjectMeta(project))
         nodes = tree.findall(tag)
@@ -772,6 +907,7 @@ class BuildService():
         
         Return a userid list in this project with this role
         """
+
         userids = []
         persons = self.getProjectData(project, 'person')
         for person in persons:
@@ -786,6 +922,7 @@ class BuildService():
 
         Return the devel tuple of a project if it has the node, else return None
         """
+
         devels = self.getProjectData(project, 'devel')
         for devel in devels:
             if devel.has_key('project') and devel.has_key('package'):
@@ -799,6 +936,7 @@ class BuildService():
 
         Return the linked project of a project if it has the node, else return None
         """
+
         links = self.getProjectData(project, 'link')
         for link in links:
             if link.has_key('project'):
@@ -812,6 +950,7 @@ class BuildService():
         
         Delete the specific project
         """
+
         try:
             core.delete_project(self.apiurl, project)
         except Exception:
@@ -825,6 +964,7 @@ class BuildService():
 
         Get XML metadata for package in project
         """
+
         return ''.join(core.show_package_meta(self.apiurl, project, package))
 
     def getPackageData(self, project, package, tag):
@@ -833,6 +973,7 @@ class BuildService():
         
         Return a string list if node has text, else return the values dict list
         """
+
         data = []
         tree = ElementTree.fromstring(self.getPackageMeta(project, package))
         nodes = tree.findall(tag)
@@ -855,6 +996,7 @@ class BuildService():
         
         Return a userid list in the package with this role
         """
+
         userids = []
         persons = self.getPackageData(project, package, 'person')
         for person in persons:
@@ -869,6 +1011,7 @@ class BuildService():
         
         Return the devel tuple of a package if it has the node, else return None
         """
+
         devels = self.getPackageData(project, package, 'devel')
         for devel in devels:
             if devel.has_key('project') and devel.has_key('package'):
@@ -882,6 +1025,7 @@ class BuildService():
         
         Delete the specific package in project
         """
+
         try:
             core.delete_package(self.apiurl, project, package)
         except Exception:
@@ -891,119 +1035,9 @@ class BuildService():
 
     def projectFlags(self, project):
         """
-        projectFlags(project) -> ProjectFlags
+        projectFlags(project) -> _ProjectFlags
 
-        Return a ProjectFlags object for manipulating the flags of project
-        """
-        return ProjectFlags(self, project)
-
-
-class ProjectFlags(object):
-    """
-    ProjectFlags(bs, project)
-
-    Represents the flags in project through the BuildService object bs
-    """
-    def __init__(self, bs, project):
-        self.bs = bs
-        self.tree = ElementTree.fromstring(self.bs.getProjectMeta(project))
-
-        # The "default" flags, when undefined
-        self.defaultflags = {'build': True,
-                             'publish': True,
-                             'useforbuild': True,
-                             'debuginfo': False}
-
-        # Figure out what arches and repositories are defined
-        self.arches = {}
-        self.repositories = {}
-
-        # Build individual repository list
-        for repository in self.tree.findall('repository'):
-            repodict = {'arches': {}}
-            self.__init_flags_in_dict(repodict)
-            for arch in repository.findall('arch'):
-                repodict['arches'][arch.text] = {}
-                self.__init_flags_in_dict(repodict['arches'][arch.text])
-                # Add placeholder in global arches
-                self.arches[arch.text] = {}
-            self.repositories[repository.get('name')] = repodict
-
-        # Initialise flags in global arches
-        for archdict in self.arches.values():
-            self.__init_flags_in_dict(archdict)
-
-        # A special repository representing the global and global arch flags
-        self.allrepositories = {'arches': self.arches}
-        self.__init_flags_in_dict(self.allrepositories)
-
-        # Now populate the structures from the xml data
-        for flagtype in ('build', 'publish', 'useforbuild', 'debuginfo'):
-            flagnode = self.tree.find(flagtype)
-            if flagnode:
-                for node in flagnode:
-                    repository = node.get('repository')
-                    arch = node.get('arch')
-
-                    if repository and arch:
-                        self.repositories[repository]['arches'][arch][flagtype] = flag2bool(node.tag)
-                    elif repository:
-                        self.repositories[repository][flagtype] = flag2bool(node.tag)
-                    elif arch:
-                        self.arches[flagtype] = flag2bool(node.tag)
-                    else:
-                        self.allrepositories[flagtype] = flag2bool(node.tag)
-
-    def __init_flags_in_dict(self, d):
-        """
-        __init_flags_in_dict(d)
-
-        Initialize all build flags to None in d
-        """
-        d.update({'build': None,
-                  'publish': None,
-                  'useforbuild': None,
-                  'debuginfo': None})
-
-    def save(self):
-        """
-        save()
-
-        Save flags
+        Return a _ProjectFlags object for manipulating the flags of project
         """
 
-        for flagtype in ('build', 'publish', 'useforbuild', 'debuginfo'):
-            # Clear if set
-            flagnode = self.tree.find(flagtype)
-            if flagnode:
-                self.tree.remove(flagnode)
-
-            # Generate rule nodes
-            rulenodes = []
-
-            # globals
-            if self.allrepositories[flagtype] != None:
-                rulenodes.append(ElementTree.Element(bool2flag(self.allrepositories[flagtype])))
-            for arch in self.arches:
-                if self.arches[arch][flagtype] != None:
-                    rulenodes.append(ElementTree.Element(bool2flag(self.arches[arch][flagtype]), arch=arch))
-
-            # repositories
-            for repository in self.repositories:
-                if self.repositories[repository][flagtype] != None:
-                    rulenodes.append(ElementTree.Element(bool2flag(self.repositories[repository][flagtype]), repository=repository))
-                for arch in self.repositories[repository]['arches']:
-                    if self.repositories[repository]['arches'][arch][flagtype] != None:
-                        rulenodes.append(ElementTree.Element(bool2flag(self.repositories[repository]['arches'][arch][flagtype]), arch=arch, repository=repository))
-
-            # Add nodes to tree
-            if rulenodes:
-                from pprint import pprint
-                pprint(rulenodes)
-                flagnode = ElementTree.Element(flagtype)
-                self.tree.insert(3, flagnode)
-                for rulenode in rulenodes:
-                    flagnode.append(rulenode)
-
-        print ElementTree.tostring(self.tree)
-
+        return _ProjectFlags(self, project)
