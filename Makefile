@@ -8,7 +8,7 @@ else
 endif
 
 ifndef PREFIX
-    PREFIX = "/local/usr"
+    PREFIX = "/usr/local"
 endif
 
 all:
