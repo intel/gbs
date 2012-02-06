@@ -17,27 +17,19 @@
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import os
+
+# internal modules
 import runner
 import errors
 import msger
-
-
-class GitError(Exception):
-    """Exception thrown by Git"""
-    keyword = ''
-
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __str__(self):
-        return self.keyword + str(self.msg)
 
 class Git:
     def __init__(self, path):
         try:
             os.stat(os.path.join(path,'.git'))
         except:
-            raise GitError, "Path %s is not a valid git repositroy." %(path)
+            raise errors.GitInvalid(path)
+
         self.path = os.path.abspath(path)
         os.chdir(self.path)
 
@@ -109,51 +101,3 @@ class Git:
             if line.split(' ', 1)[1].strip() == branch:
                 return True
         return False
-        
-#__all__ = ['config', 'branch', 'status', 'ls_files']
-#
-#def _run_git(cmd, args=[]):
-#    if not os.path.isdir('.git'):
-#        raise errors.GitInvalid(os.getcwd())
-#
-#    return runner.outs(['git', cmd] + args)
-#
-#def config(*args):
-#    return _run_git('config', list(args))
-#
-#def branch(all=False, current=False, *args):
-#    args = list(args)
-#    if all:
-#        args.insert(0, '-a')
-#
-#    branches = _run_git('branch', args).splitlines()
-#
-#    curbr = ''
-#    for br in branches:
-#        if br.startswith('* '):
-#            curbr = br[2:].strip()
-#            br = curbr
-#
-#    if current:
-#        return [curbr]
-#    else:
-#        if '(no branch)' in branches:
-#            branches.remove('(no branch)')
-#        return branches
-#
-#def status(*args):
-#    outs = _run_git('status', ['-s'] + list(args))
-#
-#    sts = {}
-#    for line in outs.splitlines():
-#        st = line[:2]
-#        if st not in sts:
-#            sts[st] = [line[2:].strip()]
-#        else:
-#            sts[st].append(line[2:].strip())
-#
-#    return sts
-#
-#def ls_files():
-#    return _run_git('ls-files').splitlines()
-#
