@@ -208,7 +208,9 @@ class BrainConfigParser(SafeConfigParser):
 
 class ConfigMgr(object):
     DEFAULTS = {
-            'general': {},
+            'general': {
+                'tmpdir': '/var/tmp'
+            },
             'build': {
                 'build_server': 'https://build.tizen.org',
                 'user': 'my_user_id',
@@ -219,6 +221,7 @@ class ConfigMgr(object):
 
     DEFAULT_CONF_TEMPLATE="""[general]
 ; general settings
+tmpdir = $general__tmpdir
 
 [build]
 ; settings for build subcommand
