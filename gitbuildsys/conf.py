@@ -31,11 +31,12 @@ class BrainConfigParser(SafeConfigParser):
     def read(self, filenames):
         """Limit the read() only support one input file. It's enough for
         current case.
+        If the input list has multiple values, use the last one.
         """
 
         if len(filenames) > 1:
-            msger.warning('Will not support multiple config files, only read in the 1st one.')
-            filenames = filenames[:1]
+            msger.warning('Will not support multiple config files, only read in the last one.')
+            filenames = filenames[-1:]
 
         return SafeConfigParser.read(self, filenames)
 
@@ -211,7 +212,7 @@ class ConfigMgr(object):
         'user': 'my_user_id',
         'passwd': '',
         'passwdx': '',
-	'build_server': 'https://build.saobs.jf.intel.com',
+        'build_server': 'https://build.saobs.jf.intel.com',
     }
 
     DEFAULT_CONF_TEMPLATE="""[general]
@@ -242,16 +243,39 @@ build_server = $build_server
     def __init__(self, fpath=None):
         self.cfgparser = BrainConfigParser()
 
-        if not fpath:
+        if fpath:
+            if not os.path.exists(fpath):
+                if not self._new_conf(fpath):
+                    msger.error('No config file available')
+
+            fpaths = [fpath]
+        else:
             # use the default path
-            fpath = os.path.expanduser('~/.gbs.conf')
+            fpaths = self._lookfor_confs()
+            if not fpaths:
+                if not self._new_conf():
+                    msger.error('No config file available')
 
-        if not os.path.exists(fpath):
-            if not self._new_conf(fpath):
-                msger.error('No config file available')
-
-        self.cfgparser.read([fpath])
+        self.cfgparser.read(fpaths)
         self._check_passwd()
+
+    def _lookfor_confs(self):
+        """Look for available config files following the order:
+            > Global
+            > User
+            > Cwd
+            > Current git
+        """
+
+        paths = []
+        for p in  ('/etc/gbs.conf',
+                   os.path.expanduser('~/.gbs.conf'),
+                   '.gbs.conf',
+                   '.git/gbs.conf'):
+            if os.path.exists(p):
+                paths.append(p)
+
+        return paths
 
     def get_default_conf(self, defaults=None):
         from string import Template
@@ -259,7 +283,10 @@ build_server = $build_server
             defaults = self.DEFAULTS
         return Template(self.DEFAULT_CONF_TEMPLATE).safe_substitute(defaults)
 
-    def _new_conf(self, fpath):
+    def _new_conf(self, fpath=None):
+        if not fpath:
+            fpath = os.path.expanduser('~/.gbs.conf')
+
         if msger.ask('Create config file %s using default values?' % fpath):
             import getpass
 
