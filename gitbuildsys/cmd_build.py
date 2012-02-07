@@ -28,6 +28,7 @@ import shutil
 
 import msger
 import runner
+import utils
 from conf import configmgr
 import git
 import obspkg
@@ -69,10 +70,9 @@ def do(opts, args):
         msger.error('No spec file found, please add spec file to packaging directory')
 
     specfile = specs[0]
-    ret, out = runner.runtool(['grep', '^Name', specfile])
-    name = out.split()[-1]
-    ret, out = runner.runtool(['grep', '^Version', specfile])
-    version = out.split()[-1]
+    # get 'name' and 'version' from spec file
+    name = utils.parse_spec(specfile, 'name')
+    version = utils.parse_spec(specfile, 'version')
 
     src_prj = 'Trunk'
     target_prj = "home:%s:branches:gbs:%s" % (USER, src_prj)
