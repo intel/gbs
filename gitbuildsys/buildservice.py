@@ -192,7 +192,7 @@ class _ProjectFlags(object):
         print ElementTree.tostring(self.tree)
 
 class BuildService():
-    "Interface to Build Service API"
+    """Interface to Build Service API"""
 
     def __init__(self, apiurl=None, oscrc=None):
         if oscrc:
@@ -1041,3 +1041,35 @@ class BuildService():
         """
 
         return _ProjectFlags(self, project)
+
+    def checkout(self, prj, pkg, rev='latest'):
+        """ checkout the package to current dir with link expanded
+        """
+
+        core.checkout_package(self.apiurl, prj, pkg, rev, expand_link=True)
+
+    def find_pac(self, wd='.'):
+        """Get the single Package object for specified dir
+          the 'wd' should be a working dir for one single pac
+        """
+
+        if core.is_package_dir(wd):
+            return core.findpacs([path])[0]
+        else:
+            return None
+
+    def mk_pac(self, pkg_path):
+        """Create empty package for new one under CWD
+        """
+
+        core.createPackageDir(pkg_path)
+
+    def submit(self, wd='.'):
+        if not core.is_package_dir(wd):
+            # TODO show some error message
+            return
+
+        pac = core.findpacs([wd])[0]
+        pac.commit(msg)
+        core.store_unlink_file(pac.absdir, '_commit_msg')
+
