@@ -44,3 +44,6 @@ class GitError(CmdError):
 class GitInvalid(GitError):
     def __str__(self):
         return 'Dir %s is not a valid git tree' % str(self.msg)
+
+class ObsError(CmdError):
+    keyword = '<obs>'

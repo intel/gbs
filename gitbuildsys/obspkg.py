@@ -72,9 +72,9 @@ class ObsPackage(object):
 
     def _mkpac(self):
         with _Workdir(self._bdir):
-            self._bs.mk_pac(os.path.join(self._prj, self._pkg))
+            self._bs.mkPac(self._prj, self._pkg)
 
-    def _checkout_latest():
+    def _checkout_latest(self):
         """ checkout the 'latest' revision of package with link expanded
         """
 
@@ -95,8 +95,9 @@ class ObsPackage(object):
         """Do the similar work of 'osc addremove',
           remove all deleted files and added all new files
         """
+
         with _Workdir(self._pkgpath):
-            pac = self._bs.find_pac()
+            pac = self._bs.findPac()
             # FIXME, if pac.to_be_added are needed to be considered.
             pac.todo = list(set(pac.filenamelist + pac.filenamelist_unvers))
             for filename in pac.todo:
@@ -117,7 +118,7 @@ class ObsPackage(object):
 
         # add it into local pac
         with _Workdir(self._pkgpath):
-            pac = self._bs.find_pac()
+            pac = self._bs.findPac()
             if pac:
                 pac.addfile(os.path.basename(fpath))
             else:
@@ -126,3 +127,55 @@ class ObsPackage(object):
     def commit(self, msg):
         with _Workdir(self._pkgpath):
             self._bs.submit(msg)
+
+class ObsProject(object):
+    """ Wrapper class of project in OBS
+    """
+
+    def __init__(self, prj, apiurl=None, oscrc=None):
+        """Arguments:
+          prj: name of obs project
+          apiurl: optional, the api url of obs service
+                 if not specified, the one from oscrc will be used
+          oscrc: optional, the path of customized oscrc
+                 if not specified, ~/.oscrc will be used
+        """
+
+        if oscrc:
+            self._oscrc = oscrc
+        else:
+            self._oscrc = os.path.expanduser('~/.oscrc')
+
+        self._bs = buildservice.BuildService(apiurl, oscrc)
+        self._apiurl = self._bs.apiurl
+        self._prj = prj
+
+    def is_new(self):
+        return self._bs.isNewProject(self._prj)
+
+    def create(self):
+        """Create an empty project"""
+        # TODO
+        pass
+
+    def branch(self, src_prj, target_prj=None):
+        """Create a new branch project of `src_prj`
+        """
+
+        if self._bs.isNewProject(src_prj):
+            raise errors.ObsError('project: %s do not exists' % src_prj)
+
+        if not self.is_new():
+            msger.warning('branched project: %s exists' % self._prj)
+            return
+
+        # pick the 1st valid package inside src prj FIXME
+        dumb_pkg = self._bs.getPackageList(src_prj)[0]
+
+        # branch out the new one
+        target_prj, target_pkg = self._bs.branchPkg(src_prj, dumb_pkg,
+                                                    target_project = target_prj,
+                                                    target_package = 'dumb_pkg')
+
+        # remove the dumb pkg
+        self._bs.deletePackage(target_prj, target_pkg)

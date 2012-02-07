@@ -245,6 +245,24 @@ class BuildService():
                 raise e
         return new_pkg
 
+    def isNewProject(self, project):
+        """Check whether the specified prject is a new one
+        """
+
+        new_prj = False
+        try:
+            core.meta_exists(metatype = 'prj',
+                        path_args = (core.quote_plus(dst_project)),
+                        create_new = False,
+                        apiurl = self.apiurl)
+        except urllib2.HTTPError, e:
+            if e.code == 404:
+                new_prj = True
+            else:
+                raise e
+
+        return new_prj
+
     def genRequestInfo(self, reqid, show_detail = True):
         """Generate formated diff info for request,
         mainly used by notification mails from BOSS
@@ -1048,7 +1066,7 @@ class BuildService():
 
         core.checkout_package(self.apiurl, prj, pkg, rev, expand_link=True)
 
-    def find_pac(self, wd='.'):
+    def findPac(self, wd='.'):
         """Get the single Package object for specified dir
           the 'wd' should be a working dir for one single pac
         """
@@ -1058,14 +1076,17 @@ class BuildService():
         else:
             return None
 
-    def mk_pac(self, pkg_path):
+    def mkPac(self, prj, pkg):
         """Create empty package for new one under CWD
         """
-        prj = pkg_path.split('/')[0]
-        pkg = pkg_path.split('/')[1]
+
+        import shutil
+        shutil.rmtree(prj, ignore_errors = True)
+
         core.make_dir(self.apiurl, prj, pkg, pathname = '.')
-        os.chdir(pkg_path)
-        core.init_package_dir(self.apiurl, prj, pkg, pkg, files=False)
+
+        shutil.rmtree(pkg_path, ignore_errors = True)
+        core.createPackageDir(pkg_path)
 
     def submit(self, msg, wd='.'):
         if not core.is_package_dir(wd):
@@ -1073,6 +1094,35 @@ class BuildService():
             return
 
         pac = core.findpacs([wd])[0]
-        pac.commit(msg)
+        prj = os.path.normpath(os.path.join(pac.dir, os.pardir))
+        pac_path = os.path.basename(os.path.normpath(pac.absdir))
+        files = {}
+        files[pac_path] = pac.todo
+        core.Project(prj).commit(tuple([pac_path]), msg=msg, files=files)
         core.store_unlink_file(pac.absdir, '_commit_msg')
 
+    def branchPkg(self, src_project, src_package, rev=None, target_project=None, target_package=None):
+        """Create branch package from `src_project/src_package`
+          arguments:
+            rev: revision of src project/package
+            target_project: name of target proj, use default one if None
+            target_package: name of target pkg, use the same as asrc if None
+        """
+
+        if target_project is None:
+            target_project = 'home:%s:branches:%s' \
+                             % (conf.get_apiurl_usr(self.apiurl), src_project)
+
+        if target_package is None:
+            target_package = src_package
+
+        exists, targetprj, targetpkg, srcprj, srcpkg = \
+            branch_pkg(self.apiurl,
+                       src_project,
+                       src_package,
+                       rev=rev,
+                       target_project=target_project,
+                       target_package=target_package,
+                       force=True)
+
+        return (targetprj, targetpkg)
