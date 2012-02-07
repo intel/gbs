@@ -208,10 +208,13 @@ class BrainConfigParser(SafeConfigParser):
 
 class ConfigMgr(object):
     DEFAULTS = {
-        'build_server': 'https://build.tizen.org',
-        'user': 'my_user_id',
-        'passwd': '',
-        'passwdx': '',
+            'general': {},
+            'build': {
+                'build_server': 'https://build.tizen.org',
+                'user': 'my_user_id',
+                'passwd': '',
+                'passwdx': '',
+            },
     }
 
     DEFAULT_CONF_TEMPLATE="""[general]
@@ -219,9 +222,9 @@ class ConfigMgr(object):
 
 [build]
 ; settings for build subcommand
-build_server = $build_server
-user = $user
-passwdx = $passwdx
+build_server = $build__build_server
+user = $build__user
+passwdx = $build__passwdx
 """
 
     # make the manager class as singleton
@@ -262,9 +265,9 @@ passwdx = $passwdx
         paths = []
         for p in  ('/etc/gbs.conf',
                    os.path.expanduser('~/.gbs.conf'),
-                   '.gbs.conf',
-                   '.git/gbs.conf'):
-            if os.path.exists(p):
+                   os.path.abspath('.gbs.conf'),
+                   os.path.abspath('.git/gbs.conf')):
+            if os.path.exists(p) and p not in paths:
                 paths.append(p)
 
         return paths
@@ -273,7 +276,13 @@ passwdx = $passwdx
         from string import Template
         if not defaults:
             defaults = self.DEFAULTS
-        return Template(self.DEFAULT_CONF_TEMPLATE).safe_substitute(defaults)
+
+        tmpl_keys = {}
+        for sec, opts in defaults.iteritems():
+            for opt, val in opts.iteritems():
+                tmpl_keys['%s__%s' % (sec, opt)] = val
+
+        return Template(self.DEFAULT_CONF_TEMPLATE).safe_substitute(tmpl_keys)
 
     def _new_conf(self, fpath=None):
         if not fpath:
@@ -282,37 +291,49 @@ passwdx = $passwdx
         if msger.ask('Create config file %s using default values?' % fpath):
             import getpass
 
+            # user and passwd in [build] section need user input
             defaults = self.DEFAULTS.copy()
-            defaults['user'] = raw_input('Username: ')
+            defaults['build']['user'] = raw_input('Username: ')
             msger.info('Your password will be encoded before saving ...')
-            defaults['passwd'] = ''
-            defaults['passwdx'] = base64.b64encode(getpass.getpass().encode('bz2'))
+            defaults['build']['passwd'] = ''
+            defaults['build']['passwdx'] = base64.b64encode(getpass.getpass().encode('bz2'))
 
             with open(fpath, 'w') as wf:
                 wf.write(self.get_default_conf(defaults))
             os.chmod(fpath, 0600)
+
             msger.info('Done. Your gbs config is now located at %s' % fpath)
-	    msger.warning('Don\'t forget to double-check the config for correct default values.')
+            msger.warning("Don't forget to double-check the config manually.")
             return True
 
         return False
 
     def _check_passwd(self):
-        plainpass = self._get('passwd')
-        if not plainpass:
-            # None or ''
-            return
+        for sec in self.DEFAULTS.keys():
+            if 'passwd' in self.DEFAULTS[sec]:
+                plainpass = self._get('passwd', sec)
+                if not plainpass:
+                    # None or ''
+                    continue
 
-        msger.warning('plaintext password in config file will be replaced by encoded one')
-        self.set('passwd', base64.b64encode(plainpass.encode('bz2')))
-        self.update()
+                msger.warning('plaintext password in config file will be replaced by encoded one')
+                self.set('passwd', base64.b64encode(plainpass.encode('bz2')), sec)
+                self.update()
 
     def _get(self, opt, section='general'):
         try:
             return self.cfgparser.get(section, opt)
+        except NoSectionError:
+            if section in self.DEFAULTS and \
+               opt in self.DEFAULTS[section]:
+                return self.DEFAULTS[section][opt]
+            else:
+                raise errors.ConfigError('no opt: %s or no section %s' \
+                                         % (opt, section))
+
         except NoOptionError:
-            if opt in self.DEFAULTS:
-                return self.DEFAULTS[opt]
+            if opt in self.DEFAULTS[section]:
+                return self.DEFAULTS[section][opt]
             else:
                 raise errors.ConfigError('no opt: %s in section %s' % (opt, section))
 
