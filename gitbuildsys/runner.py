@@ -58,11 +58,13 @@ def runtool(cmdln_or_args, catch=1):
         serr = PIPE
     elif catch == 3:
         sout = PIPE
-        serr = PIPE
+        serr = STDOUT
 
     try:
         p = Popen(args, stdout=sout, stderr=serr)
         out = p.communicate()[0]
+        if out is None:
+            out = ''
     except OSError, e:
         if e.errno == 2:
             # [Errno 2] No such file or directory
@@ -97,9 +99,9 @@ def show(cmdln_or_args):
     msger.verbose(msg)
     return rc
 
-def outs(cmdln_or_args):
+def outs(cmdln_or_args, catch=1):
     # get the outputs of tools
-    return runtool(cmdln_or_args, catch=1)[1].strip()
+    return runtool(cmdln_or_args, catch)[1].strip()
 
 def quiet(cmdln_or_args):
     return runtool(cmdln_or_args, catch=0)[0]

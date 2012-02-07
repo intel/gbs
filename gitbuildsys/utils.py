@@ -16,9 +16,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+from __future__ import with_statement
 import os
 
 import msger
+import runner
 
 def which(cmd):
     def is_exe(fpath):
@@ -49,3 +51,44 @@ def strip_end(text, suffix):
 def get_share_dir():
     # TODO need to be better
     return '/usr/share/gbs/'
+
+def parse_spec(spec_path, macro):
+    """Parse the spec file to get the specified `macro`
+    """
+
+    rpmb_cmd = 'rpmbuild'
+
+    if which(rpmb_cmd):
+        # rpmbuild has been installed in system, use it
+        rpmb_cmdline = ("%s -bp --nodeps --force "
+                        "tmp.spec --define '_topdir .' "
+                        "--define '_builddir .' "
+                        "--define '_sourcedir .' "
+                        "--define '_rpmdir .' "
+                        "--define '_specdir .' "
+                        "--define '_srcrpmdir .'") % rpmb_cmd
+
+        wf = open('tmp.spec', 'w')
+        with file(spec_path) as f:
+            for line in f:
+                if line.startswith('%prep'):
+                    line ='%%prep\necho %%{%s}\nexit\n' % macro
+                wf.write(line)
+        wf.close()
+
+        outs = runner.outs(rpmb_cmdline, catch=3)
+
+        # clean up
+        os.unlink('tmp.spec')
+        if os.path.isdir('BUILDROOT'):
+            import shutil
+            shutil.rmtree('BUILDROOT', ignore_errors=True)
+
+        for line in outs.splitlines():
+            if line.startswith('+ echo '):
+                return line[7:].rstrip()
+
+    else:
+        # TBD parse it directly
+        msger.warning('cannot support parsing spec without rpmbuild command')
+        return ''
