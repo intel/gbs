@@ -35,7 +35,7 @@ class Git:
 
     def _check_path(self):
         if os.getcwd() != self.path:
-            raise GitRepositoryError
+            raise errors.GitError("Not inside git dir")
 
     def _git_command(self, command, args=[]):
         """exec a git command and return the output"""
@@ -50,9 +50,8 @@ class Git:
     def get_files(self):
         """return the files list"""
         ret, out = self._git_command('ls-files')
-        print self._git_command('ls-files')
         if ret:
-            raise GitRepositoryError, "Error listing files %d" % ret
+            raise errors.GitError("Error listing files %d" % ret)
         if out:
             return [ file for file in out.split('\n') if file ]
         else:
