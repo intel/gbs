@@ -67,21 +67,23 @@ def do(opts, args):
     
     specs = glob.glob('./packaging/*.spec')
     if not specs:
-        msger.error('No spec file found, please add spec file to packaging directory')
+        msger.error('no spec file found, please add spec file to packaging directory')
 
-    specfile = specs[0]
+    specfile = specs[0] #TODO:
+    if len(specs) > 1:
+        msger.warning('multiple specfiles found.')
+
     # get 'name' and 'version' from spec file
     name = utils.parse_spec(specfile, 'name')
     version = utils.parse_spec(specfile, 'version')
-
     src_prj = 'Trunk'
     target_prj = "home:%s:branches:gbs:%s" % (USER, src_prj)
     prj = obspkg.ObsProject(target_prj, apiurl = SRCSERVER, oscrc = oscrcpath)
     if prj.is_new():
-        msger.info('Creating home project for package build.')
+        msger.info('creating home project for package build ...')
         prj.branch_from(src_prj)
 
-    msger.info('Checking out project...')
+    msger.info('checking out project ...')
     localpkg = obspkg.ObsPackage(tmpdir, target_prj, name, SRCSERVER, oscrcpath)
     workdir = localpkg.get_workdir()
     localpkg.remove_all()
@@ -89,8 +91,9 @@ def do(opts, args):
     srcdir = "%s-%s" % (name, version)
     os.mkdir(srcdir)
 
-    msger.info('Packaging git tree to tar ball.')
-    tarfp = '%s/%s-%s.tizen.tar.bz2' % (workdir, name, version)
+    tarball = '%s-%s.tizen.tar.bz2' % (name, version)
+    msger.info('archive git tree to tar ball: %s' % tarball)
+    tarfp = '%s/%s' % (workdir, tarball)
     tar = tarfile.open(tarfp, 'w:bz2')
     for f in GIT.get_files():
         if f.startswith('packaging'):
@@ -108,8 +111,8 @@ def do(opts, args):
 
     localpkg.update_local()
 
-    msger.info('Commit packaging files to build server.')
-    localpkg.commit ("Submit packaging files to obs for OBS building")
+    msger.info('commit packaging files to build server ...')
+    localpkg.commit ('submit packaging files to obs for OBS building')
 
     os.unlink(oscrcpath)
-    msger.info('Your local changes have been submitted to the build server.')
+    msger.info('local changes submitted to build server successfully')
