@@ -19,6 +19,7 @@
 from __future__ import with_statement
 import os
 import buildservice
+import runner
 
 class _Workdir(object):
     def __init__(self, path):
@@ -54,7 +55,7 @@ class ObsPackage(object):
         self._bs = buildservice.BuildService(apiurl, oscrc)
         self._apiurl = self._bs.apiurl
 
-        self._bdir = os.path.absdir(os.path.expanduser(basedir))
+        self._bdir = os.path.abspath(os.path.expanduser(basedir))
         self._prj = prj
         self._pkg = pkg
         self._pkgpath = os.path.join(self._bdir, prj, pkg)
@@ -96,7 +97,8 @@ class ObsPackage(object):
         """
         with _Workdir(self._pkgpath):
             pac = self._bs.find_pac()
-            pac.todo = list(set(pac.filenamelist + pac.filenamelist_unvers + pac.to_be_added))
+            # FIXME, if pac.to_be_added are needed to be considered.
+            pac.todo = list(set(pac.filenamelist + pac.filenamelist_unvers))
             for filename in pac.todo:
                 if os.path.isdir(filename):
                     continue
@@ -123,4 +125,4 @@ class ObsPackage(object):
 
     def commit(self, msg):
         with _Workdir(self._pkgpath):
-            self._bs.submit()
+            self._bs.submit(msg)

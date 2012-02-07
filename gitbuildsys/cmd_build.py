@@ -30,8 +30,7 @@ import msger
 import runner
 from conf import configmgr
 import git
-import buildservice
-
+import obspkg
 OSCRC_TEMPLATE = """[general]
 apiurl = %(api)s
 [%(apiurl)s]
@@ -80,12 +79,11 @@ def do(opts, args):
     ret, out = runner.runtool(['grep', '^Version', specfile])
     version = out.split()[-1]
 
-    bs = buildservice.BuildService(apiurl = SRCSERVER, oscrc = oscrcpath)
-
-    #obspkg = ObsPackage(tmpdir, SRCSERVER, "home:%s:branches:gbs:Trunk" % USER, name, oscrcpath)
-    #workdir = obspkg.get_workdir()
-    workdir = os.getcwd()
-    #obspkg.remove_all()
+    localpkg = obspkg.ObsPackage(tmpdir, "home:%s:branches:gbs:Trunk" % USER, name, SRCSERVER, oscrcpath)
+    workdir = localpkg.get_workdir()
+    import pdb
+    pdb.set_trace()
+    localpkg.remove_all()
 
     srcdir = "%s-%s" % (name, version)
     os.mkdir(srcdir)
@@ -105,6 +103,6 @@ def do(opts, args):
     for f in glob.glob('packaging/*'):
         shutil.copy(f, workdir)
 
-    #obspkg.add_all()
-    #obspkg.commit ()
+    localpkg.update_local()
+    localpkg.commit ("Submit packaging files to obs for test work")
     os.unlink(oscrcpath)
