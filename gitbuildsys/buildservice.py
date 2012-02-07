@@ -1064,7 +1064,7 @@ class BuildService():
         """ checkout the package to current dir with link expanded
         """
 
-        core.checkout_package(self.apiurl, prj, pkg, rev, expand_link=True)
+        core.checkout_package(self.apiurl, prj, pkg, rev, prj_dir=prj, expand_link=True)
 
     def findPac(self, wd='.'):
         """Get the single Package object for specified dir
@@ -1085,6 +1085,7 @@ class BuildService():
 
         core.make_dir(self.apiurl, prj, pkg, pathname = '.')
 
+        pkg_path = os.path.join(prj, pkg)
         shutil.rmtree(pkg_path, ignore_errors = True)
         core.createPackageDir(pkg_path)
 
