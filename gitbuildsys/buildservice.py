@@ -252,7 +252,7 @@ class BuildService():
         new_prj = False
         try:
             core.meta_exists(metatype = 'prj',
-                        path_args = (core.quote_plus(dst_project)),
+                        path_args = (core.quote_plus(project)),
                         create_new = False,
                         apiurl = self.apiurl)
         except urllib2.HTTPError, e:
@@ -1118,12 +1118,12 @@ class BuildService():
             target_package = src_package
 
         exists, targetprj, targetpkg, srcprj, srcpkg = \
-            branch_pkg(self.apiurl,
-                       src_project,
-                       src_package,
-                       rev=rev,
-                       target_project=target_project,
-                       target_package=target_package,
-                       force=True)
+            core.branch_pkg(self.apiurl,
+                            src_project,
+                            src_package,
+                            rev=rev,
+                            target_project=target_project,
+                            target_package=target_package,
+                            force=True)
 
         return (targetprj, targetpkg)

@@ -158,7 +158,7 @@ class ObsProject(object):
         # TODO
         pass
 
-    def branch(self, src_prj, target_prj=None):
+    def branch_from(self, src_prj):
         """Create a new branch project of `src_prj`
         """
 
@@ -174,8 +174,11 @@ class ObsProject(object):
 
         # branch out the new one
         target_prj, target_pkg = self._bs.branchPkg(src_prj, dumb_pkg,
-                                                    target_project = target_prj,
+                                                    target_project = self._prj,
                                                     target_package = 'dumb_pkg')
+
+        if target_prj != self._prj:
+            raise ObsError('branched prj: %s is not expected %s' % (target_prj, self._prj))
 
         # remove the dumb pkg
         self._bs.deletePackage(target_prj, target_pkg)
