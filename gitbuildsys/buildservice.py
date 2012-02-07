@@ -1054,17 +1054,20 @@ class BuildService():
         """
 
         if core.is_package_dir(wd):
-            return core.findpacs([path])[0]
+            return core.findpacs([wd])[0]
         else:
             return None
 
     def mk_pac(self, pkg_path):
         """Create empty package for new one under CWD
         """
+        prj = pkg_path.split('/')[0]
+        pkg = pkg_path.split('/')[1]
+        core.make_dir(self.apiurl, prj, pkg, pathname = '.')
+        os.chdir(pkg_path)
+        core.init_package_dir(self.apiurl, prj, pkg, pkg, files=False)
 
-        core.createPackageDir(pkg_path)
-
-    def submit(self, wd='.'):
+    def submit(self, msg, wd='.'):
         if not core.is_package_dir(wd):
             # TODO show some error message
             return
