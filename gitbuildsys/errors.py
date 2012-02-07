@@ -38,8 +38,9 @@ class Abort(CmdError):
 class ConfigError(CmdError):
     keyword = '<config>'
 
-class GitInvalid(CmdError):
+class GitError(CmdError):
     keyword = '<git>'
 
+class GitInvalid(GitError):
     def __str__(self):
         return 'Dir %s is not a valid git tree' % str(self.msg)
