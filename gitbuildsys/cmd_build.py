@@ -31,6 +31,7 @@ import runner
 from conf import configmgr
 import git
 import obspkg
+
 OSCRC_TEMPLATE = """[general]
 apiurl = %(api)s
 [%(apiurl)s]
@@ -38,13 +39,10 @@ user=%(user)s
 passx=%(passwdx)s
 """
 
-#SRCSERVER = configmgr.get('src_server')
-#USER = configmgr.get('user')
-#PASSWDX = configmgr.get('passwdx')
-
-SRCSERVER = 'https://api.saobs.jf.intel.com'
-USER = 'xiaoqiang'
-PASSWDX = 'QlpoOTFBWSZTWVyCeo8AAAKIAHJAIAAhhoGaAlNOLuSKcKEguQT1Hg=='
+SRCSERVER   = configmgr.get('build_server', 'build')
+USER        = configmgr.get('user', 'build')
+PASSWDX     = configmgr.get('passwdx', 'build')
+TMPDIR      = configmgr.get('tmpdir')
 
 def do(opts, args):
 
@@ -55,10 +53,7 @@ def do(opts, args):
     if GIT.get_branches()[0] != 'master':
         msger.error('You must run this command under the master branch')
 
-    # get temp dir from opts
-    #tmpdir = opts.tmpdir
-
-    tmpdir = '/var/tmp/%s' % USER
+    tmpdir = '%s/%s' % (TMPDIR, USER)
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
 
@@ -79,14 +74,22 @@ def do(opts, args):
     ret, out = runner.runtool(['grep', '^Version', specfile])
     version = out.split()[-1]
 
-    localpkg = obspkg.ObsPackage(tmpdir, "home:%s:branches:gbs:Trunk" % USER, name, SRCSERVER, oscrcpath)
+    src_prj = 'Trunk'
+    target_prj = "home:%s:branches:gbs:%s" % (USER, src_prj)
+    prj = obspkg.ObsProject(target_prj, apiurl = SRCSERVER, oscrc = oscrcpath)
+    if prj.is_new():
+        msger.info('Creating home project for package build.')
+        prj.branch_from(src_prj)
+
+    msger.info('Checking out project...')
+    localpkg = obspkg.ObsPackage(tmpdir, target_prj, name, SRCSERVER, oscrcpath)
     workdir = localpkg.get_workdir()
-    import pdb
-    pdb.set_trace()
     localpkg.remove_all()
 
     srcdir = "%s-%s" % (name, version)
     os.mkdir(srcdir)
+
+    msger.info('Packaging git tree to tar ball.')
     tarfp = '%s/%s-%s.tizen.tar.bz2' % (workdir, name, version)
     tar = tarfile.open(tarfp, 'w:bz2')
     for f in GIT.get_files():
@@ -99,10 +102,14 @@ def do(opts, args):
         tar.add("%s/%s" % (srcdir, f))
     tar.close()
     shutil.rmtree(srcdir, ignore_errors = True)
-    
+
     for f in glob.glob('packaging/*'):
         shutil.copy(f, workdir)
 
     localpkg.update_local()
-    localpkg.commit ("Submit packaging files to obs for test work")
+
+    msger.info('Commit packaging files to build server.')
+    localpkg.commit ("Submit packaging files to obs for OBS building")
+
     os.unlink(oscrcpath)
+    msger.info('Your local changes have been submitted to the build server.')
