@@ -30,10 +30,8 @@ class Usage(CmdError):
     keyword = '<usage>'
 
     def __str__(self):
-        return self.keyword + str(self.msg) + ', please use "--help" for more info'
-
-class Abort(CmdError):
-    keyword = ''
+        return self.keyword + str(self.msg) + \
+                ', please use "--help" for more info'
 
 class ConfigError(CmdError):
     keyword = '<config>'
@@ -43,7 +41,10 @@ class GitError(CmdError):
 
 class GitInvalid(GitError):
     def __str__(self):
-        return 'Dir %s is not a valid git tree' % str(self.msg)
+        return '<git>dir %s is not a valid git tree' % str(self.msg)
 
 class ObsError(CmdError):
     keyword = '<obs>'
+
+class Abort(CmdError):
+    keyword = ''

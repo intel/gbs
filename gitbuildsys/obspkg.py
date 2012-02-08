@@ -177,7 +177,8 @@ class ObsProject(object):
                                                     target_package = 'dumb_pkg')
 
         if target_prj != self._prj:
-            raise ObsError('branched prj: %s is not expected %s' % (target_prj, self._prj))
+            raise ObsError('branched prj: %s is not the expected %s' \
+                           % (target_prj, self._prj))
 
         # remove the dumb pkg
         self._bs.deletePackage(target_prj, target_pkg)

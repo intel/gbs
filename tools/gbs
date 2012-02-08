@@ -64,8 +64,12 @@ class TizenPkg(cmdln.Cmdln):
 
     def get_optparser(self):
         optparser = cmdln.CmdlnOptionParser(self, version=self.version)
-        optparser.add_option('-d', '--debug', action='store_true', dest='debug', help='print debug message')
-        optparser.add_option('-v', '--verbose', action='store_true', dest='verbose', help='verbose information')
+        optparser.add_option('-d', '--debug', action='store_true',
+                                              dest='debug',
+                                              help='print debug message')
+        optparser.add_option('-v', '--verbose', action='store_true',
+                                                dest='verbose',
+                                                help='verbose information')
         return optparser
 
     def postoptparse(self):
@@ -76,12 +80,16 @@ class TizenPkg(cmdln.Cmdln):
             msger.set_loglevel('debug')
 
     @cmdln.alias("bl")
-    @cmdln.option('-T', '--target-obsprj', default=None, dest='target_obsprj',
-                  help='The corresponding OBS target project used to build package, '\
-                       'If not specified, "home:<userid>:gbs:Trunk" will be used.')
-    @cmdln.option('-B', '--base-obsprj', default=None, dest='base_obsprj',
-                  help='The corresponding OBS Base project used to branch from, ' \
-                       'If not specified, "Trunk" will be used.')
+    @cmdln.option('-T', '--target-obsprj',
+                  default=None,
+                  dest='target_obsprj',
+                  help='OBS target project being used to build package, ' \
+                       'use "home:<userid>:gbs:Trunk" if not specified')
+    @cmdln.option('-B', '--base-obsprj',
+                  default=None,
+                  dest='base_obsprj',
+                  help='Base OBS project being used to branch from, ' \
+                       'use "Trunk" if not specified')
     @_fall_to_shell('build')
     def do_build(self, subcmd, opts, *args):
         """${cmd_name}: test building for current pkg
@@ -96,8 +104,11 @@ class TizenPkg(cmdln.Cmdln):
         cmd.do(opts, args)
 
     @cmdln.alias("cfg")
-    @cmdln.option('-s', '--section', metavar='SECTION', default='general',
-                  help='specify the section inside config file, default as "general"')
+    @cmdln.option('-s', '--section',
+                        metavar='SECTION',
+                        default='general',
+                        help='specify the section inside config file, ' \
+                             'use "general" as the default')
     def do_getconfig(self, subcmd, opts, *args):
         """${cmd_name}: query values of config file
 
@@ -113,10 +124,12 @@ class TizenPkg(cmdln.Cmdln):
         for arg in args:
             val = configmgr.get(arg, section=opts.section)
             if val:
-                msger.verbose('The value of opt "%s" in [%s] is:' % (arg, opts.section))
+                msger.verbose('The value of opt "%s" in [%s] is:' \
+                              % (arg, opts.section))
                 msger.raw(val)
             else:
-                msger.verbose('No value for opt key "%s" in [%s]' % (arg, opts.section))
+                msger.verbose('No value for opt key "%s" in [%s]' \
+                              % (arg, opts.section))
                 msger.raw('') # we need a blank line
 
 if __name__ == '__main__':

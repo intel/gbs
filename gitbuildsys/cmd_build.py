@@ -41,7 +41,7 @@ user=%(user)s
 passx=%(passwdx)s
 """
 
-SRCSERVER   = configmgr.get('build_server', 'build')
+APISERVER   = configmgr.get('build_server', 'build')
 USER        = configmgr.get('user', 'build')
 PASSWDX     = configmgr.get('passwdx', 'build')
 TMPDIR      = configmgr.get('tmpdir')
@@ -59,16 +59,21 @@ def do(opts, args):
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
 
-    oscrc = OSCRC_TEMPLATE % {"apiurl": SRCSERVER, "user": USER, "passwdx": PASSWDX}
+    oscrc = OSCRC_TEMPLATE % {
+                "apiurl": APISERVER,
+                "user": USER,
+                "passwdx": PASSWDX,
+            }
     (fd, oscrcpath) = tempfile.mkstemp(dir=tmpdir,prefix='.oscrc')
     os.close(fd)
     f = file(oscrcpath, 'w+')
     f.write(oscrc)
     f.close()
     
+    # TODO: check ./packaging dir at first
     specs = glob.glob('./packaging/*.spec')
     if not specs:
-        msger.error('no spec file found, please add spec file to packaging directory')
+        msger.error('no spec file found under /packaging sub-directory')
 
     specfile = specs[0] #TODO:
     if len(specs) > 1:
@@ -89,14 +94,14 @@ def do(opts, args):
     else:
         target_prj = opts.target_obsprj
 
-    prj = obspkg.ObsProject(target_prj, apiurl = SRCSERVER, oscrc = oscrcpath)
+    prj = obspkg.ObsProject(target_prj, apiurl = APISERVER, oscrc = oscrcpath)
     msger.info('checking status of obs project: %s ...' % target_prj)
     if prj.is_new():
         msger.info('creating %s for package build ...' % target_prj)
         prj.branch_from(base_prj)
 
     msger.info('checking out %s/%s to %s ...' % (target_prj, name, tmpdir))
-    localpkg = obspkg.ObsPackage(tmpdir, target_prj, name, SRCSERVER, oscrcpath)
+    localpkg = obspkg.ObsPackage(tmpdir, target_prj, name, APISERVER, oscrcpath)
     workdir = localpkg.get_workdir()
     localpkg.remove_all()
 
@@ -128,5 +133,6 @@ def do(opts, args):
 
     os.unlink(oscrcpath)
     msger.info('local changes submitted to build server successfully')
-    msger.info('follow the link to monitor the build progress: ')
-    msger.info('%s/project/show?project=%s' % (SRCSERVER.replace('api', 'build'), target_prj))
+    msger.info('follow the link to monitor the build progress:\n'
+               '  %s/project/show?project=%s' \
+               % (APISERVER.replace('api', 'build'), target_prj))

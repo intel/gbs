@@ -35,7 +35,8 @@ class BrainConfigParser(SafeConfigParser):
         """
 
         if len(filenames) > 1:
-            msger.warning('Will not support multiple config files, only read in the last one.')
+            msger.warning('Will not support multiple config files, '
+                          'only read in the last one.')
             filenames = filenames[-1:]
 
         return SafeConfigParser.read(self, filenames)
@@ -49,6 +50,9 @@ class BrainConfigParser(SafeConfigParser):
         Customization: save filename and corresponding lineno for all
         the sections and keys
         """
+
+        def _get_savekey(sec, opt):
+            return "%s.%s" % (sec, opt)
 
         # save the original filepath and contents
         self._fpname = fname
@@ -79,7 +83,8 @@ class BrainConfigParser(SafeConfigParser):
                 value = line.strip()
                 if value:
                     cursect[optname] = "%s\n%s" % (cursect[optname], value)
-                    self._opt_linenos["%s.%s" % (cursect['__name__'], optname)].append(lineno)
+                    savekey = _get_savekey(cursect['__name__'], optname)
+                    self._opt_linenos[savekey].append(lineno)
             # a section header or option header?
             else:
                 # is it a section header?
@@ -123,7 +128,8 @@ class BrainConfigParser(SafeConfigParser):
                             optval = ''
                         optname = self.optionxform(optname.rstrip())
                         cursect[optname] = optval
-                        self._opt_linenos["%s.%s" % (cursect['__name__'], optname)] = [lineno]
+                        savekey = _get_savekey(cursect['__name__'], optname)
+                        self._opt_linenos[savekey] = [lineno]
 
                     else:
                         # a non-fatal parsing error occurred.  set up the
@@ -149,7 +155,8 @@ class BrainConfigParser(SafeConfigParser):
                 return -1
 
             found = False
-            for sec, lineno in sorted(self._sec_linenos.items(), key=lambda x: x[1][0]):
+            for sec, lineno in sorted(self._sec_linenos.items(),
+                                          key=lambda x: x[1][0]):
                 if found:
                     return lineno[0]-1
 
@@ -299,7 +306,8 @@ passwdx = $build__passwdx
             defaults['build']['user'] = raw_input('Username: ')
             msger.info('Your password will be encoded before saving ...')
             defaults['build']['passwd'] = ''
-            defaults['build']['passwdx'] = base64.b64encode(getpass.getpass().encode('bz2'))
+            defaults['build']['passwdx'] = \
+                        base64.b64encode(getpass.getpass().encode('bz2'))
 
             with open(fpath, 'w') as wf:
                 wf.write(self.get_default_conf(defaults))
@@ -319,8 +327,11 @@ passwdx = $build__passwdx
                     # None or ''
                     continue
 
-                msger.warning('plaintext password in config file will be replaced by encoded one')
-                self.set('passwd', base64.b64encode(plainpass.encode('bz2')), sec)
+                msger.warning('plaintext password in config file will '
+                              'be replaced by encoded one')
+                self.set('passwd',
+                         base64.b64encode(plainpass.encode('bz2')),
+                         sec)
                 self.update()
 
     def _get(self, opt, section='general'):
@@ -338,7 +349,8 @@ passwdx = $build__passwdx
             if opt in self.DEFAULTS[section]:
                 return self.DEFAULTS[section][opt]
             else:
-                raise errors.ConfigError('no opt: %s in section %s' % (opt, section))
+                raise errors.ConfigError('no opt: %s in section %s' \
+                                         % (opt, section))
 
     def get(self, opt, section='general'):
         if opt == 'passwd':

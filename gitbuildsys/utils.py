@@ -99,7 +99,8 @@ def parse_spec(spec_path, macro):
             if line.startswith('+ echo '):
                 return line[7:].rstrip()
 
-        msger.warning('invalid spec file, cannot get the value of macro %s' % macro)
+        msger.warning('invalid spec file, cannot get the value of macro %s' \
+                      % macro)
         return ''
 
     else:
