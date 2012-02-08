@@ -34,6 +34,8 @@ __ALL__ = ['set_mode',
            'error',
            'ask',
            'pause',
+           'PrintBuf',
+           'PrintBufWrapper',
           ]
 
 # COLORs in ANSI
@@ -62,11 +64,107 @@ CATCHERR_BUFFILE_FD = -1
 CATCHERR_BUFFILE_PATH = None
 CATCHERR_SAVED_2 = -1
 
-def _general_print(head, color, msg = None, stream = sys.stdout, level = 'normal'):
-    global LOG_CONTENT
+# save the orignal stdout/stderr at the very start
+STDOUT = sys.stdout
+STDERR = sys.stderr
+
+class PrintBuf(object):
+    """Object to buffer the output of 'print' statement string
+    """
+
+    def __init__(self):
+        self.buf1 = \
+        self.buf2 = \
+        self.old1 = \
+        self.old2 = None
+
+    def start(self):
+        """Start to buffer, redirect stdout to string
+        """
+
+        import StringIO
+        self.buf1 = StringIO.StringIO()
+        self.buf2 = StringIO.StringIO()
+
+        self.old1 = sys.stdout
+        self.old2 = sys.stderr
+        sys.stdout = self.buf1
+        sys.stderr = self.buf2
+
+    def stop(self):
+        """Stop buffer, restore the original stdout, and flush the
+        buffer string, return the content
+        """
+
+        if self.buf1:
+            msg1 = self.buf1.getvalue().strip()
+            msg2 = self.buf2.getvalue().strip()
+            self.buf1.close()
+            self.buf2.close()
+
+            sys.stdout = self.old1
+            sys.stderr = self.old2
+
+            self.buf1 = \
+            self.buf2 = \
+            self.old1 = \
+            self.old2 = None
+
+            return (msg1, msg2)
+
+        return ('', '')
+
+class PrintBufWrapper(object):
+    """Wrapper class for another class, to catch the print output and
+    handlings.
+    """
+
+    def __init__(self, wrapped_class, msgfunc_1, msgfunc_2, *args, **kwargs):
+        """Arguments:
+          wrapped_class: the class to be wrapped
+          msgfunc_1: function to deal with msg from stdout(1)
+          msgfunc_2: function to deal with msg from stderr(2)
+          *args, **kwargs: the original args of wrapped_class
+        """
+
+        self.pbuf = PrintBuf()
+        self.func1 = msgfunc_1
+        self.func2 = msgfunc_2
+
+        self.pbuf.start()
+        self.wrapped_inst = wrapped_class(*args, **kwargs)
+        stdout_msg, stderr_msg = self.pbuf.stop()
+        if stdout_msg:
+            self.func1(stdout_msg)
+        if stderr_msg:
+            self.func2(stderr_msg)
+
+    def __getattr__(self, attr):
+        orig_attr = getattr(self.wrapped_inst, attr)
+        if callable(orig_attr):
+            def hooked(*args, **kwargs):
+                self.pbuf.start()
+                result = orig_attr(*args, **kwargs)
+                stdout_msg, stderr_msg = self.pbuf.stop()
+                if stdout_msg:
+                    self.func1(stdout_msg)
+                if stderr_msg:
+                    self.func2(stderr_msg)
+                return result
+
+            return hooked
+        else:
+            return orig_attr
+
+def _general_print(head, color, msg = None, stream = None, level = 'normal'):
+    global LOG_CONTENT, STDOUT
+
     if LOG_LEVELS[level] > LOG_LEVEL:
         # skip
         return
+
+    if stream is None:
+        stream = STDOUT
 
     if CATCHERR_BUFFILE_FD > 0:
         size = os.lseek(CATCHERR_BUFFILE_FD , 0, os.SEEK_END)
@@ -116,10 +214,12 @@ def _color_print(head, color, msg, stream, level):
     stream.flush()
 
 def _color_perror(head, color, msg, level = 'normal'):
+    global STDOUT, STDERR
+
     if CATCHERR_BUFFILE_FD > 0:
-        _general_print(head, color, msg, sys.stdout, level)
+        _general_print(head, color, msg, STDOUT, level)
     else:
-        _general_print(head, color, msg, sys.stderr, level)
+        _general_print(head, color, msg, STDERR, level)
 
 def _split_msg(head, msg):
     if isinstance(msg, list):

@@ -191,7 +191,7 @@ class _ProjectFlags(object):
 
         print ElementTree.tostring(self.tree)
 
-class BuildService():
+class BuildService(object):
     """Interface to Build Service API"""
 
     def __init__(self, apiurl=None, oscrc=None):

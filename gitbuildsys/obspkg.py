@@ -20,6 +20,7 @@ from __future__ import with_statement
 import os
 import buildservice
 import runner
+import msger
 
 class _Workdir(object):
     def __init__(self, path):
@@ -52,7 +53,11 @@ class ObsPackage(object):
         else:
             self._oscrc = os.path.expanduser('~/.oscrc')
 
-        self._bs = buildservice.BuildService(apiurl, oscrc)
+        self._bs = msger.PrintBufWrapper(buildservice.BuildService, #class
+                                         msger.verbose, # func_for_stdout
+                                         msger.warning, # func_for_stderr
+                                         apiurl, oscrc) # original args
+
         self._apiurl = self._bs.apiurl
 
         self._bdir = os.path.abspath(os.path.expanduser(basedir))
