@@ -18,7 +18,7 @@
 
 import os, sys
 import re
-from datetime import datetime
+import time
 
 __ALL__ = ['set_mode',
            'get_loglevel',
@@ -44,6 +44,9 @@ WARN_COLOR = 33 # yellow
 ERR_COLOR  = 31 # red
 ASK_COLOR  = 34 # blue
 NO_COLOR = 0
+
+# save the timezone info at import time
+HOST_TIMEZONE = time.timezone
 
 PREFIX_RE = re.compile('^<(.*?)>\s*(.*)', re.S)
 
@@ -166,18 +169,25 @@ def _general_print(head, color, msg = None, stream = None, level = 'normal'):
     if stream is None:
         stream = STDOUT
 
+    errormsg = ''
     if CATCHERR_BUFFILE_FD > 0:
         size = os.lseek(CATCHERR_BUFFILE_FD , 0, os.SEEK_END)
         os.lseek(CATCHERR_BUFFILE_FD, 0, os.SEEK_SET)
         errormsg = os.read(CATCHERR_BUFFILE_FD, size)
         os.ftruncate(CATCHERR_BUFFILE_FD, 0)
-        msg += errormsg
 
     if LOG_FILE_FP:
-        save_msg = msg.strip()
-        if save_msg:
-            timestr = datetime.now().strftime('[%m/%d %H:%M:%S] ')
-            LOG_CONTENT += timestr + save_msg + '\n'
+        if errormsg:
+            LOG_CONTENT += errormsg
+
+        if msg and msg.strip():
+            global HOST_TIMEZONE
+            timestr = time.strftime("[%m/%d %H:%M:%S] ",
+                                    time.gmtime(time.time() - HOST_TIMEZONE))
+            LOG_CONTENT += timestr + msg.strip() + '\n'
+
+    if errormsg:
+        _color_print('', NO_COLOR, errormsg, stream, level)
 
     _color_print(head, color, msg, stream, level)
 
@@ -358,6 +368,7 @@ def disable_logstderr():
     global CATCHERR_BUFFILE_PATH
     global CATCHERR_SAVED_2
 
+    raw(msg=None) # flush message buffer and print it
     os.dup2(CATCHERR_SAVED_2, 2)
     os.close(CATCHERR_SAVED_2)
     os.close(CATCHERR_BUFFILE_FD)
