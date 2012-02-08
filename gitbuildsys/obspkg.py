@@ -18,6 +18,7 @@
 
 from __future__ import with_statement
 import os
+import shutil
 import buildservice
 import runner
 import msger
@@ -67,6 +68,9 @@ class ObsPackage(object):
 
         if not os.path.exists(self._bdir):
             os.makedirs(self._bdir)
+
+        with _Workdir(self._bdir):
+            shutil.rmtree(prj, ignore_errors = True)
 
         if self._bs.isNewPackage(prj, pkg):
             # to init new package in local dir

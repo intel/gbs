@@ -20,6 +20,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import os
+import shutil
 import tempfile
 import time
 import urlparse
@@ -1080,14 +1081,12 @@ class BuildService(object):
         """Create empty package for new one under CWD
         """
 
-        import shutil
-        shutil.rmtree(prj, ignore_errors = True)
-
         core.make_dir(self.apiurl, prj, pkg, pathname = '.')
 
         pkg_path = os.path.join(prj, pkg)
         shutil.rmtree(pkg_path, ignore_errors = True)
-        core.createPackageDir(pkg_path)
+        os.chdir(prj)
+        core.createPackageDir(pkg)
 
     def submit(self, msg, wd='.'):
         if not core.is_package_dir(wd):
