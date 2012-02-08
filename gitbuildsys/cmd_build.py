@@ -34,7 +34,8 @@ import git
 import obspkg
 
 OSCRC_TEMPLATE = """[general]
-apiurl = %(api)s
+apiurl = %(apiurl)s
+plaintext_passwd=0
 [%(apiurl)s]
 user=%(user)s
 passx=%(passwdx)s
@@ -58,7 +59,7 @@ def do(opts, args):
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
 
-    oscrc = OSCRC_TEMPLATE % {"api": SRCSERVER, "apiurl": SRCSERVER, "user": USER, "passwdx": PASSWDX}
+    oscrc = OSCRC_TEMPLATE % {"apiurl": SRCSERVER, "user": USER, "passwdx": PASSWDX}
     (fd, oscrcpath) = tempfile.mkstemp(dir=tmpdir,prefix='.oscrc')
     os.close(fd)
     f = file(oscrcpath, 'w+')
