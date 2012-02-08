@@ -22,81 +22,100 @@ import os
 import runner
 import errors
 import msger
+from utils import Workdir
 
 class Git:
     def __init__(self, path):
-        try:
-            os.stat(os.path.join(path,'.git'))
-        except:
+        if not os.path.isdir(os.path.join(path, '.git')):
             raise errors.GitInvalid(path)
 
         self.path = os.path.abspath(path)
-        os.chdir(self.path)
 
-    def _check_path(self):
-        if os.getcwd() != self.path:
-            raise errors.GitError("Not inside git dir")
+        # as cache
+        self.cur_branch = None
+        self.branches = None
 
-    def _git_command(self, command, args=[]):
-        """exec a git command and return the output"""
+    def _exec_git(self, command, args=[]):
+        """Exec a git command and return the output
+        """
 
         cmd = ['git', command] + args
-        msger.debug(cmd)
-        return runner.runtool(cmd)
 
-    def status(self):
-        return self._git_command('status')
+        cmdln = ' '.join(cmd)
+        msger.debug('run command: %s' % cmdln)
 
-    def get_files(self):
-        """return the files list"""
-        ret, out = self._git_command('ls-files')
+        with Workdir(self.path):
+            ret, out = runner.runtool(cmd)
+
         if ret:
-            raise errors.GitError("Error listing files %d" % ret)
-        if out:
-            return [ file for file in out.split('\n') if file ]
-        else:
-            return []
+            raise errors.GitError("command error for: %s" % cmdln)
 
-    def get_branches(self):
-        """
-        return the branches list, current working
-        branch is the first element
-        """
-        self._check_path()
-        branches = []
-        for line in self._git_command('branch', [ '--no-color' ])[1].split('\n'):
-            if line.startswith('*'):
-                current_branch=line.split(' ', 1)[1].strip()
+        return out
+
+    def status(self, *args):
+        outs = self._exec_git('status', ['-s'] + list(args))
+
+        sts = {}
+        for line in outs.splitlines():
+            st = line[:2]
+            if st not in sts:
+                sts[st] = [line[2:].strip()]
             else:
-                branches.append(line.strip())
+                sts[st].append(line[2:].strip())
+
+        return sts
+
+    def ls_files(self):
+        """Return the files list
+        """
+        return filter(None, self._exec_git('ls-files').splitlines())
+
+    def _get_branches(self):
+        """Return the branches list, current working branch is the first
+        element.
+        """
+
+        branches = []
+        for line in self._exec_git('branch', ['--no-color']).splitlines():
+            br = line.strip().split()[-1]
+
+            if line.startswith('*'):
+                current_branch = br
+
+            branches.append(br)
 
         return (current_branch, branches)
 
+    def get_branches(self):
+        if not self.cur_branch or not self.branches:
+            self.cur_branch, self.branches = \
+                self._get_branches()
+
+        return (self.cur_branch, self.branches)
+
     def is_clean(self):
         """does the repository contain any uncommitted modifications"""
-        self._check_path()
-        clean_msg = 'nothing to commit'
-        out = self._git_command('status')[1]
-        ret = False
-        for line in out:
-            if line.startswith('#'):
-                continue
-            if line.startswith(clean_msg):
-                    ret = True
-            break
-        return (ret, "".join(out))
 
-    def has_branch(self, branch, remote=False):
-        """
-        check if the repository has branch 'branch'
-        @param remote: only liste remote branches
+        gitsts = self.status()
+        if 'M ' in gitsts or ' M' in gitsts:
+            return False
+        else:
+            return True
+
+    def has_branch(self, br, remote=False):
+        """Check if the repository has branch 'br'
+          @param remote: only liste remote branches
         """
 
-        options = [ '--no-color' ]
         if remote:
-            options += [ '-r' ]
+            options = [ '--no-color', '-r' ]
 
-        for line in self._git_command('branch', options)[1]:
-            if line.split(' ', 1)[1].strip() == branch:
-                return True
-        return False
+            for line in self._exec_git('branch', options).splitlines():
+                rbr = line.strip().split()[-1]
+                if br == rbr:
+                    return True
+
+            return False
+
+        else:
+            return (br in self.get_branches()[1])

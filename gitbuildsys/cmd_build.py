@@ -51,8 +51,8 @@ def do(opts, args):
     if not os.path.isdir('.git'):
         msger.error('You must run this command under a git tree')
 
-    GIT = git.Git('.')
-    if GIT.get_branches()[0] != 'master':
+    mygit = git.Git('.')
+    if mygit.get_branches()[0] != 'master':
         msger.error('You must run this command under the master branch')
 
     tmpdir = '%s/%s' % (TMPDIR, USER)
@@ -107,7 +107,7 @@ def do(opts, args):
     msger.info('archive git tree to tar ball: %s' % tarball)
     tarfp = '%s/%s' % (workdir, tarball)
     tar = tarfile.open(tarfp, 'w:bz2')
-    for f in GIT.get_files():
+    for f in mygit.ls_files():
         if f.startswith('packaging'):
             continue
         dirname = "%s/%s" % (srcdir, os.path.dirname(f))

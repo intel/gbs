@@ -22,17 +22,7 @@ import shutil
 import buildservice
 import runner
 import msger
-
-class _Workdir(object):
-    def __init__(self, path):
-        self._newdir = path
-        self._cwd = os.getcwd()
-
-    def __enter__(self):
-        os.chdir(self._newdir)
-
-    def __exit__(self, type, value, tb):
-        os.chdir(self._cwd)
+from utils import Workdir
 
 class ObsPackage(object):
     """ Wrapper class of local package dir of OBS
@@ -69,7 +59,7 @@ class ObsPackage(object):
         if not os.path.exists(self._bdir):
             os.makedirs(self._bdir)
 
-        with _Workdir(self._bdir):
+        with Workdir(self._bdir):
             shutil.rmtree(prj, ignore_errors = True)
 
         if self._bs.isNewPackage(prj, pkg):
@@ -80,14 +70,14 @@ class ObsPackage(object):
             self._checkout_latest()
 
     def _mkpac(self):
-        with _Workdir(self._bdir):
+        with Workdir(self._bdir):
             self._bs.mkPac(self._prj, self._pkg)
 
     def _checkout_latest(self):
         """ checkout the 'latest' revision of package with link expanded
         """
 
-        with _Workdir(self._bdir):
+        with Workdir(self._bdir):
             self._bs.checkout(self._prj, self._pkg)
 
     def get_workdir(self):
@@ -97,7 +87,7 @@ class ObsPackage(object):
         """Remove all files under pkg dir
         """
 
-        with _Workdir(self._pkgpath):
+        with Workdir(self._pkgpath):
             runner.quiet('/bin/rm -f *')
 
     def update_local(self):
@@ -105,7 +95,7 @@ class ObsPackage(object):
           remove all deleted files and added all new files
         """
 
-        with _Workdir(self._pkgpath):
+        with Workdir(self._pkgpath):
             pac = self._bs.findPac()
             # FIXME, if pac.to_be_added are needed to be considered.
             pac.todo = list(set(pac.filenamelist + pac.filenamelist_unvers))
@@ -126,7 +116,7 @@ class ObsPackage(object):
         runner.quiet('/bin/cp -f %s %s' % (fpath, self._pkgpath))
 
         # add it into local pac
-        with _Workdir(self._pkgpath):
+        with Workdir(self._pkgpath):
             pac = self._bs.findPac()
             if pac:
                 pac.addfile(os.path.basename(fpath))
@@ -134,7 +124,7 @@ class ObsPackage(object):
                 msger.warning('Invalid pac working dir, skip')
 
     def commit(self, msg):
-        with _Workdir(self._pkgpath):
+        with Workdir(self._pkgpath):
             self._bs.submit(msg)
 
 class ObsProject(object):

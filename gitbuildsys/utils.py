@@ -22,6 +22,17 @@ import os
 import msger
 import runner
 
+class Workdir(object):
+    def __init__(self, path):
+        self._newdir = path
+        self._cwd = os.getcwd()
+
+    def __enter__(self):
+        os.chdir(self._newdir)
+
+    def __exit__(self, type, value, tb):
+        os.chdir(self._cwd)
+
 def which(cmd):
     def is_exe(fpath):
         return os.path.exists(fpath) and os.access(fpath, os.X_OK)
