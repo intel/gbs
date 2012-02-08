@@ -77,14 +77,25 @@ def do(opts, args):
     # get 'name' and 'version' from spec file
     name = utils.parse_spec(specfile, 'name')
     version = utils.parse_spec(specfile, 'version')
-    src_prj = 'Trunk'
-    target_prj = "home:%s:branches:gbs:%s" % (USER, src_prj)
-    prj = obspkg.ObsProject(target_prj, apiurl = SRCSERVER, oscrc = oscrcpath)
-    if prj.is_new():
-        msger.info('creating home project for package build ...')
-        prj.branch_from(src_prj)
 
-    msger.info('checking out project ...')
+    if opts.base_obsprj is None:
+        # TODO, get current branch of git to determine it
+        base_prj = 'Trunk'
+    else:
+        base_prj = opts.base_obsprj
+
+    if opts.target_obsprj is None:
+        target_prj = "home:%s:gbs:%s" % (USER, base_prj)
+    else:
+        target_prj = opts.target_obsprj
+
+    prj = obspkg.ObsProject(target_prj, apiurl = SRCSERVER, oscrc = oscrcpath)
+    msger.info('checking status of obs project: %s ...' % target_prj)
+    if prj.is_new():
+        msger.info('creating %s for package build ...' % target_prj)
+        prj.branch_from(base_prj)
+
+    msger.info('checking out %s/%s to %s ...' % (target_prj, name, tmpdir))
     localpkg = obspkg.ObsPackage(tmpdir, target_prj, name, SRCSERVER, oscrcpath)
     workdir = localpkg.get_workdir()
     localpkg.remove_all()
@@ -117,3 +128,5 @@ def do(opts, args):
 
     os.unlink(oscrcpath)
     msger.info('local changes submitted to build server successfully')
+    msger.info('follow the link to monitor the build progress: ')
+    msger.info('%s/project/show?project=%s' % (SRCSERVER.replace('api', 'build'), target_prj))

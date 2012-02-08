@@ -76,10 +76,12 @@ class TizenPkg(cmdln.Cmdln):
             msger.set_loglevel('debug')
 
     @cmdln.alias("bl")
-    @cmdln.option('-p', '--obsprj', default='',
-                  help='The corresponding project name in remote OBS server. ' \
-                       'If not specified, "home:<userid>:branches:Trunk" will' \
-                       ' be used.')
+    @cmdln.option('-T', '--target-obsprj', default=None, dest='target_obsprj',
+                  help='The corresponding OBS target project used to build package, '\
+                       'If not specified, "home:<userid>:gbs:Trunk" will be used.')
+    @cmdln.option('-B', '--base-obsprj', default=None, dest='base_obsprj',
+                  help='The corresponding OBS Base project used to branch from, ' \
+                       'If not specified, "Trunk" will be used.')
     @_fall_to_shell('build')
     def do_build(self, subcmd, opts, *args):
         """${cmd_name}: test building for current pkg
