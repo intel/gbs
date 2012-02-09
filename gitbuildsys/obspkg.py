@@ -22,6 +22,7 @@ import shutil
 import buildservice
 import runner
 import msger
+import errors
 from utils import Workdir
 
 class ObsPackage(object):

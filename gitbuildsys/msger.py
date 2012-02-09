@@ -85,14 +85,15 @@ class PrintBuf(object):
         """Start to buffer, redirect stdout to string
         """
 
-        import StringIO
-        self.buf1 = StringIO.StringIO()
-        self.buf2 = StringIO.StringIO()
+        if get_loglevel() != 'debug':
+            import StringIO
+            self.buf1 = StringIO.StringIO()
+            self.buf2 = StringIO.StringIO()
 
-        self.old1 = sys.stdout
-        self.old2 = sys.stderr
-        sys.stdout = self.buf1
-        sys.stderr = self.buf2
+            self.old1 = sys.stdout
+            self.old2 = sys.stderr
+            sys.stdout = self.buf1
+            sys.stderr = self.buf2
 
     def stop(self):
         """Stop buffer, restore the original stdout, and flush the
