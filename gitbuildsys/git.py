@@ -119,3 +119,35 @@ class Git:
 
         else:
             return (br in self.get_branches()[1])
+
+    def archive_tar(self, prefix, tarname, treeish = None):
+        """Archive git tree to tar ball
+          @prefix: tarball topdir 
+          @output: output tarball name
+          @treeish: commit ID archive from
+        """
+        filetypes = ['.tar.gz', '.tar.bz2', '.tgz']
+        tarfile = None
+        compress = None
+        for type in filetypes:
+           if tarname.endswith(type):
+               tarfile = "%s.tar" % tarname.replace(type, '')
+               compress = type
+               break
+        else:
+            raise errors.GitError("Can't support tarball type, "\
+                                  "supported types: %s" % ', '.join(filetypes))
+
+        if treeish is None:
+            treeish = 'HEAD'
+
+        options = [ treeish, '--output=%s' % tarfile, \
+                    '--prefix=%s' % prefix ]
+        self._exec_git('archive', options)
+
+        if compress == '.tar.bz2':
+            runner.quiet('bzip2 -f %s' % tarfile)
+
+        if compress == 'gz':
+            # TODO: implement later.
+            pass

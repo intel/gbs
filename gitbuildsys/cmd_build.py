@@ -21,7 +21,6 @@
 
 import os
 import time
-import tarfile
 import tempfile
 import glob
 import shutil
@@ -109,23 +108,9 @@ def do(opts, args):
     workdir = localpkg.get_workdir()
     localpkg.remove_all()
 
-    srcdir = "%s-%s" % (name, version)
-    os.mkdir(srcdir)
-
-    tarball = '%s-%s-tizen.tar.bz2' % (name, version)
+    tarball = '%s/%s-%s-tizen.tar.bz2' % (workdir, name, version)
     msger.info('archive git tree to tar ball: %s' % tarball)
-    tarfp = '%s/%s' % (workdir, tarball)
-    tar = tarfile.open(tarfp, 'w:bz2')
-    for f in mygit.ls_files():
-        if f.startswith('packaging'):
-            continue
-        dirname = "%s/%s" % (srcdir, os.path.dirname(f))
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-        shutil.copy(f, dirname)
-        tar.add("%s/%s" % (srcdir, f))
-    tar.close()
-    shutil.rmtree(srcdir, ignore_errors = True)
+    mygit.archive_tar("%s-%s/" % (name, version), tarball)
 
     for f in glob.glob('packaging/*'):
         shutil.copy(f, workdir)
