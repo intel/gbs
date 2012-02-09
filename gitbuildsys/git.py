@@ -22,7 +22,7 @@ import os
 import runner
 import errors
 import msger
-from utils import Workdir
+from utils import Workdir, strip_end
 
 class Git:
     def __init__(self, path):
@@ -120,34 +120,58 @@ class Git:
         else:
             return (br in self.get_branches()[1])
 
-    def archive_tar(self, prefix, tarname, treeish = None):
-        """Archive git tree to tar ball
-          @prefix: tarball topdir 
-          @output: output tarball name
+    def archive(self, prefix, tarfname, treeish='HEAD'):
+        """Archive git tree from 'treeish', detect archive type
+        from the extname of output filename.
+
+          @prefix: tarball topdir
+          @tarfname: output tarball name
           @treeish: commit ID archive from
         """
-        filetypes = ['.tar.gz', '.tar.bz2', '.tgz']
-        tarfile = None
-        compress = None
-        for type in filetypes:
-           if tarname.endswith(type):
-               tarfile = "%s.tar" % tarname.replace(type, '')
-               compress = type
+
+        filetypes = {
+                '.tar.gz': ('tar', 'gz'),
+                '.tgz': ('tar', 'gz'),
+                '.tar.bz2': ('tar', 'bz2'),
+                '.tbz2': ('tar', 'bz2'),
+                '.zip': ('zip', ''),
+        }
+
+        zipcmds = {
+                'gz': 'gzip',
+                'bz2': 'bzip2 -f',
+        }
+
+        for extname in filetypes:
+           if tarfname.endswith(extname):
+               fmt, compress = filetypes[extname]
+
+               barename = strip_end(tarfname, extname)
+               tarname = '%s.%s' % (barename, fmt)
+
+               if compress:
+                   zipcmd = zipcmds[compress]
+                   finalname = '%s.%s' % (tarname, compress)
+               else:
+                   zipcmd = None
+                   finalname = tarname
+
                break
+
         else:
-            raise errors.GitError("Can't support tarball type, "\
-                                  "supported types: %s" % ', '.join(filetypes))
+            raise errors.GitError("Cannot detect archive type from filename, "\
+                                  "supported ext-names: %s" \
+                                  % ', '.join(filetypes.keys()))
 
-        if treeish is None:
-            treeish = 'HEAD'
-
-        options = [ treeish, '--output=%s' % tarfile, \
-                    '--prefix=%s' % prefix ]
+        options = [ treeish,
+                    '--format=%s' % fmt,
+                    '--output=%s' % tarname,
+                    '--prefix=%s' % prefix
+                  ]
         self._exec_git('archive', options)
 
-        if compress == '.tar.bz2':
-            runner.quiet('bzip2 -f %s' % tarfile)
+        if zipcmd:
+            runner.quiet('%s %s' % (zipcmd, tarname))
 
-        if compress == 'gz':
-            # TODO: implement later.
-            pass
+        if finalname != tarfname:
+            os.rename(finalname, tarfname)
