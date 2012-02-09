@@ -39,10 +39,12 @@ def runtool(cmdln_or_args, catch=1):
         return None
 
     if isinstance(cmdln_or_args, list):
-        args = cmdln_or_args
+        cmd = cmdln_or_args[0]
+        shell = False
     else:
         import shlex
-        args = shlex.split(cmdln_or_args)
+        cmd = shlex.split(cmdln_or_args)[0]
+        shell = True
 
     if catch != 3:
         dev_null = os.open("/dev/null", os.O_WRONLY)
@@ -61,14 +63,14 @@ def runtool(cmdln_or_args, catch=1):
         serr = STDOUT
 
     try:
-        p = Popen(args, stdout=sout, stderr=serr)
+        p = Popen(cmdln_or_args, stdout=sout, stderr=serr, shell=shell)
         out = p.communicate()[0]
         if out is None:
             out = ''
     except OSError, e:
         if e.errno == 2:
             # [Errno 2] No such file or directory
-            msger.error('Cannot run command: %s, lost dependency?' % args[0])
+            msger.error('Cannot run command: %s, lost dependency?' % cmd)
         else:
             raise # relay
     finally:
