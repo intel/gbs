@@ -36,6 +36,8 @@ import obspkg
 OSCRC_TEMPLATE = """[general]
 apiurl = %(apiurl)s
 plaintext_passwd=0
+use_keyring=0
+gnome_keyring=0
 [%(apiurl)s]
 user=%(user)s
 passx=%(passwdx)s
@@ -82,6 +84,8 @@ def do(opts, args):
     # get 'name' and 'version' from spec file
     name = utils.parse_spec(specfile, 'name')
     version = utils.parse_spec(specfile, 'version')
+    if not name or not version:
+        msger.error('can\'t get correct name or version from spec file.')
 
     if opts.base_obsprj is None:
         # TODO, get current branch of git to determine it
@@ -108,7 +112,7 @@ def do(opts, args):
     srcdir = "%s-%s" % (name, version)
     os.mkdir(srcdir)
 
-    tarball = '%s-%s.tizen.tar.bz2' % (name, version)
+    tarball = '%s-%s-tizen.tar.bz2' % (name, version)
     msger.info('archive git tree to tar ball: %s' % tarball)
     tarfp = '%s/%s' % (workdir, tarball)
     tar = tarfile.open(tarfp, 'w:bz2')
@@ -134,5 +138,5 @@ def do(opts, args):
     os.unlink(oscrcpath)
     msger.info('local changes submitted to build server successfully')
     msger.info('follow the link to monitor the build progress:\n'
-               '  %s/project/show?project=%s' \
-               % (APISERVER.replace('api', 'build'), target_prj))
+               '  %s/package/show?package=%s&project=%s' \
+               % (APISERVER.replace('api', 'build'), name, target_prj))
