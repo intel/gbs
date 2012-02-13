@@ -113,7 +113,7 @@ def do(opts, args):
     localpkg.remove_all()
 
     tarball = '%s/%s-%s-tizen.tar.bz2' % (workdir, name, version)
-    msger.info('archive git tree to tar ball: %s' % tarball)
+    msger.info('archive git tree to tarball: %s' % os.path.basename(tarball))
     mygit.archive("%s-%s/" % (name, version), tarball)
 
     for f in glob.glob('packaging/*'):

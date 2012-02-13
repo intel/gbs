@@ -34,6 +34,7 @@ __ALL__ = ['set_mode',
            'error',
            'ask',
            'pause',
+           'waiting',
            'PrintBuf',
            'PrintBufWrapper',
           ]
@@ -294,6 +295,56 @@ def error(msg):
     head, msg = _split_msg('Error', msg)
     _color_perror(head, ERR_COLOR, msg)
     sys.exit(1)
+
+def waiting(f):
+    """Function decorator to show simple waiting message for
+    long time operations.
+    """
+
+    import functools
+
+    @functools.wraps(f)
+    def _wait_with_print(*args, **kwargs):
+        import threading
+
+        class _WaitingTimer(threading.Thread):
+            def __init__(self):
+                threading.Thread.__init__(self)
+                self.event = threading.Event()
+                self.waited = False
+
+            def run(self):
+                while not self.event.is_set():
+                    # put the waiting above the actual
+                    # printing to avoid unnecessary msg
+                    self.event.wait(1)
+                    if self.event.is_set():
+                        break
+
+                    self.waited = True
+                    STDERR.write('.')
+                    STDERR.flush()
+
+            def stop(self):
+                self.event.set()
+
+                if self.waited:
+                    STDERR.write('\n')
+                    STDERR.flush()
+
+        timer = _WaitingTimer()
+        timer.start()
+
+        try:
+            out = f(*args, **kwargs)
+        except:
+            raise
+        finally:
+            timer.stop()
+
+        return out
+
+    return _wait_with_print
 
 def ask(msg, default=True):
     _general_print('\rQ', ASK_COLOR, '')

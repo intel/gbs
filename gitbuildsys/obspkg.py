@@ -74,6 +74,7 @@ class ObsPackage(object):
         with Workdir(self._bdir):
             self._bs.mkPac(self._prj, self._pkg)
 
+    @msger.waiting
     def _checkout_latest(self):
         """ checkout the 'latest' revision of package with link expanded
         """
@@ -124,6 +125,7 @@ class ObsPackage(object):
             else:
                 msger.warning('Invalid pac working dir, skip')
 
+    @msger.waiting
     def commit(self, msg):
         with Workdir(self._pkgpath):
             self._bs.submit(msg)
@@ -150,6 +152,7 @@ class ObsProject(object):
         self._apiurl = self._bs.apiurl
         self._prj = prj
 
+    @msger.waiting
     def is_new(self):
         return self._bs.isNewProject(self._prj)
 
