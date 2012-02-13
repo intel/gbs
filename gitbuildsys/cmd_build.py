@@ -36,6 +36,8 @@ OSCRC_TEMPLATE = """[general]
 apiurl = %(apiurl)s
 plaintext_passwd=0
 use_keyring=0
+http_debug = %(http_debug)s
+debug = %(debug)s
 gnome_keyring=0
 [%(apiurl)s]
 user=%(user)s
@@ -61,6 +63,8 @@ def do(opts, args):
         os.makedirs(tmpdir)
 
     oscrc = OSCRC_TEMPLATE % {
+                "http_debug": 1 if msger.get_loglevel() == 'debug' else 0,
+                "debug": 1 if msger.get_loglevel() == 'verbose' else 0,
                 "apiurl": APISERVER,
                 "user": USER,
                 "passwdx": PASSWDX,
