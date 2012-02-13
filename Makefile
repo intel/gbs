@@ -1,5 +1,6 @@
 VERSION = $(shell cat VERSION)
 TAGVER = $(shell cat VERSION | sed -e "s/\([0-9\.]*\).*/\1/")
+PKGNAME = gbs
 
 ifeq ($(VERSION), $(TAGVER))
 	TAG = $(TAGVER)
@@ -17,13 +18,21 @@ all:
 tag:
 	git tag $(VERSION)
 
-dist-bz2:
-	git archive --format=tar --prefix=gbs-$(TAGVER)/ $(TAG) | \
-		bzip2 > gbs-$(TAGVER).tar.bz2
+dist-common: man
+	git archive --format=tar --prefix=$(PKGNAME)-$(TAGVER)/ $(TAG) | tar xpf -
+	git show $(TAG) --oneline | head -1 > $(PKGNAME)-$(TAGVER)/commit-id
+	mkdir $(PKGNAME)-$(TAGVER)/doc; mv mic.1 $(PKGNAME)-$(TAGVER)/doc
 
-dist-gz:
-	git archive --format=tar --prefix=gbs-$(TAGVER)/ $(TAG) | \
-		gzip > gbs-$(TAGVER).tar.gz
+dist-bz2: dist-common
+	tar jcpf $(PKGNAME)-$(TAGVER).tar.bz2 $(PKGNAME)-$(TAGVER)
+	rm -rf $(PKGNAME)-$(TAGVER)
+
+dist-gz: dist-common
+	tar zcpf $(PKGNAME)-$(TAGVER).tar.gz $(PKGNAME)-$(TAGVER)
+	rm -rf $(PKGNAME)-$(TAGVER)
+
+man: README.rst
+	rst2man $< >mic.1
 
 install: all
 	python setup.py install --prefix=${PREFIX}
