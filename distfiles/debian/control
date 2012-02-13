@@ -10,8 +10,8 @@ Package: gbs
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends},
  git-core,
- curl,
- osc (>= 0.131)
+ osc (>= 0.131),
+ rpm
 Description: The command line tools for Tizen package developers
   The command line tools for Tizen package developers will
   be used to do packaging related tasks. 

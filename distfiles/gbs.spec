@@ -10,8 +10,13 @@ URL:        http://www.tizen.org
 Source0:    %{name}-%{version}.tar.gz
 Requires:   python >= 2.5
 Requires:   git-core
-Requires:   curl
 Requires:   osc >= 0.131
+%if 0%{?fedora_version}
+Requires:   rpm-build
+%else
+Requires:   rpm
+%endif
+
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
 
