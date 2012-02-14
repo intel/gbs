@@ -43,7 +43,7 @@ rm -rf $RPM_BUILD_ROOT
 %endif
 
 mkdir -p %{buildroot}/%{_prefix}/share/man/man1
-install -m644 doc/mic.1 %{buildroot}/%{_prefix}/share/man/man1
+install -m644 doc/gbs.1 %{buildroot}/%{_prefix}/share/man/man1
 
 %files
 %defattr(-,root,root,-)

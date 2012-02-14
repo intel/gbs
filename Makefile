@@ -21,7 +21,7 @@ tag:
 dist-common: man
 	git archive --format=tar --prefix=$(PKGNAME)-$(TAGVER)/ $(TAG) | tar xpf -
 	git show $(TAG) --oneline | head -1 > $(PKGNAME)-$(TAGVER)/commit-id
-	mkdir $(PKGNAME)-$(TAGVER)/doc; mv mic.1 $(PKGNAME)-$(TAGVER)/doc
+	mkdir $(PKGNAME)-$(TAGVER)/doc; mv gbs.1 $(PKGNAME)-$(TAGVER)/doc
 
 dist-bz2: dist-common
 	tar jcpf $(PKGNAME)-$(TAGVER).tar.bz2 $(PKGNAME)-$(TAGVER)
@@ -32,7 +32,7 @@ dist-gz: dist-common
 	rm -rf $(PKGNAME)-$(TAGVER)
 
 man: README.rst
-	rst2man $< >mic.1
+	rst2man $< >gbs.1
 
 install: all
 	python setup.py install --prefix=${PREFIX}

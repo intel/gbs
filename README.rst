@@ -25,6 +25,9 @@ It supports native running in many mainstream Linux distributions, including:
 
 Installation
 ============
+gbs is recommended to install from official repository, but if your system have
+not been supported by official repo, you can try to install gbs from source 
+code, before that, you should install gbs's dependencies such as git, osc. 
 
 Repositories
 ------------
@@ -114,6 +117,21 @@ Ubuntu/Debian Installation
 
 Source Installation
 -------------------
+If you need install gbs from source code, you need install gbs's dependencies
+first, required packages as follows:
+
+* git-core
+* osc >= 0.131
+* rpm (None Fedora)
+* rpm-build (Fedora)
+
+Official osc are maintained at:
+
+ `<http://download.opensuse.org/repositories/openSUSE:/Tools/>`_
+
+which can be added to you system, then using general package manager tools
+to install osc. 
+
 Gbs source code is managed by Gerrit in tizen staging zone(temporarily), you
 need an account to access it.
 
@@ -134,9 +152,9 @@ Then using the following commands to install gbs:
 
 Configuration file
 ==================
-At the first time to run the gbs, it will prompt you to input your user_name
-and password. Or edit the configuration file by yourself.  Just make sure it
-looks like as below:
+gbs read gbs configure file from ~/.gbs.conf. At the first time to run the gbs,
+it will prompt you to input your user_name and password. Or edit the 
+configuration file by yourself.  Just make sure it looks like as below:
 ::
 
   [general]
@@ -146,6 +164,7 @@ looks like as below:
   ; settings for build subcommand
   build_server = <OBS API URL>
   user = <USER_NAME>
+  passwd  = <PASSWORD in base64 string>
   passwdx = <PASSWORD encoded in base64 string>
 
 In this configuration file, there are two sections: [common] is for general
@@ -154,11 +173,14 @@ setting, and [build] is for the options of gbs build.
 In the [build] section, the following values can be specified:
 
 build_server
-    OBS API url, which point to remote OBS.
+    OBS API url, which point to remote OBS. Available value can be:
+    https://api.stg.tizen.org
 user
     OBS account user name
+passwd
+    raw OBS account user passwd
 passwdx
-    encoded OBS account user passwd
+    encoded OBS account user passwd, this key would be generated automaticlly.
 
 Usages
 ======
@@ -169,7 +191,7 @@ Running 'gbs build'
 --------------------
 
 Subcommand `build` is used to push local git code to remote obs build server
-to build. The usage of subcommand `build` can be avaliable using `gbs build --help`
+to build. The usage of subcommand `build` can be available using `gbs build --help`
 ::
 
   build (bl): test building for current pkg
