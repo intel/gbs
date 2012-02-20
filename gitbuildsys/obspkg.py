@@ -152,7 +152,6 @@ class ObsProject(object):
         self._apiurl = self._bs.apiurl
         self._prj = prj
 
-    @msger.waiting
     def is_new(self):
         return self._bs.isNewProject(self._prj)
 
