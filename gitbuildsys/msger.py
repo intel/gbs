@@ -149,12 +149,17 @@ class PrintBufWrapper(object):
         if callable(orig_attr):
             def hooked(*args, **kwargs):
                 self.pbuf.start()
-                result = orig_attr(*args, **kwargs)
-                stdout_msg, stderr_msg = self.pbuf.stop()
-                if stdout_msg:
-                    self.func1(stdout_msg)
-                if stderr_msg:
-                    self.func2(stderr_msg)
+                try:
+                    result = orig_attr(*args, **kwargs)
+                except:
+                    raise
+                finally:
+                    stdout_msg, stderr_msg = self.pbuf.stop()
+                    if stdout_msg:
+                        self.func1(stdout_msg)
+                    if stderr_msg:
+                        self.func2(stderr_msg)
+
                 return result
 
             return hooked
