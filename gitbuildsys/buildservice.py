@@ -28,6 +28,44 @@ import urllib2
 import xml.etree.cElementTree as ElementTree
 from osc import conf, core
 
+class ObsError(Exception):
+    pass
+
+# Injection code for osc.core to fix the empty XML bug
+def solid_get_files_meta(self, revision='latest', skip_service=True):
+    from time import sleep
+    import msger
+    try:
+        from xml.etree import cElementTree as ET
+    except ImportError:
+        import cElementTree as ET
+
+    retry_count = 3
+    while retry_count > 0:
+        fm = core.show_files_meta(self.apiurl, self.prjname, self.name,
+                                  revision=revision, meta=self.meta)
+        try:
+            root = ET.fromstring(fm)
+            break
+        except SyntaxError, err:
+            msger.warning('corrupted or empty obs server response ,retrying ...')
+            sleep(1)
+            retry_count -= 1
+
+    if not retry_count:
+        # all the re-try failed, abort
+        raise ObsError('cannet fetch files meta xml from server')
+
+    # look for "too large" files according to size limit and mark them
+    for e in root.findall('entry'):
+        size = e.get('size')
+        if size and self.size_limit and int(size) > self.size_limit \
+            or skip_service and (e.get('name').startswith('_service:') or e.get('name').startswith('_service_')):
+            e.set('skipped', 'true')
+    return ET.tostring(root)
+
+core.Package.get_files_meta = solid_get_files_meta
+
 class _Metafile:
     """
     _Metafile(url, input, change_is_required=False, file_ext='.xml')

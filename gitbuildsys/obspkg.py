@@ -80,7 +80,10 @@ class ObsPackage(object):
         """
 
         with Workdir(self._bdir):
-            self._bs.checkout(self._prj, self._pkg)
+            try:
+                self._bs.checkout(self._prj, self._pkg)
+            except buildservice.ObsError, err:
+                raise errors.ObsError(str(err))
 
     def get_workdir(self):
         return self._pkgpath
