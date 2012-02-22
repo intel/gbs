@@ -35,19 +35,15 @@ class ObsError(Exception):
 def solid_get_files_meta(self, revision='latest', skip_service=True):
     from time import sleep
     import msger
-    try:
-        from xml.etree import cElementTree as ET
-    except ImportError:
-        import cElementTree as ET
 
     retry_count = 3
     while retry_count > 0:
         fm = core.show_files_meta(self.apiurl, self.prjname, self.name,
                                   revision=revision, meta=self.meta)
         try:
-            root = ET.fromstring(fm)
+            root = core.ET.fromstring(fm)
             break
-        except SyntaxError, err:
+        except:
             msger.warning('corrupted or empty obs server response ,retrying ...')
             sleep(1)
             retry_count -= 1
@@ -62,7 +58,7 @@ def solid_get_files_meta(self, revision='latest', skip_service=True):
         if size and self.size_limit and int(size) > self.size_limit \
             or skip_service and (e.get('name').startswith('_service:') or e.get('name').startswith('_service_')):
             e.set('skipped', 'true')
-    return ET.tostring(root)
+    return core.ET.tostring(root)
 
 core.Package.get_files_meta = solid_get_files_meta
 
