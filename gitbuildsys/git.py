@@ -168,10 +168,10 @@ class Git:
                     '--output=%s' % tarname,
                     '--prefix=%s' % prefix
                   ]
-        self._exec_git('archive', options)
+        with Workdir(self.path):
+            self._exec_git('archive', options)
+            if zipcmd:
+                runner.quiet('%s %s' % (zipcmd, tarname))
 
-        if zipcmd:
-            runner.quiet('%s %s' % (zipcmd, tarname))
-
-        if finalname != tarfname:
-            os.rename(finalname, tarfname)
+            if finalname != tarfname:
+                os.rename(finalname, tarfname)

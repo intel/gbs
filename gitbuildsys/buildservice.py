@@ -1164,3 +1164,30 @@ class BuildService(object):
                             force=True)
 
         return (targetprj, targetpkg)
+
+    def get_buildconfig(self, prj, repository):
+        return core.get_buildconfig(self.apiurl, prj, repository)
+
+    def get_repos(self, prj):
+        repos = []
+        for repo in core.get_repos_of_project(self.apiurl, prj):
+            repos.append(repo)
+        return repos
+
+    def get_ArchitectureList(self, prj, target):
+        """
+        return the list of Archictecture of the target of the projectObsName for a OBS server.
+        """
+        url = core.makeurl(self.apiurl,['build', prj, target])
+        f = core.http_GET(url)
+        if f == None:
+            return None
+
+        aElement = ElementTree.fromstring(''.join(f.readlines()))
+        result = []
+        for directory in aElement:
+            for entry in directory.getiterator():
+                result.append(entry.get("name"))
+
+        return result
+

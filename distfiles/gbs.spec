@@ -11,6 +11,7 @@ Source0:    %{name}-%{version}.tar.gz
 Requires:   python >= 2.5
 Requires:   git-core
 Requires:   osc >= 0.131
+Requires:   build >= 2011.10.10
 %if 0%{?fedora_version}
 Requires:   rpm-build
 %else

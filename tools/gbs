@@ -79,6 +79,71 @@ class TizenPkg(cmdln.Cmdln):
         if self.options.debug:
             msger.set_loglevel('debug')
 
+    @cmdln.alias("lb")
+    @cmdln.option('-D', '--dist',
+                  default=None,
+                  dest='dist',
+                  help='Specify distribution configure file, which should' \
+                       'be full path')
+    @cmdln.option('-R', '--repository',
+                  action="append",
+                  default=None,
+                  type="string",
+                  dest='repositories',
+                  help='Specify package repositories, Supported format ' \
+                       'is rpm-md')
+    @cmdln.option('-B', '--buildroot',
+                  default=None,
+                  dest='buildroot',
+                  help='Specify build rootdir to setup chroot environment')
+    @cmdln.option('-A', '--arch',
+                  default=None,
+                  dest='arch',
+                  help='build target arch ')
+    @cmdln.option('-C', '--clean',
+                  action="store_true",
+                  default=False,
+                  dest='clean',
+                  help='Delete old build root before initializing it')
+    @cmdln.option('--noinit',
+                  action="store_true",
+                  default=False,
+                  dest='noinit',
+                  help='Skip initialization of build root and start with build immediately')
+    @cmdln.option('--debuginfo',
+                  action="store_true",
+                  default=False,
+                  dest='debuginfo',
+                  help='Enable build debuginfo sub-packages')
+
+    def do_localbuild(self, subcmd, opts, *args):
+        """${cmd_name}: local build package
+
+        Usage:
+            gbs localbuild -R repository -A ARCH [options] [package git dir]
+
+            [package git dir] is optional, if not specified, current dir wuold
+            be used.
+            
+        Examples:
+            gbs localbuild -R http://example1.org/packages/ \\
+                           -R http://example2.org/packages/ \\
+                           -A i586                          \\
+                           -D /usr/share/gbs/tizen-1.0.conf
+
+        Note:
+        
+        if -D not specified, distconf key in ~/.gbs.conf would be used.
+        If distconf key is None, dist conf file would be got  from  OBS 
+        project (Trunk by default).
+
+        ${cmd_option_list}
+        """
+
+        from gitbuildsys import cmd_localbuild as cmd
+        cmd.do(opts, args)
+
+
     @cmdln.alias("bl")
     @cmdln.option('-T', '--target-obsprj',
                   default=None,

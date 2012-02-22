@@ -220,9 +220,15 @@ class ConfigMgr(object):
             },
             'build': {
                 'build_server': 'https://build.tizen.org',
-                'user': 'my_user_id',
-                'passwd': '',
-                'passwdx': '',
+                'user':         'my_user_id',
+                'passwd':       '',
+                'passwdx':      '',
+            },
+            'localbuild': {
+                'build_cmd':    '/usr/bin/build',
+                'build_root':   '/var/tmp/build-root-gbs',
+                'su-wrapper':   'su -c',
+                'distconf':     None,
             },
     }
 
@@ -235,6 +241,11 @@ tmpdir = $general__tmpdir
 build_server = $build__build_server
 user = $build__user
 passwdx = $build__passwdx
+[localbuild]
+build_cmd = /usr/bin/build
+build_root= /var/tmp/build-root-gbs
+su-wrapper= su -c
+distconf= /usr/share/gbs/tizen-1.0.conf
 """
 
     # make the manager class as singleton
@@ -351,6 +362,12 @@ passwdx = $build__passwdx
             else:
                 raise errors.ConfigError('no opt: %s in section %s' \
                                          % (opt, section))
+    def check_opt(self, opt, section='general'):
+        if section in self.DEFAULTS and \
+           opt in self.DEFAULTS[section]:
+            return True
+        else:
+            return False
 
     def get(self, opt, section='general'):
         if opt == 'passwd':

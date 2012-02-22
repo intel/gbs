@@ -11,6 +11,7 @@ Architecture: all
 Depends: ${misc:Depends}, ${python:Depends},
  git-core,
  osc (>= 0.131),
+ build (>= 2011.10.10),
  rpm
 Description: The command line tools for Tizen package developers
   The command line tools for Tizen package developers will

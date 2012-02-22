@@ -107,3 +107,19 @@ def parse_spec(spec_path, macro):
         # TBD parse it directly
         msger.warning('cannot support parsing spec without rpmbuild command')
         return ''
+
+def get_processors():
+    """
+    get number of processors (online) based on
+    SC_NPROCESSORS_ONLN (returns 1 if config name does not exist).
+    """
+    try:
+        return os.sysconf('SC_NPROCESSORS_ONLN')
+    except ValueError:
+        return 1
+
+def get_hostarch():
+    hostarch = os.uname()[4]
+    if hostarch == 'i686':
+        hostarch = 'i586'
+    return hostarch

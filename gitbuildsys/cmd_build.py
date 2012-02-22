@@ -51,12 +51,11 @@ TMPDIR      = configmgr.get('tmpdir')
 
 def do(opts, args):
 
-    if not os.path.isdir('.git'):
-        msger.error('You must run this command under a git tree')
-
-    mygit = git.Git('.')
-    if mygit.get_branches()[0] != 'master':
-        msger.error('You must run this command under the master branch')
+    workdir = os.getcwd()
+    if len(args) > 1:
+        msger.error('only one work directory can be specified in args.')
+    if len(args) == 1:
+        workdir = args[0]
 
     tmpdir = '%s/%s' % (TMPDIR, USER)
     if not os.path.exists(tmpdir):
@@ -76,7 +75,7 @@ def do(opts, args):
     f.close()
     
     # TODO: check ./packaging dir at first
-    specs = glob.glob('./packaging/*.spec')
+    specs = glob.glob('%s/packaging/*.spec' % workdir)
     if not specs:
         msger.error('no spec file found under /packaging sub-directory')
 
@@ -109,15 +108,16 @@ def do(opts, args):
 
     msger.info('checking out %s/%s to %s ...' % (target_prj, name, tmpdir))
     localpkg = obspkg.ObsPackage(tmpdir, target_prj, name, APISERVER, oscrcpath)
-    workdir = localpkg.get_workdir()
+    oscworkdir = localpkg.get_workdir()
     localpkg.remove_all()
 
-    tarball = '%s/%s-%s-tizen.tar.bz2' % (workdir, name, version)
+    tarball = '%s/%s-%s-tizen.tar.bz2' % (oscworkdir, name, version)
     msger.info('archive git tree to tarball: %s' % os.path.basename(tarball))
+    mygit = git.Git(workdir)
     mygit.archive("%s-%s/" % (name, version), tarball)
 
-    for f in glob.glob('packaging/*'):
-        shutil.copy(f, workdir)
+    for f in glob.glob('%s/packaging/*' % workdir):
+        shutil.copy(f, oscworkdir)
 
     localpkg.update_local()
 
