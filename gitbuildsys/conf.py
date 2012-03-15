@@ -230,6 +230,11 @@ class ConfigMgr(object):
                 'su-wrapper':   'su -c',
                 'distconf':     None,
             },
+            'import': {
+                'commit_name':    None,
+                'commit_email':   None,
+            },
+
     }
 
     DEFAULT_CONF_TEMPLATE="""[general]
@@ -246,6 +251,9 @@ build_cmd = /usr/bin/build
 build_root= /var/tmp/build-root-gbs
 su-wrapper= su -c
 distconf= /usr/share/gbs/tizen-1.0.conf
+[import]
+commit_name=
+commit_email=
 """
 
     # make the manager class as singleton

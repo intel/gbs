@@ -30,10 +30,15 @@ class Git:
             raise errors.GitInvalid(path)
 
         self.path = os.path.abspath(path)
+        self._git_dir = os.path.join(path, '.git')
 
         # as cache
         self.cur_branch = None
         self.branches = None
+
+    def _is_sha1(self, val):
+        sha1_re = re.compile(r'[0-9a-f]{40}$')
+        return True if sha1_re.match(val) else False
 
     def _exec_git(self, command, args=[]):
         """Exec a git command and return the output
@@ -70,11 +75,29 @@ class Git:
         """
         return filter(None, self._exec_git('ls-files').splitlines())
 
+    def rev_parse(self, name):
+        """ Find the SHA1 of a given name commit id"""
+        options = [ "--quiet", "--verify", name ]
+        cmd = ['git', 'rev-parse']
+        ret, commit = runner.runtool(' '.join(cmd + options))
+        if ret == 0:
+            return commit.strip()
+        else:
+            return None
+
+    def create_branch(self, branch, rev=None):
+        if rev and not self._is_sha1(rev):
+            rev = self.rev_parse(rev)
+        if not branch:
+            raise errors.GitError('Branch name should not be None')
+
+        options = [branch, rev, '-f']
+        self._exec_git('branch', options)
+
     def _get_branches(self):
         """Return the branches list, current working branch is the first
         element.
         """
-
         branches = []
         for line in self._exec_git('branch', ['--no-color']).splitlines():
             br = line.strip().split()[-1]
@@ -119,6 +142,44 @@ class Git:
 
         else:
             return (br in self.get_branches()[1])
+
+    def commit_dir(self, unpack_dir, msg, branch = 'master', other_parents=None,
+                   author={}, committer={}, create_missing_branch=False):
+
+        for key, val in author.items():
+            if val:
+                os.environ['GIT_AUTHOR_%s' % key.upper()] = val
+        for key, val in committer.items():
+            if val:
+                os.environ['GIT_COMMITTER_%s' % key.upper()] = val
+
+        os.environ['GIT_WORK_TREE'] = unpack_dir
+        options = ['.', '-f']
+        self._exec_git("add", options)
+
+        options = ['--quiet','-a', '-m %s' % msg,]
+        self._exec_git("commit", options)
+
+        commit_id = self._exec_git('log', ['--oneline', '-1']).split()[0]
+
+        del os.environ['GIT_WORK_TREE']
+        for key, val in author.items():
+            if val:
+                del os.environ['GIT_AUTHOR_%s' % key.upper()]
+        for key, val in committer.items():
+            if val:
+                del os.environ['GIT_COMMITTER_%s' % key.upper()]
+
+        self._exec_git('reset', ['--hard', commit_id])
+
+        return commit_id
+
+    def create_tag(self, name, msg, commit):
+        """Creat a tag with name at commit""" 
+        if self.rev_parse(commit) is None:
+            raise errors.GitError('%s is invalid commit ID' % commit)
+        options = [name, '-m %s' % msg, commit]
+        self._exec_git('tag', options)
 
     def archive(self, prefix, tarfname, treeish='HEAD'):
         """Archive git tree from 'treeish', detect archive type
@@ -175,3 +236,43 @@ class Git:
 
             if finalname != tarfname:
                 os.rename(finalname, tarfname)
+
+    @staticmethod
+    def _formatlize(version):
+        return version.replace('~', '_').replace(':', '%')
+
+    @staticmethod
+    def version_to_tag(format, version):
+        return format % dict(version=Git._formatlize(version))
+
+    @classmethod
+    def create(klass, path, description=None, bare=False):
+        """
+        Create a repository at path
+        @path: where to create the repository
+        """
+        abspath = os.path.abspath(path)
+        options = []
+        if bare:
+            options = [ '--bare' ]
+            git_dir = ''
+        else:
+            options = []
+            git_dir = '.git'
+
+        try:
+            if not os.path.exists(abspath):
+                os.makedirs(abspath)
+
+            with Workdir(abspath):
+                cmd = ['git', 'init'] + options;
+                runner.quiet(' '.join(cmd))
+            if description:
+                with file(os.path.join(abspath, git_dir, "description"), 'w') as f:
+                    description += '\n' if description[-1] != '\n' else ''
+                    f.write(description)
+            return klass(abspath)
+        except OSError, err:
+            raise errors.GitError("Cannot create Git repository at '%s': %s"
+                                     % (abspath, err[1]))
+        return None

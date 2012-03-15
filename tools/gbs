@@ -176,6 +176,34 @@ class TizenPkg(cmdln.Cmdln):
         from gitbuildsys import cmd_build as cmd
         cmd.do(opts, args)
 
+
+    @cmdln.alias("im")
+    @cmdln.option('--author-name',
+                  default=None,
+                  dest='author_name',
+                  help='author name of git commit')
+    @cmdln.option('--author-email',
+                  default=None,
+                  dest='author_email',
+                  help='author email of git commit')
+    def do_import(self, subcmd, opts, *args):
+        """${cmd_name}: Import spec file/source rpm/tar ball to git repository
+
+        Usage:
+            gbs import [options] specfile | source rpm | tar ball
+
+
+        Examples:
+          $ gbs import /path/to/specfile/
+          $ gbs import /path/to/src.rpm
+          $ gbs import /path/to/tarball
+        ${cmd_option_list}
+        """
+
+        from gitbuildsys import cmd_import as cmd
+        cmd.do(opts, args)
+
+
     @cmdln.alias("cfg")
     @cmdln.option('-s', '--section',
                         metavar='SECTION',
