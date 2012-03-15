@@ -160,8 +160,16 @@ class TizenPkg(cmdln.Cmdln):
         """${cmd_name}: test building for current pkg
 
         Usage:
-            gbs build [options] [OBS_project]
+            gbs build [options] [package git dir]
 
+            [package git dir] is optional, if not specified, current dir wuold
+            be used.
+
+        Examples:    
+          $ gbs build
+          $ gbs build -B Test
+          $ gbs build -B Test -T home:<userid>:gbs
+          $ gbs build <package git directory>
         ${cmd_option_list}
         """
 

@@ -166,9 +166,15 @@ configuration file by yourself.  Just make sure it looks like as below:
   user = <USER_NAME>
   passwd  = <PASSWORD in base64 string>
   passwdx = <PASSWORD encoded in base64 string>
+  [localbuild]
+  build_cmd = /usr/bin/build
+  build_root= /var/tmp/build-root-gbs
+  su-wrapper= su -c
+  distconf=/usr/share/gbs/tizen-1.0.conf
 
-In this configuration file, there are two sections: [common] is for general
-setting, and [build] is for the options of gbs build.
+In this configuration file, there are three sections: [common] is for general
+setting, [build] section is for the options of gbs build, and [localbuild]
+is for gbs localbuild.
 
 In the [build] section, the following values can be specified:
 
@@ -181,6 +187,14 @@ passwd
     raw OBS account user passwd
 passwdx
     encoded OBS account user passwd, this key would be generated automaticlly.
+
+In the [localbuild] section, the following values can be specified:
+build_cmd
+    build script path for building RPMs in a chroot environment
+build_root
+    patch for chroot environment
+distconf
+    Specify distribution configure file
 
 Usages
 ======
