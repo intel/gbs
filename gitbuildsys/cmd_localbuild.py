@@ -97,15 +97,6 @@ def do(opts, args):
     if len(specs) > 1:
         msger.warning('multiple specfiles found.')
 
-    name = utils.parse_spec(specfile, 'name')
-    version = utils.parse_spec(specfile, 'version')
-    if not name or not version:
-        msger.error('can\'t get correct name or version from spec file.')
-
-    tarball = 'packaging/%s-%s-tizen.tar.bz2' % (name, version)
-    msger.info('generate tar ball: %s' % tarball)
-    mygit = git.Git(workdir)
-    mygit.archive("%s-%s/" % (name, version), tarball)
 
     tmpdir = '%s/%s' % (TMPDIR, USER)
     if not os.path.exists(tmpdir):
@@ -199,6 +190,16 @@ def do(opts, args):
         cmd = [ change_personality[buildarch] ] + cmd;
 
     msger.info(' '.join(cmd))
+
+    name = utils.parse_spec(specfile, 'name')
+    version = utils.parse_spec(specfile, 'version')
+    if not name or not version:
+        msger.error('can\'t get correct name or version from spec file.')
+
+    tarball = 'packaging/%s-%s-tizen.tar.bz2' % (name, version)
+    msger.info('generate tar ball: %s' % tarball)
+    mygit = git.Git(workdir)
+    mygit.archive("%s-%s/" % (name, version), tarball)
 
     # runner.show() can't support interactive mode, so use subprocess insterad.
     try:
