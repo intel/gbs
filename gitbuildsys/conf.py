@@ -227,7 +227,7 @@ class ConfigMgr(object):
             'localbuild': {
                 'build_cmd':    '/usr/bin/build',
                 'build_root':   '/var/tmp/build-root-gbs',
-                'su-wrapper':   'su -c',
+                'su-wrapper':   'sudo',
                 'distconf':     None,
             },
             'import': {
@@ -249,7 +249,7 @@ passwdx = $build__passwdx
 [localbuild]
 build_cmd = /usr/bin/build
 build_root= /var/tmp/build-root-gbs
-su-wrapper= su -c
+su-wrapper= sudo
 distconf= /usr/share/gbs/tizen-1.0.conf
 [import]
 commit_name=

@@ -205,15 +205,16 @@ def do(opts, args):
     try:
         rc = subprocess.call(cmd)
         if rc:
-            print 'The buildroot was:', build_root
+            msger.error('rpmbuild fails')
+        else:
+            msger.info('The buildroot was:', build_root)
+            msger.info('Done')
     except KeyboardInterrupt, i:
-        print "keyboard interrupt, killing build ..."
+        msger.info('keyboard interrupt, killing build ...')
         subprocess.call(cmd + ["--kill"])
-        raise i
-
-    os.unlink("%s/%s" % (workdir, tarball))
-    os.unlink(oscrcpath)
-    if bc_filename:
-        os.unlink(bc_filename)
-
-    msger.info('Done')
+        msger.error('interrrupt from keyboard')
+    finally:
+        os.unlink("%s/%s" % (workdir, tarball))
+        os.unlink(oscrcpath)
+        if bc_filename:
+            os.unlink(bc_filename)
