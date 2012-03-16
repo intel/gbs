@@ -17,6 +17,7 @@
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import os
+import re
 
 # internal modules
 import runner
@@ -174,12 +175,28 @@ class Git:
 
         return commit_id
 
+    def find_tag(self, tag):
+        """find the specify version from the repository"""
+        args = ['-l', tag]
+        ret = self._exec_git('tag', args)
+        if ret:
+            return True
+        return False
+
     def create_tag(self, name, msg, commit):
         """Creat a tag with name at commit""" 
         if self.rev_parse(commit) is None:
             raise errors.GitError('%s is invalid commit ID' % commit)
         options = [name, '-m %s' % msg, commit]
         self._exec_git('tag', options)
+
+    def merge(self, commit):
+        """ merge the git tree specified by commit to current branch"""
+        if self.rev_parse(commit) is None or not self.find_tag(commit):
+            raise errors.GitError('%s is invalid commit ID or tag' % commit)
+
+        options = [commit]
+        self._exec_git('merge', options)
 
     def archive(self, prefix, tarfname, treeish='HEAD'):
         """Archive git tree from 'treeish', detect archive type

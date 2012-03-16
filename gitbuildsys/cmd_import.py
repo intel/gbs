@@ -95,6 +95,8 @@ def do(opts, args):
                             )
     msger.info('create tag named: %s' % tag)
     repo.create_tag(tag, msg, commit)
+    msger.info('create upstream branch')
+    repo.create_branch('upstream', commit)
 
     packagingdir = '%s/packaging' % upstream.unpacked
     if not os.path.exists(packagingdir):
