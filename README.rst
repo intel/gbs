@@ -189,6 +189,7 @@ passwdx
     encoded OBS account user passwd, this key would be generated automaticlly.
 
 In the [localbuild] section, the following values can be specified:
+
 build_cmd
     build script path for building RPMs in a chroot environment
 build_root
