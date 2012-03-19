@@ -19,6 +19,7 @@
 from __future__ import with_statement
 import os
 import glob
+import platform
 
 import msger
 import runner
@@ -31,6 +32,23 @@ compressor_opts = { 'gzip'  : [ '-n', 'gz' ],
 # Map frequently used names of compression types to the internal ones:
 compressor_aliases = { 'bz2' : 'bzip2',
                        'gz'  : 'gzip', }
+
+SUPPORT_DISTS = (
+    'SuSE',
+    'debian',
+    'fedora',
+    'ubuntu'
+    'tizen',
+)
+
+def linux_distribution():
+    try:
+        (dist, ver, id) = platform.linux_distribution( \
+                              supported_dists = SUPPORT_DISTS)
+    except:
+        (dist, ver, id) = platform.dist( \
+                              supported_dists = SUPPORT_DISTS)
+    return (dist, ver, id)
 
 class Workdir(object):
     def __init__(self, path):

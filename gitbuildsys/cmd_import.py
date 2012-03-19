@@ -50,7 +50,10 @@ def do(opts, args):
         srcrpmdir = tempfile.mkdtemp(prefix='%s/%s' % (tmpdir, 'src.rpm'))
 
         msger.info('unpack source rpm package: %s' % args[0])
-        ret = runner.quiet("rpm -i --define '_topdir %s' %s" % (srcrpmdir, args[0]))
+        cmd = "rpm -i --define '_topdir %s' %s" % (srcrpmdir, args[0])
+        if utils.linux_distribution()[0] == 'Ubuntu':
+            cmd = "%s --force-debian" % cmd
+        ret = runner.quiet(cmd)
         if ret != 0:
             msger.error('source rpm %s unpack fails' % args[0])
         specfile = glob.glob("%s/SPECS/*" % srcrpmdir)[0]
