@@ -207,7 +207,7 @@ def do(opts, args):
         if rc:
             msger.error('rpmbuild fails')
         else:
-            msger.info('The buildroot was:', build_root)
+            msger.info('The buildroot was: %s' % build_root)
             msger.info('Done')
     except KeyboardInterrupt, i:
         msger.info('keyboard interrupt, killing build ...')
