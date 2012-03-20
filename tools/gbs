@@ -203,6 +203,41 @@ class TizenPkg(cmdln.Cmdln):
         from gitbuildsys import cmd_import as cmd
         cmd.do(opts, args)
 
+    @cmdln.alias("import-orig")
+    @cmdln.option('--author-name',
+                  default=None,
+                  dest='author_name',
+                  help='author name of git commit')
+    @cmdln.option('--author-email',
+                  default=None,
+                  dest='author_email',
+                  help='author email of git commit')
+    @cmdln.option('--upstream_branch',
+                  default=None,
+                  dest='upstream_branch',
+                  help='specify upstream branch for new version of package')
+    @cmdln.option('--no-merge',
+                  action="store_true",
+                  default=False,
+                  dest='no_merge',
+                  help='Dont merge new upstream branch to master branch, please user merge it manually')
+
+    def do_import_orig(self, subcmd, opts, *args):
+        """${cmd_name}: Import tar ball to upstream branch
+
+        Usage:
+            gbs import-orig [options] original-tar-ball
+
+
+        Examples:
+          $ gbs import original-tar-ball
+        ${cmd_option_list}
+        """
+
+        from gitbuildsys import cmd_import_orig as cmd
+        cmd.do(opts, args)
+
+
 
     @cmdln.alias("cfg")
     @cmdln.option('-s', '--section',

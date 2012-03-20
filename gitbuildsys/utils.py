@@ -20,6 +20,7 @@ from __future__ import with_statement
 import os
 import glob
 import platform
+import re
 
 import msger
 import runner
@@ -234,3 +235,27 @@ class UpstreamTarball(object):
             unpackArchive = UnpackTarArchive(self.path, dir, filters)
         except gbpc.CommandExecFailed:
             raise GbpError
+
+    def guess_version(self, extra_regex=r''):
+        """
+        Guess the package name and version from the filename of an upstream
+        archive.
+        """
+        known_compressions = [ args[1][-1] for args in compressor_opts.items() ]
+
+        version_chars = r'[a-zA-Z\d\.\~\-\:\+]'
+        extensions = r'\.tar\.(%s)' % "|".join(known_compressions)
+
+        version_filters = map ( lambda x: x % (version_chars, extensions),
+                           ( # Tizen package_<version>-tizen.tar.gz:
+                             r'^(?P<package>[a-z\d\.\+\-]+)-(?P<version>%s+)-tizen%s',
+                             # Upstream package-<version>.tar.gz:
+                             r'^(?P<package>[a-zA-Z\d\.\+\-]+)-(?P<version>[0-9]%s*)%s'))
+        if extra_regex:
+            version_filters = extra_regex + version_filters
+
+        for filter in version_filters:
+            m = re.match(filter, os.path.basename(self.path))
+            if m:
+                return (m.group('package'), m.group('version'))
+

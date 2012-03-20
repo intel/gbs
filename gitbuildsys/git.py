@@ -121,7 +121,8 @@ class Git:
         """does the repository contain any uncommitted modifications"""
 
         gitsts = self.status()
-        if 'M ' in gitsts or ' M' in gitsts:
+        if 'M ' in gitsts or ' M' in gitsts or \
+           'A ' in gitsts or ' A ' in gitsts:
             return False
         else:
             return True
@@ -144,6 +145,23 @@ class Git:
         else:
             return (br in self.get_branches()[1])
 
+    def checkout_branch(self, br):
+        """checkout repository branch 'br'
+        """
+        options = [br]
+        with Workdir(self.path):
+            self._exec_git('checkout', options)
+
+    def clean_branch(self, br):
+        """Clean up repository branch 'br'
+        """
+
+        options = ['-dfx']
+        with Workdir(self.path):
+            self.checkout_branch(br)
+            runner.quiet('rm .git/index')
+            self._exec_git('clean', options)
+
     def commit_dir(self, unpack_dir, msg, branch = 'master', other_parents=None,
                    author={}, committer={}, create_missing_branch=False):
 
@@ -157,6 +175,10 @@ class Git:
         os.environ['GIT_WORK_TREE'] = unpack_dir
         options = ['.', '-f']
         self._exec_git("add", options)
+
+        import pdb;pdb.set_trace()
+        if self.is_clean():
+            return None
 
         options = ['--quiet','-a', '-m %s' % msg,]
         self._exec_git("commit", options)
