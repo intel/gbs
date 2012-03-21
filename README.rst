@@ -327,8 +327,10 @@ Running 'gbs import-orig'
 -------------------------
 
 Subcommand `import-orig` is used to import original upstream tar ball to current
-git  repository. This subcommand is mostlly used for upgrade packages. usage of
-subcommand `import-orig` can be available from `gbs import-orig --help`
+git  repository. This subcommand is mostlly used for upgrade packages. upstream
+tar ball format can be tar.gz, tar.bz2, tar.xz, tar.lzma or .zip.
+
+Usage of subcommand `import-orig` can be available from `gbs import-orig --help`
 ::
 
   root@test-virtual-machine:~/gbs# gbs import-orig -h
@@ -339,7 +341,7 @@ subcommand `import-orig` can be available from `gbs import-orig --help`
 
 
   Examples:
-    $ gbs import original-tar-ball
+    $ gbs import-orig original-tar-ball
   Options:
       -h, --help          show this help message and exit
       --tag               Create tag while import new version of upstream tar

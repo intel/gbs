@@ -24,6 +24,7 @@ import re
 
 import msger
 import runner
+import errors
 
 compressor_opts = { 'gzip'  : [ '-n', 'gz' ],
                     'bzip2' : [ '', 'bz2' ],
@@ -164,7 +165,9 @@ class UnpackTarArchive(object):
             compression = '-a'
 
         cmd = ' '.join(['tar']+ exclude + ['-C', dir, compression, '-xf', archive ])
-        runner.quiet(cmd)
+        ret = runner.quiet(cmd)
+        if ret != 0:
+            raise errors.UnpackError("Unpacking of %s failed" % archive)
 
 class UnpackZipArchive(object):
     """Wrap zip to Unpack a zip file"""
@@ -173,8 +176,9 @@ class UnpackZipArchive(object):
         self.dir = dir
 
         cmd = ' '.join(['unzip'] + [ "-q", archive, '-d', dir ])
-        msger.info(cmd)
-        runner.quiet(cmd)
+        ret = runner.quiet(cmd)
+        if ret != 0:
+            raise errors.UnpackError("Unpacking of %s failed" % archive)
 
 class UpstreamTarball(object):
     def __init__(self, name, unpacked=None):
@@ -195,7 +199,7 @@ class UpstreamTarball(object):
             filters = []
 
         if type(filters) != type([]):
-            raise GbpError, "Filters must be a list"
+            raise errors.UnpackError ('Filters must be a list')
 
         self._unpack_archive(dir, filters)
         self.unpacked = self._unpacked_toplevel(dir)
@@ -211,10 +215,7 @@ class UpstreamTarball(object):
             self._unpack_tar(dir, filters)
 
     def _unpack_zip(self, dir):
-        try:
-            UnpackZipArchive(self.path, dir)
-        except CmdError:
-            raise CmdError, "Unpacking of %s failed" % self.path
+        UnpackZipArchive(self.path, dir)
 
     def _unpacked_toplevel(self, dir):
         """unpacked archives can contain a leading directory or not"""
@@ -231,10 +232,7 @@ class UpstreamTarball(object):
         """
         Unpack a tarball to dir applying a list of filters.
         """
-        try:
-            unpackArchive = UnpackTarArchive(self.path, dir, filters)
-        except gbpc.CommandExecFailed:
-            raise GbpError
+        UnpackTarArchive(self.path, dir, filters)
 
     def guess_version(self, extra_regex=r''):
         """

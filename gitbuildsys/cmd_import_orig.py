@@ -56,7 +56,12 @@ def do(opts, args):
     msger.info('unpack upstream tar ball ...')
     upstream = utils.UpstreamTarball(tarball)
     (pkgname, pkgversion) = upstream.guess_version() or ('', '')
-    upstream.unpack(tardir)
+
+    try:
+        import pdb;pdb.set_trace()
+        upstream.unpack(tardir)
+    except errors.UnpackError:
+        msger.error('Unpacking %s fail' % tarball)
 
     tag = repo.version_to_tag("%(version)s", pkgversion)
     msg = "Upstream version %s" % (pkgversion)

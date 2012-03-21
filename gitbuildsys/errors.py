@@ -46,5 +46,8 @@ class GitInvalid(GitError):
 class ObsError(CmdError):
     keyword = '<obs>'
 
+class UnpackError(CmdError):
+    keyword = '<unpack>'
+
 class Abort(CmdError):
     keyword = ''
