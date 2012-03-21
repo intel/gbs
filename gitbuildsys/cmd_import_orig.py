@@ -71,7 +71,6 @@ def do(opts, args):
 
     os.chdir(repo.path)
     repo.clean_branch(upstream_branch)
-    repo.checkout_branch(upstream_branch)
     if repo.find_tag(tag):
         msger.error('dont need to import, already in version %s' % tag)
 
