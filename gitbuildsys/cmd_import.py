@@ -116,7 +116,7 @@ def do(opts, args):
 
     packagingfiles = glob.glob('%s/*' % basedir)
     for f in  packagingfiles:
-        if f.endswith(os.path.basename(tarball)):
+        if f.endswith(os.path.basename(tarball)) or not os.path.isfile(f):
             continue
         shutil.copy(f, packagingdir)
 
