@@ -171,7 +171,9 @@ configuration file by yourself.  Just make sure it looks like as below:
   build_root= /var/tmp/build-root-gbs
   su-wrapper= su -c
   distconf=/usr/share/gbs/tizen-1.0.conf
-
+  [import]
+  commit_name= <Author Name>
+  commit_email= <Author Email>
 In this configuration file, there are three sections: [common] is for general
 setting, [build] section is for the options of gbs build, and [localbuild]
 is for gbs localbuild.
@@ -196,6 +198,13 @@ build_root
     patch for chroot environment
 distconf
     Specify distribution configure file
+
+In [import] section, the following values can be specified:
+
+commit_name
+    Commit author name while executing git commit
+commit_email
+    Commit author email adress while executing git commit
 
 Usages
 ======
@@ -230,3 +239,197 @@ then goto the root directory of git repository, run gbs build as follows:
   $ gbs build
   $ gbs build -B Test
   $ gbs build -B Test -T home:<userid>:gbs
+
+Running 'gbs localbuild'
+------------------------
+
+Subcommand `localbuild` is used to build rpm package at local by rpmbuild. The
+usage of subcommand `localbuild` can be available using `gbs localbuild --help`
+::
+
+  localbuild (lb): local build package
+  Usage:
+      gbs localbuild -R repository -A ARCH [options] [package git dir]
+      [package git dir] is optional, if not specified, current dir would
+      be used.
+  Examples:
+      gbs localbuild -R http://example1.org/packages/ \
+                     -R http://example2.org/packages/ \
+                     -A i586                          \
+                     -D /usr/share/gbs/tizen-1.0.conf
+  Note:
+  if -D not specified, distconf key in ~/.gbs.conf would be used.
+  Options:
+      -h, --help          show this help message and exit
+      --debuginfo         Enable build debuginfo sub-packages
+      --noinit            Skip initialization of build root and start with build
+                          immediately
+      -C, --clean         Delete old build root before initializing it
+      -A ARCH, --arch=ARCH
+                          build target arch
+      -B BUILDROOT, --buildroot=BUILDROOT
+                          Specify build rootdir to setup chroot environment
+      -R REPOSITORIES, --repository=REPOSITORIES
+                          Specify package repositories, Supported format is rpm-
+                          md
+      -D DIST, --dist=DIST
+                          Specify distribution configure file, which should be
+                          full path
+
+Examples to run gbs localbuild:
+
+1) Use specified dist file in command line using -D option
+::
+
+  $ gbs localbuild -R http://example1.org/ -A i586 -D /usr/share/gbs/tizen-1.0.conf
+
+2) Use dist conf file specified in ~/.gbs.conf, if distconf key exist.
+::
+
+  $ gbs localbuild -R http://example1.org/ -A i586
+
+3) Multi repos specified
+::
+
+  $ gbs lb -R http://example1.org/  -R http://example2.org/  -A i586
+
+4) With --noinit option, Skip initialization of build root and start with build immediately
+::
+
+  $ gbs localbuild -R http://example1.org/ -A i586  --noinit
+
+5) Specify a package git directory, instead of running in git top directory
+::
+
+  $ gbs localbuild -R http://example1.org/ -A i586  PackageKit
+
+6) Local repo example
+::
+
+  $ gbs localbuild -R /path/to/repo/dir/ -A i586
+
+'''BKM''': to have quick test with local repo, you can run 'gbs localbuild' 
+with remote repo. rpm packages will be downloaded to localdir /var/cache/\
+build/md5-value/, then you can use the following command to create it as local
+repo
+::
+
+  $ mv /var/cache/build/md5-value/ /var/cache/build/localrepo
+  $ cd /var/cache/build/localrepo
+  $ createrepo . # if createrepo is not avaliable, you should install it first
+  $ gbs localbuild -R /var/cache/build/localrepo/ -A i586/armv7hl
+
+If gbs localbuild fails with dependencies, you should download it manually and
+put it to /var/cache/build/localrepo, then createrepo again.
+
+
+Running 'gbs import-orig'
+-------------------------
+
+Subcommand `import-orig` is used to import original upstream tar ball to current
+git  repository. This subcommand is mostlly used for upgrade packages. usage of
+subcommand `import-orig` can be available from `gbs import-orig --help`
+::
+
+  root@test-virtual-machine:~/gbs# gbs import-orig -h
+  import_orig (import-orig): Import tar ball to upstream branch
+
+  Usage:
+      gbs import-orig [options] original-tar-ball
+
+
+  Examples:
+    $ gbs import original-tar-ball
+  Options:
+      -h, --help          show this help message and exit
+      --tag               Create tag while import new version of upstream tar
+                          ball
+      --no-merge          Dont merge new upstream branch to master branch,
+                          please user merge it manually
+      --upstream_branch=UPSTREAM_BRANCH
+                          specify upstream branch for new version of package
+      --author-email=AUTHOR_EMAIL
+                          author email of git commit
+      --author-name=AUTHOR_NAME
+                          author name of git commit
+
+gbs import-orig must run under package git repository top directory, the
+following command can be used:
+::
+
+  $ gbs import-orig example-0.1.tar.gz
+  $ gbs import-orig example-0.2-tizen.tar.bz2
+  Info: unpack upstream tar ball ...
+  Info: submit the upstream data
+  Info: merge imported upstream branch to master branch
+  Info: done.
+  $
+
+Running 'gbs import'
+--------------------
+
+Subcommand `import` is used to import source rpm or unpacked src.rpm to current
+git repository. This subcommand is mostlly used for initializing git repository
+or upgrade packages. usage of subcommand `import` can be available from 
+`gbs import --help`
+::
+
+  import (im): Import spec file or source rpm to git repository
+
+  Usage:
+      gbs import [options] specfile | source rpm
+
+
+  Examples:
+    $ gbs import /path/to/specfile/
+    $ gbs import /path/to/src.rpm
+  Options:
+      -h, --help          show this help message and exit
+      --tag               Create tag while import new version of upstream tar
+                          ball
+      --upstream_branch=UPSTREAM_BRANCH
+                          specify upstream branch for new version of package
+      --author-email=AUTHOR_EMAIL
+                          author email of git commit
+      --author-name=AUTHOR_NAME
+                          author name of git commit
+
+
+Examples to run gbs import:
+
+1) import from source rpm, and package git repository would be generated
+::
+
+  $test@test/gbs-demo# gbs import expect-5.43.0-18.13.src.rpm 
+   Info: unpack source rpm package: expect-5.43.0-18.13.src.rpm
+   Info: No git repository found, creating one.
+   Info: unpack upstream tar ball ...
+   Info: submitted the upstream data as first commit
+   Info: create upstream branch
+   Info: submit packaging files as second commit
+   Info: done.
+
+2) import from unpacked source rpm, spec file need to be specified from args
+::
+
+  $test@test/gbs-demo# gbs import expect-5.43.0/expect.spec --tag
+   Info: No git repository found, creating one.
+   Info: unpack upstream tar ball ...
+   Info: submitted the upstream data as first commit
+   Info: create tag named: 5.43.0
+   Info: create upstream branch
+   Info: submit packaging files as second commit
+   Info: done.
+  $test@test/gbs-demo# cd expect&git log
+   commit 3c344812d0fa53bd9c56ebd054998dc1b401ecde
+   Author: root <root@test-virtual-machine.(none)>
+   Date:   Sun Nov 27 00:34:25 2011 +0800
+
+        packaging files for tizen
+
+   commit b696a78b36ebd3d5614f0d3044834bb4e6bcd928
+   Author: root <root@test-virtual-machine.(none)>
+   Date:   Sun Nov 27 00:34:25 2011 +0800
+
+        Upstream version 5.43.0
+
