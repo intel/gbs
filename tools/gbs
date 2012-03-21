@@ -186,6 +186,11 @@ class TizenPkg(cmdln.Cmdln):
                   default=None,
                   dest='author_email',
                   help='author email of git commit')
+    @cmdln.option('--tag',
+                  action="store_true",
+                  default=False,
+                  dest='tag',
+                  help='Create tag while import new version of upstream tar ball')
     def do_import(self, subcmd, opts, *args):
         """${cmd_name}: Import spec file/source rpm/tar ball to git repository
 
@@ -221,6 +226,11 @@ class TizenPkg(cmdln.Cmdln):
                   default=False,
                   dest='no_merge',
                   help='Dont merge new upstream branch to master branch, please user merge it manually')
+    @cmdln.option('--tag',
+                  action="store_true",
+                  default=False,
+                  dest='tag',
+                  help='Create tag while import new version of upstream tar ball')
 
     def do_import_orig(self, subcmd, opts, *args):
         """${cmd_name}: Import tar ball to upstream branch

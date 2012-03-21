@@ -42,7 +42,6 @@ def do(opts, args):
     workdir = os.getcwd()
     tmpdir = '%s/%s' % (TMPDIR, USER)
 
-    import pdb;pdb.set_trace()
     if len(args) != 1:
         msger.error('missning argument, please reference gbs import-orig --help.')
     else:
@@ -80,16 +79,16 @@ def do(opts, args):
                                          'email':COMM_EMAIL
                                       }
                             )
-    if commit:
+    if commit and opts.tag:
         msger.info('create tag named: %s' % tag)
         repo.create_tag(tag, msg, commit)
 
     repo.checkout_branch('master')
     
-    if not opts.no_merge:
+    if commit and not opts.no_merge:
         try:
             msger.info('merge imported upstream branch to master branch')
-            repo.merge(tag)
+            repo.merge(commit)
         except:
             msger.error('Merge failed, please resolve')
 

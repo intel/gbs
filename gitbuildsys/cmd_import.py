@@ -73,7 +73,6 @@ def do(opts, args):
     pkgname = utils.parse_spec(specfile, 'name')
     pkgversion = utils.parse_spec(specfile, 'version')
 
-#import pdb;pdb.set_trace()
     try:
         repo = git.Git('.')
     except errors.GitInvalid:
@@ -93,22 +92,20 @@ def do(opts, args):
 
     os.chdir(repo.path)
 
-    if not repo.find_tag(tag):
-        commit = repo.commit_dir(upstream.unpacked, msg,
-                                 author = {'name':COMM_NAME,
-                                           'email':COMM_EMAIL
-                                          }
-                                )
-        if commit:
-            msger.info('submitted the upstream data as first commit')
+    commit = repo.commit_dir(upstream.unpacked, msg,
+                             author = {'name':COMM_NAME,
+                                       'email':COMM_EMAIL
+                                      }
+                            )
+    if commit:
+        msger.info('submitted the upstream data as first commit')
+        if opts.tag:
             msger.info('create tag named: %s' % tag)
             repo.create_tag(tag, msg, commit)
-            msger.info('create upstream branch')
-            repo.create_branch('upstream', commit)
-        else:
-            msger.info('No changes between currentlly git repo and tar ball')
+        msger.info('create upstream branch')
+        repo.create_branch('upstream', commit)
     else:
-        msger.info('tag %s already exsit, so dont need update' % tag)
+        msger.info('No changes between currentlly git repo and tar ball')
 
     packagingdir = '%s/packaging' % upstream.unpacked
     if not os.path.exists(packagingdir):
