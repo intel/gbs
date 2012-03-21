@@ -292,7 +292,6 @@ Examples to run gbs localbuild:
 ::
 
   $ gbs lb -R http://example1.org/  -R http://example2.org/  -A i586
-
 4) With --noinit option, Skip initialization of build root and start with build immediately
 ::
 
@@ -316,7 +315,7 @@ repo
 
   $ mv /var/cache/build/md5-value/ /var/cache/build/localrepo
   $ cd /var/cache/build/localrepo
-  $ createrepo . # if createrepo is not avaliable, you should install it first
+  $ createrepo . # if createrepo is not available, you should install it first
   $ gbs localbuild -R /var/cache/build/localrepo/ -A i586/armv7hl
 
 If gbs localbuild fails with dependencies, you should download it manually and
@@ -327,8 +326,8 @@ Running 'gbs import-orig'
 -------------------------
 
 Subcommand `import-orig` is used to import original upstream tar ball to current
-git  repository. This subcommand is mostlly used for upgrade packages. upstream
-tar ball format can be tar.gz, tar.bz2, tar.xz, tar.lzma or .zip.
+git repository. This subcommand is mostly used for upgrading packages. Upstream
+tar ball format can be *.tar.gz,*.tar.bz2,*.tar.xz,*.tar.lzma,*.zip.
 
 Usage of subcommand `import-orig` can be available from `gbs import-orig --help`
 ::
@@ -344,18 +343,18 @@ Usage of subcommand `import-orig` can be available from `gbs import-orig --help`
     $ gbs import-orig original-tar-ball
   Options:
       -h, --help          show this help message and exit
-      --tag               Create tag while import new version of upstream tar
-                          ball
-      --no-merge          Dont merge new upstream branch to master branch,
-                          please user merge it manually
+      --tag               Create tag while importing new version of upstream
+                          tar ball
+      --no-merge          Don't merge new upstream branch to master branch,
+                          please merge it manually
       --upstream_branch=UPSTREAM_BRANCH
                           specify upstream branch for new version of package
       --author-email=AUTHOR_EMAIL
-                          author email of git commit
+                          author's email of git commit
       --author-name=AUTHOR_NAME
-                          author name of git commit
+                          author's name of git commit
 
-gbs import-orig must run under package git repository top directory, the
+gbs import-orig must run under the top directory of package git repository,the
 following command can be used:
 ::
 
@@ -370,9 +369,9 @@ following command can be used:
 Running 'gbs import'
 --------------------
 
-Subcommand `import` is used to import source rpm or unpacked src.rpm to current
-git repository. This subcommand is mostlly used for initializing git repository
-or upgrade packages. usage of subcommand `import` can be available from 
+Subcommand `import` is used to import source rpm or unpacked \*.src.rpm to current
+git repository. This subcommand is mostly used for initializing git repository
+or upgrading packages. Usage of subcommand `import` can be available using
 `gbs import --help`
 ::
 
@@ -384,17 +383,17 @@ or upgrade packages. usage of subcommand `import` can be available from
 
   Examples:
     $ gbs import /path/to/specfile/
-    $ gbs import /path/to/src.rpm
+    $ gbs import /path/to/*.src.rpm
   Options:
       -h, --help          show this help message and exit
-      --tag               Create tag while import new version of upstream tar
+      --tag               Create tag while importing new version of upstream tar
                           ball
       --upstream_branch=UPSTREAM_BRANCH
                           specify upstream branch for new version of package
       --author-email=AUTHOR_EMAIL
-                          author email of git commit
+                          author's email of git commit
       --author-name=AUTHOR_NAME
-                          author name of git commit
+                          author's name of git commit
 
 
 Examples to run gbs import:
