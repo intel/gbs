@@ -1,4 +1,4 @@
-#!/usr/bin/python -tt
+/!/usr/bin/python -tt
 # vim: ai ts=4 sts=4 et sw=4
 #
 # Copyright (c) 2012 Intel, Inc.
@@ -58,7 +58,6 @@ def do(opts, args):
     (pkgname, pkgversion) = upstream.guess_version() or ('', '')
 
     try:
-        import pdb;pdb.set_trace()
         upstream.unpack(tardir)
     except errors.UnpackError:
         msger.error('Unpacking %s fail' % tarball)
@@ -87,6 +86,9 @@ def do(opts, args):
     if commit and opts.tag:
         msger.info('create tag named: %s' % tag)
         repo.create_tag(tag, msg, commit)
+
+    if commit is None:
+        msger.info('dont need import, already in version %s' % tag)
 
     repo.checkout_branch('master')
     

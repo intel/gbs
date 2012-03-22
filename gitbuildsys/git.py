@@ -122,7 +122,8 @@ class Git:
 
         gitsts = self.status()
         if 'M ' in gitsts or ' M' in gitsts or \
-           'A ' in gitsts or ' A ' in gitsts:
+           'A ' in gitsts or ' A' in gitsts or \
+           'D ' in gitsts or ' D' in gitsts:
             return False
         else:
             return True
@@ -176,11 +177,10 @@ class Git:
         options = ['.', '-f']
         self._exec_git("add", options)
 
-        if self.is_clean():
-            return None
-
-        options = ['--quiet','-a', '-m %s' % msg,]
-        self._exec_git("commit", options)
+        changed = not self.is_clean()
+        if changed:
+            options = ['--quiet','-a', '-m %s' % msg,]
+            self._exec_git("commit", options)
 
         commit_id = self._exec_git('log', ['--oneline', '-1']).split()[0]
 
@@ -194,7 +194,7 @@ class Git:
 
         self._exec_git('reset', ['--hard', commit_id])
 
-        return commit_id
+        return commit_id if changed else None
 
     def find_tag(self, tag):
         """find the specify version from the repository"""
@@ -213,7 +213,7 @@ class Git:
 
     def merge(self, commit):
         """ merge the git tree specified by commit to current branch"""
-        if self.rev_parse(commit) is None or not self.find_tag(commit):
+        if self.rev_parse(commit) is None and not self.find_tag(commit):
             raise errors.GitError('%s is invalid commit ID or tag' % commit)
 
         options = [commit]
