@@ -174,6 +174,7 @@ configuration file by yourself.  Just make sure it looks like as below:
   [import]
   commit_name= <Author Name>
   commit_email= <Author Email>
+
 In this configuration file, there are three sections: [common] is for general
 setting, [build] section is for the options of gbs build, and [localbuild]
 is for gbs localbuild.
@@ -292,6 +293,7 @@ Examples to run gbs localbuild:
 ::
 
   $ gbs lb -R http://example1.org/  -R http://example2.org/  -A i586
+
 4) With --noinit option, Skip initialization of build root and start with build immediately
 ::
 
