@@ -1,4 +1,4 @@
-/!/usr/bin/python -tt
+#!/usr/bin/python -tt
 # vim: ai ts=4 sts=4 et sw=4
 #
 # Copyright (c) 2012 Intel, Inc.
@@ -53,14 +53,16 @@ def do(opts, args):
         msger.error("No git repository found.")
 
     tardir = tempfile.mkdtemp(prefix='%s/' % (tmpdir))
-    msger.info('unpack upstream tar ball ...')
     upstream = utils.UpstreamTarball(tarball)
     (pkgname, pkgversion) = upstream.guess_version() or ('', '')
 
     try:
+        msger.info('unpack upstream tar ball ...')
         upstream.unpack(tardir)
     except errors.UnpackError:
-        msger.error('Unpacking %s fail' % tarball)
+        msger.error('Unpacking %s failed' % tarball)
+    except errors.FormatError, e:
+        msger.error(e.msg)
 
     tag = repo.version_to_tag("%(version)s", pkgversion)
     msg = "Upstream version %s" % (pkgversion)

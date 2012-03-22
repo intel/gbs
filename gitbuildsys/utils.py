@@ -154,6 +154,17 @@ def get_hostarch():
         hostarch = 'i586'
     return hostarch
 
+def get_ext(file, level = 1):
+    """ get ext of specified file
+    """
+    ext = ''
+    for i in range(level):
+        (file, curext) = os.path.splitext(file)
+        if curext == '':
+           return ext
+        ext = curext+ext
+    return ext
+
 class UnpackTarArchive(object):
     """Wrap tar to unpack a compressed tar archive"""
     def __init__(self, archive, dir, filters=[], compression=None):
@@ -208,11 +219,19 @@ class UpstreamTarball(object):
         """
         Unpack packed upstream sources into a given directory.
         """
-        ext = os.path.splitext(self.path)[1]
-        if ext in [ ".zip", ".xpi" ]:
+        tarfmt = ['.tar.gz', '.tar.bz2', '.tar.xz', '.tar.lzma']
+        zipfmt = ['.zip', '.xpi']
+        ext = get_ext(self.path)
+        ext2= get_ext(self.path, level = 2)
+        if ext in zipfmt:
             self._unpack_zip(dir)
-        else:
+        elif ext in ['.tgz'] or ext2 in tarfmt:
             self._unpack_tar(dir, filters)
+        else:
+            raise errors.FormatError('%s format tar ball not support. '
+                                     'Supported format: %s' %
+                                    (ext if ext == ext2 else ext2,
+                                     ','.join(tarfmt + zipfmt)))
 
     def _unpack_zip(self, dir):
         UnpackZipArchive(self.path, dir)

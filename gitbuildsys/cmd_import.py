@@ -91,7 +91,9 @@ def do(opts, args):
     try:
         upstream.unpack(tardir)
     except errors.UnpackError:
-        msger.error('Unpacking %s fail' % tarball)
+        msger.error('Unpacking %s failed' % tarball)
+    except errors.FormatError, e:
+        msger.error(e.msg)
 
     tag = repo.version_to_tag("%(version)s", pkgversion)
     msg = "Upstream version %s" % (pkgversion)

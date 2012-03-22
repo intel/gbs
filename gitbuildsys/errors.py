@@ -49,5 +49,8 @@ class ObsError(CmdError):
 class UnpackError(CmdError):
     keyword = '<unpack>'
 
+class FormatError(CmdError):
+    keyword = '<format>'
+
 class Abort(CmdError):
     keyword = ''
