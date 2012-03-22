@@ -43,7 +43,7 @@ def do(opts, args):
     tmpdir = '%s/%s' % (TMPDIR, USER)
 
     if len(args) != 1:
-        msger.error('missning argument, please reference gbs import-orig --help.')
+        msger.error('missing argument, please reference gbs import-orig --help.')
     else:
         tarball = args[0]
 
@@ -55,6 +55,9 @@ def do(opts, args):
     tardir = tempfile.mkdtemp(prefix='%s/' % (tmpdir))
     upstream = utils.UpstreamTarball(tarball)
     (pkgname, pkgversion) = upstream.guess_version() or ('', '')
+    if not ( pkgname and pkgversion ):
+        msger.error('can\'t parse the package name or version! Please check the tarball.' )
+
 
     try:
         msger.info('unpack upstream tar ball ...')
@@ -72,12 +75,12 @@ def do(opts, args):
     else:
         upstream_branch = 'upstream'
     if not repo.has_branch(upstream_branch):
-        msger.error('upstream branch not exist, please create one manually')
+        msger.error('upstream branch not exists, please create one manually')
 
     os.chdir(repo.path)
     repo.clean_branch(upstream_branch)
     if repo.find_tag(tag):
-        msger.error('dont need to import, already in version %s' % tag)
+        msger.error('don\'t need to import, already in version %s' % tag)
 
     msger.info('submit the upstream data')
     commit = repo.commit_dir(upstream.unpacked, msg,
@@ -90,7 +93,7 @@ def do(opts, args):
         repo.create_tag(tag, msg, commit)
 
     if commit is None:
-        msger.info('dont need import, already in version %s' % tag)
+        msger.info('don\'t need import, already in version %s' % tag)
 
     repo.checkout_branch('master')
     
