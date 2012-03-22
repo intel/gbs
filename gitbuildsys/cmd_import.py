@@ -43,8 +43,10 @@ def do(opts, args):
     tmpdir = '%s/%s' % (TMPDIR, USER)
     specfile = None
 
-    if len(args) != 1:
-        msger.error('missning argument, please reference gbs import --help.')
+    if len(args) < 1:
+        msger.error('Missing argument, please reference gbs import --help.')
+    if len(args) > 1:
+        msger.error('Too many arguments! Please reference gbs import --help.')
     if args[0].endswith('.src.rpm'):
         srcrpmdir = tempfile.mkdtemp(prefix='%s/%s' % (tmpdir, 'src.rpm'))
 
@@ -54,14 +56,14 @@ def do(opts, args):
             cmd = "%s --force-debian" % cmd
         ret = runner.quiet(cmd)
         if ret != 0:
-            msger.error('source rpm %s unpack fails' % args[0])
+            msger.error('source rpm %s unpack failed' % args[0])
         specfile = glob.glob("%s/SPECS/*" % srcrpmdir)[0]
         for f in glob.glob("%s/SOURCES/*" % srcrpmdir):
             shutil.move(f, "%s/SPECS/" % srcrpmdir)
     elif args[0].endswith('.spec'):
         specfile = args[0]
     else:
-        msger.error('tar ball import support have not been implemented')
+        msger.error('Tarball imported support has not been implemented')
 
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
@@ -69,7 +71,7 @@ def do(opts, args):
     basedir = os.path.abspath(os.path.dirname(specfile))
     tarball = os.path.join(basedir, utils.parse_spec(specfile, 'SOURCE0'))
     if not os.path.exists(tarball):
-        msger.error('tarball %s not exist, please check that' % tarball)
+        msger.error('Tarball %s not exist, please check that' % tarball)
     pkgname = utils.parse_spec(specfile, 'name')
     pkgversion = utils.parse_spec(specfile, 'version')
 
