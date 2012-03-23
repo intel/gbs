@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 Name:       gbs
 Summary:    The command line tools for Tizen package developers
-Version:    0.2
+Version:    0.3
 Release:    1
 Group:      Development/Tools
 License:    GPLv2
