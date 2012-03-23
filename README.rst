@@ -13,7 +13,8 @@ git-build-system is a command line tools for Tizen package developers
 
 * gbs build : build rpm package from git repository on OBS
 * gbs local-build : build rpm package from git repository at local
-* gbs import : import source tarball or source rpm to git repository
+* gbs import-orig: import source tarball to current git repository, which can be used to upgrade a package
+* gbs import : import source rpm or specfile to git repository
 * gbs submit : maintain the changelogs file, sanity check etc.
 
 It supports native running in many mainstream Linux distributions, including:

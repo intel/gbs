@@ -264,7 +264,7 @@ class UpstreamTarball(object):
         extensions = r'\.tar\.(%s)' % "|".join(known_compressions)
 
         version_filters = map ( lambda x: x % (version_chars, extensions),
-                           ( # Tizen package_<version>-tizen.tar.gz:
+                           ( # Tizen package-<version>-tizen.tar.gz:
                              r'^(?P<package>[a-z\d\.\+\-]+)-(?P<version>%s+)-tizen%s',
                              # Upstream package-<version>.tar.gz:
                              r'^(?P<package>[a-zA-Z\d\.\+\-]+)-(?P<version>[0-9]%s*)%s'))

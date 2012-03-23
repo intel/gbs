@@ -46,9 +46,9 @@ def do(opts, args):
 
     specfile = None
     if len(args) < 1:
-        msger.error('Missing argument, please reference gbs import --help.')
+        msger.error('missing argument, please reference gbs import --help.')
     if len(args) > 1:
-        msger.error('Too many arguments! Please reference gbs import --help.')
+        msger.error('too many arguments! Please reference gbs import --help.')
     if args[0].endswith('.src.rpm'):
         srcrpmdir = tempfile.mkdtemp(prefix='%s/%s' % (tmpdir, 'src.rpm'))
 
@@ -65,7 +65,7 @@ def do(opts, args):
     elif args[0].endswith('.spec'):
         specfile = args[0]
     else:
-        msger.error('Tarball imported support has not been implemented')
+        msger.error('gbs import only support importing specfile or source rpm')
 
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
@@ -73,7 +73,7 @@ def do(opts, args):
     basedir = os.path.abspath(os.path.dirname(specfile))
     tarball = os.path.join(basedir, utils.parse_spec(specfile, 'SOURCE0'))
     if not os.path.exists(tarball):
-        msger.error('Tarball %s not exist, please check that' % tarball)
+        msger.error('tarball %s not exist, please check that' % tarball)
     pkgname = utils.parse_spec(specfile, 'name')
     pkgversion = utils.parse_spec(specfile, 'version')
 
@@ -83,7 +83,7 @@ def do(opts, args):
         try:
             repo = git.Git(pkgname)
         except errors.GitInvalid:
-            msger.info("No git repository found, creating one.")
+            msger.info("no git repository found, creating one.")
             repo = git.Git.create(pkgname)
 
     tardir = tempfile.mkdtemp(prefix='%s/%s' % (tmpdir, pkgname))
@@ -93,7 +93,7 @@ def do(opts, args):
     try:
         upstream.unpack(tardir)
     except errors.UnpackError:
-        msger.error('Unpacking %s failed' % tarball)
+        msger.error('unpacking %s failed' % tarball)
     except errors.FormatError, e:
         msger.error(e.msg)
 
@@ -115,7 +115,7 @@ def do(opts, args):
         msger.info('create upstream branch')
         repo.create_branch('upstream', commit)
     else:
-        msger.info('No changes between currentlly git repo and tar ball')
+        msger.info('no changes between currentlly git repo and tar ball')
 
     packagingdir = '%s/packaging' % upstream.unpacked
     if not os.path.exists(packagingdir):

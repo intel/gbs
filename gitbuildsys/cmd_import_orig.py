@@ -52,20 +52,21 @@ def do(opts, args):
     try:
         repo = git.Git('.')
     except errors.GitInvalid:
-        msger.error("No git repository found.")
+        msger.error("no git repository found.")
 
     tardir = tempfile.mkdtemp(prefix='%s/' % (tmpdir))
     upstream = utils.UpstreamTarball(tarball)
     (pkgname, pkgversion) = upstream.guess_version() or ('', '')
     if not ( pkgname and pkgversion ):
-        msger.error('can\'t parse the package name or version! Please check the tarball.' )
-
+        msger.error('can\'t parse out package name or version! Please check '
+                    'the tarball.  The format of tarball name should be '
+                    'name-version-tizen.<ext> or name-version.<ext>')
 
     try:
         msger.info('unpack upstream tar ball ...')
         upstream.unpack(tardir)
     except errors.UnpackError:
-        msger.error('Unpacking %s failed' % tarball)
+        msger.error('unpacking %s failed' % tarball)
     except errors.FormatError, e:
         msger.error(e.msg)
 
@@ -104,6 +105,6 @@ def do(opts, args):
             msger.info('merge imported upstream branch to master branch')
             repo.merge(commit)
         except:
-            msger.error('Merge failed, please resolve')
+            msger.error('merge failed, please resolve')
 
     msger.info('done.')
