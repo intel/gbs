@@ -45,4 +45,4 @@ clean:
 	rm -rf dist/
 	rm -rf *.egg-info/
 test:
-	nosetests tests
+	nosetests tests -v
