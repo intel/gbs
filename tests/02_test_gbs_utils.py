@@ -7,7 +7,7 @@ class TestUpsteramTarball(unittest.TestCase):
 
     def setUp(self):
         """Init a tarball base name"""
-        self.pkgname, self.version = ('osc-perm', '5.1.1')
+        self.pkgname, self.version = ('OSC', '5.1.1')
 
     def _testTarballFormat(self, postfix):
         """test the sepecified tarball format is supported or not"""
@@ -24,6 +24,14 @@ class TestUpsteramTarball(unittest.TestCase):
 
         self._testTarballFormat('.tar.bz2')
 
+    def testXZ(self):
+
+        self._testTarballFormat('.tar.xz')
+
+    def testLZMA(self):
+
+        self._testTarballFormat('.tar.lzma')
+
     def testTizen(self):
 
         self._testTarballFormat('-tizen.tar.bz2')
@@ -38,7 +46,6 @@ class TestUpsteramTarball(unittest.TestCase):
 
     def testNegative(self):
 
-        self._testTarballFormat('.src.rpm')
         self._testTarballFormat('.orig.tar.gz')
 #if __name__ = '__main__'
 #    unittest.main()
