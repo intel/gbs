@@ -55,6 +55,17 @@ buildarchmap = {
             'i386':     'i686',
           }
 
+supportedarchs = [
+            'x86_64',
+            'i686',
+            'i586',
+            'armv7hl',
+            'armv7el',
+            'armv7tnhl',
+            'armv7nhl',
+            'armv7l',
+          ]
+
 OSCRC_TEMPLATE = """[general]
 apiurl = %(apiurl)s
 plaintext_passwd=0
@@ -88,6 +99,9 @@ def do(opts, args):
             buildarch = buildarchmap[opts.arch]
         else:
             buildarch = opts.arch
+    if not buildarch in supportedarchs:
+        msger.error('arch %s not supported, supported archs are: %s ' % \
+                   (buildarch, ','.join(supportedarchs)))
 
     specs = glob.glob('%s/packaging/*.spec' % workdir)
     if not specs:
