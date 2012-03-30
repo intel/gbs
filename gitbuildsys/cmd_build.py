@@ -31,6 +31,7 @@ import utils
 from conf import configmgr
 import git
 import obspkg
+import errors
 
 OSCRC_TEMPLATE = """[general]
 apiurl = %(apiurl)s
@@ -104,7 +105,10 @@ def do(opts, args):
     msger.info('checking status of obs project: %s ...' % target_prj)
     if prj.is_new():
         msger.info('creating %s for package build ...' % target_prj)
-        prj.branch_from(base_prj)
+        try:
+            prj.branch_from(base_prj)
+        except errors.ObsError, e:
+            msger.error('%s' % e)
 
     msger.info('checking out %s/%s to %s ...' % (target_prj, name, tmpdir))
     localpkg = obspkg.ObsPackage(tmpdir, target_prj, name, APISERVER, oscrcpath)

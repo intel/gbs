@@ -175,7 +175,10 @@ class ObsProject(object):
             return
 
         # pick the 1st valid package inside src prj FIXME
-        dumb_pkg = self._bs.getPackageList(src_prj)[0]
+        pkglist = self._bs.getPackageList(src_prj)
+        if len(pkglist) == 0:
+            raise errors.ObsError('base project %s is empty.' % src_prj)
+        dumb_pkg = pkglist[0]
 
         # branch out the new one
         target_prj, target_pkg = self._bs.branchPkg(src_prj, dumb_pkg,
@@ -183,7 +186,7 @@ class ObsProject(object):
                                                     target_package = 'dumb_pkg')
 
         if target_prj != self._prj:
-            raise ObsError('branched prj: %s is not the expected %s' \
+            raise errors.ObsError('branched prj: %s is not the expected %s' \
                            % (target_prj, self._prj))
 
         # remove the dumb pkg
