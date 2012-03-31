@@ -44,6 +44,11 @@ def do(opts, args):
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
 
+    if opts.author_name:
+        COMM_NAME = opts.author_name
+    if opts.author_email:
+        COMM_EMAIL = opts.author_email
+
     specfile = None
     if len(args) < 1:
         msger.error('missing argument, please reference gbs import --help.')

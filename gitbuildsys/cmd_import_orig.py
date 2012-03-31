@@ -62,6 +62,11 @@ def do(opts, args):
                     'the tarball.  The format of tarball name should be '
                     'name-version-tizen.<ext> or name-version.<ext>')
 
+    if opts.author_name:
+        COMM_NAME = opts.author_name
+    if opts.author_email:
+        COMM_EMAIL = opts.author_email
+
     try:
         msger.info('unpack upstream tar ball ...')
         upstream.unpack(tardir)
