@@ -204,6 +204,51 @@ class Git:
             return True
         return False
 
+    def commits(self, since=None, until=None, paths=None, options=None,
+                first_parent=False):
+        """
+        get commits from since to until touching paths
+
+        @param options: list of options past to git log
+        @type  options: list of strings
+        """
+
+        args = ['--pretty=format:%H']
+
+        if options:
+            args += options
+
+        if first_parent:
+            args += [ "--first-parent" ]
+
+        if since and until:
+            assert(self.rev_parse(since))
+            assert(self.rev_parse(until))
+            args += ['%s..%s' % (since, until)]
+
+        if paths:
+            args += [ "--", paths ]
+
+        commits = self._exec_git('log', args)
+
+        return [ commit.strip() for commit in commits.split('\n') ]
+
+    def get_config(self, name):
+        """Gets the config value associated with name"""
+        return self._exec_git('config', [ name ] )[:-1]
+
+    def get_commit_info(self, commit):
+        """Given a commit name, return a dictionary of its components,
+        including id, author, email, subject, and body."""
+        out = self._exec_git('log',
+                             ['--pretty=format:%an%n%ae%n%s%n%b%n',
+                              '-n1', commit]).split('\n')
+        return {'id' : commit,
+                'author' : out[0].strip(),
+                'email' : out[1].strip(),
+                'subject' : out[2].rstrip(),
+                'body' : [line.rstrip() for line in  out[3:]]}
+
     def create_tag(self, name, msg, commit):
         """Creat a tag with name at commit""" 
         if self.rev_parse(commit) is None:
