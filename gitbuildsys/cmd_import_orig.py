@@ -38,6 +38,8 @@ COMM_NAME   = configmgr.get('commit_name', 'import')
 COMM_EMAIL  = configmgr.get('commit_email', 'import')
 
 def do(opts, args):
+    global COMM_NAME
+    global COMM_EMAIL
 
     workdir = os.getcwd()
     tmpdir = '%s/%s' % (TMPDIR, USER)
@@ -62,10 +64,19 @@ def do(opts, args):
                     'the tarball.  The format of tarball name should be '
                     'name-version-tizen.<ext> or name-version.<ext>')
 
+    try:
+        COMM_NAME = repo.get_config('user.name')
+        COMM_EMAIL = repo.get_config('user.email')
+    except errors.GitError:
+        pass
     if opts.author_name:
         COMM_NAME = opts.author_name
     if opts.author_email:
         COMM_EMAIL = opts.author_email
+    if not COMM_NAME:
+        msger.error('commit user name must be specified')
+    if not COMM_EMAIL:
+        msger.error('commit user email must be specified')
 
     try:
         msger.info('unpack upstream tar ball ...')
@@ -108,6 +119,7 @@ def do(opts, args):
     if commit and not opts.no_merge:
         try:
             msger.info('merge imported upstream branch to master branch')
+            # TODO: add commit name/email support
             repo.merge(commit)
         except:
             msger.error('merge failed, please resolve')

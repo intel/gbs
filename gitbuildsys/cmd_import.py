@@ -24,6 +24,7 @@ import time
 import tempfile
 import glob
 import shutil
+import urlparse
 
 import msger
 import runner
@@ -38,6 +39,8 @@ COMM_NAME   = configmgr.get('commit_name', 'import')
 COMM_EMAIL  = configmgr.get('commit_email', 'import')
 
 def do(opts, args):
+    global COMM_NAME
+    global COMM_EMAIL
 
     workdir = os.getcwd()
     tmpdir = '%s/%s' % (TMPDIR, USER)
@@ -48,6 +51,11 @@ def do(opts, args):
         COMM_NAME = opts.author_name
     if opts.author_email:
         COMM_EMAIL = opts.author_email
+
+    if not COMM_NAME:
+        msger.error('commit user name must be specified')
+    if not COMM_EMAIL:
+        msger.error('commit user email must be specified')
 
     specfile = None
     if len(args) < 1:
@@ -76,7 +84,9 @@ def do(opts, args):
         os.makedirs(tmpdir)
 
     basedir = os.path.abspath(os.path.dirname(specfile))
-    tarball = os.path.join(basedir, utils.parse_spec(specfile, 'SOURCE0'))
+    source = utils.parse_spec(specfile, 'SOURCE0')
+    urlres = urlparse.urlparse(source)
+    tarball = os.path.join(basedir, os.path.basename(urlres.path))
     if not os.path.exists(tarball):
         msger.error('tarball %s not exist, please check that' % tarball)
     pkgname = utils.parse_spec(specfile, 'name')
