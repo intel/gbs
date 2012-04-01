@@ -54,3 +54,11 @@ class FormatError(CmdError):
 
 class Abort(CmdError):
     keyword = ''
+
+class GBSError(Exception):
+
+    def __init__(self, msg):
+        self.msg = msg
+    
+    def __str__(self):
+        return self.msg
