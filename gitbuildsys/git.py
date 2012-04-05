@@ -278,12 +278,14 @@ class Git:
                 '.tgz': ('tar', 'gz'),
                 '.tar.bz2': ('tar', 'bz2'),
                 '.tbz2': ('tar', 'bz2'),
+                '.tar.xz': ('tar', 'xz'),
                 '.zip': ('zip', ''),
         }
 
         zipcmds = {
                 'gz': 'gzip',
                 'bz2': 'bzip2 -f',
+                'xz': 'xz -f',
         }
 
         for extname in filetypes:

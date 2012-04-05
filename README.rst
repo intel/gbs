@@ -235,7 +235,12 @@ to build. The usage of subcommand `build` can be available using `gbs build --he
                           "home:<userid>:gbs:Trunk" if not specified
 
 Before running gbs build, you need to prepare a package git repository first,
-then goto the root directory of git repository, run gbs build as follows:
+and packaging directory must be exist and have spec file in it. The spec file
+is used to prepare package name, version and tar ball format, and tar ball
+format is specified using SOURCE field in specfile.
+
+Once git reposoritory and packaging directory are  ready,  goto  the  root
+directory of git repository, run gbs build as follows:
 ::
 
   $ gbs build
@@ -277,6 +282,8 @@ usage of subcommand `localbuild` can be available using `gbs localbuild --help`
       -D DIST, --dist=DIST
                           Specify distribution configure file, which should be
                           full path
+
+git repository and packaging directory should be prepared like `gbs build`.
 
 Examples to run gbs localbuild:
 

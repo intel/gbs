@@ -26,6 +26,7 @@ import tempfile
 import glob
 import shutil
 import subprocess
+import urlparse
 
 import msger
 import runner
@@ -210,7 +211,10 @@ def do(opts, args):
     if not name or not version:
         msger.error('can\'t get correct name or version from spec file.')
 
-    tarball = 'packaging/%s-%s-tizen.tar.bz2' % (name, version)
+    source = utils.parse_spec(specfile, 'SOURCE0')
+    urlres = urlparse.urlparse(source)
+
+    tarball = '%s/%s' % (oscworkdir, os.path.basename(urlres.path))
     msger.info('generate tar ball: %s' % tarball)
     mygit = git.Git(workdir)
     mygit.archive("%s-%s/" % (name, version), tarball)

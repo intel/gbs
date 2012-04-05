@@ -24,6 +24,7 @@ import time
 import tempfile
 import glob
 import shutil
+import urlparse
 
 import msger
 import runner
@@ -115,7 +116,10 @@ def do(opts, args):
     oscworkdir = localpkg.get_workdir()
     localpkg.remove_all()
 
-    tarball = '%s/%s-%s-tizen.tar.bz2' % (oscworkdir, name, version)
+    source = utils.parse_spec(specfile, 'SOURCE0')
+    urlres = urlparse.urlparse(source)
+
+    tarball = '%s/%s' % (oscworkdir, os.path.basename(urlres.path))
     msger.info('archive git tree to tarball: %s' % os.path.basename(tarball))
     mygit = git.Git(workdir)
     mygit.archive("%s-%s/" % (name, version), tarball)
