@@ -214,7 +214,7 @@ def do(opts, args):
     source = utils.parse_spec(specfile, 'SOURCE0')
     urlres = urlparse.urlparse(source)
 
-    tarball = '%s/%s' % (oscworkdir, os.path.basename(urlres.path))
+    tarball = 'packaging/%s' % os.path.basename(urlres.path)
     msger.info('generate tar ball: %s' % tarball)
     mygit = git.Git(workdir)
     mygit.archive("%s-%s/" % (name, version), tarball)
