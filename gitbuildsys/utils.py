@@ -25,7 +25,6 @@ import re
 import msger
 import runner
 import errors
-import rpm
 
 compressor_opts = { 'gzip'  : [ '-n', 'gz' ],
                     'bzip2' : [ '', 'bz2' ],
@@ -97,24 +96,47 @@ def get_share_dir():
 def parse_spec(spec_path, macro):
     """Parse the spec file to get the specified `macro`
     """
-    specinfo = rpm.spec(spec_path)
 
-    try:
-        package = specinfo.packages[0]
-        try:
-            if macro in package.header:
-                return package.header[macro]
-        except ValueError:
-            if (macro.lower().find('source') == 0) or (macro.lower().find('patch') == 0):
-                for name, number, flg in specinfo.sources:
-                    if ((flg == rpm.RPMBUILD_ISSOURCE) and (str(number) == macro[6:])) \
-                    or ((flg == rpm.RPMBUILD_ISPATCH) and (str(number) == macro[5:])):
-                        return name
-            else:
-                return specinfo.__getattribute__(macro)
-    except:
-        raise
-    raise Exception("%s has no attribute %s" %(spec_path, macro))
+    rpmb_cmd = 'rpmbuild'
+
+    if which(rpmb_cmd):
+        # rpmbuild has been installed in system, use it
+        rpmb_cmdline = ("%s -bp --nodeps --force "
+                        "tmp.spec --define '_topdir .' "
+                        "--define '_builddir .' "
+                        "--define '_sourcedir .' "
+                        "--define '_rpmdir .' "
+                        "--define '_specdir .' "
+                        "--define '_srcrpmdir .'") % rpmb_cmd
+
+        wf = open('tmp.spec', 'w')
+        with file(spec_path) as f:
+            for line in f:
+                if line.startswith('%prep'):
+                    line ='%%prep\necho %%{%s}\nexit\n' % macro
+                wf.write(line)
+        wf.close()
+
+        outs = runner.outs(rpmb_cmdline, catch=3)
+
+        # clean up
+        os.unlink('tmp.spec')
+        if os.path.isdir('BUILDROOT'):
+            import shutil
+            shutil.rmtree('BUILDROOT', ignore_errors=True)
+
+        for line in outs.splitlines():
+            if line.startswith('+ echo '):
+                return line[7:].rstrip()
+
+        msger.warning('invalid spec file, cannot get the value of macro %s' \
+                      % macro)
+        return ''
+
+    else:
+        # TBD parse it directly
+        msger.warning('cannot support parsing spec without rpmbuild command')
+        return ''
 
 def get_processors():
     """
