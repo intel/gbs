@@ -31,6 +31,7 @@ import urlparse
 import msger
 import runner
 import utils
+import errors
 from conf import configmgr
 import git
 import buildservice
@@ -205,6 +206,12 @@ def do(opts, args):
         cmd = [ change_personality[buildarch] ] + cmd;
 
     msger.info(' '.join(cmd))
+
+    if buildarch.startswith('arm'):
+        try:
+            utils.setup_qemu_emulator()
+        except errors.QemuError, e:
+            msger.error('%s' % e)
 
     name = utils.parse_spec(specfile, 'name')
     version = utils.parse_spec(specfile, 'version')

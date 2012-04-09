@@ -52,6 +52,9 @@ class UnpackError(CmdError):
 class FormatError(CmdError):
     keyword = '<format>'
 
+class QemuError(CmdError):
+    keyword = '<qemu>'
+
 class Abort(CmdError):
     keyword = ''
 

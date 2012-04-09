@@ -276,3 +276,47 @@ class UpstreamTarball(object):
             if m:
                 return (m.group('package'), m.group('version'))
 
+def is_statically_linked(binary):
+    return ", statically linked, " in runner.outs(['file', binary])
+
+def setup_qemu_emulator():
+    # mount binfmt_misc if it doesn't exist
+    if not os.path.exists("/proc/sys/fs/binfmt_misc"):
+        modprobecmd = find_binary_path("modprobe")
+        runner.show([modprobecmd, "binfmt_misc"])
+    if not os.path.exists("/proc/sys/fs/binfmt_misc/register"):
+        mountcmd = find_binary_path("mount")
+        runner.show([mountcmd, "-t", "binfmt_misc", "none", "/proc/sys/fs/binfmt_misc"])
+
+    # qemu_emulator is a special case, we can't use find_binary_path
+    # qemu emulator should be a statically-linked executable file
+    qemu_emulator = "/usr/bin/qemu-arm"
+    if not os.path.exists(qemu_emulator) or not is_statically_linked(qemu_emulator):
+        qemu_emulator = "/usr/bin/qemu-arm-static"
+    if not os.path.exists(qemu_emulator):
+        raise errors.QemuError("Please install a statically-linked qemu-arm")
+
+    # disable selinux, selinux will block qemu emulator to run
+    if os.path.exists("/usr/sbin/setenforce"):
+        msger.info('Try to disable selinux')
+        runner.show(["/usr/sbin/setenforce", "0"])
+
+    node = "/proc/sys/fs/binfmt_misc/arm"
+    if is_statically_linked(qemu_emulator) and os.path.exists(node):
+        return qemu_emulator
+
+    # unregister it if it has been registered and is a dynamically-linked executable
+    if not is_statically_linked(qemu_emulator) and os.path.exists(node):
+        qemu_unregister_string = "-1\n"
+        fd = open("/proc/sys/fs/binfmt_misc/arm", "w")
+        fd.write(qemu_unregister_string)
+        fd.close()
+
+    # register qemu emulator for interpreting other arch executable file
+    if not os.path.exists(node):
+        qemu_arm_string = ":arm:M::\\x7fELF\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\x28\\x00:\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\x00\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfa\\xff\\xff\\xff:%s:\n" % qemu_emulator
+        fd = open("/proc/sys/fs/binfmt_misc/register", "w")
+        fd.write(qemu_arm_string)
+        fd.close()
+
+    return qemu_emulator
