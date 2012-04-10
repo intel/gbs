@@ -7,7 +7,7 @@ Group:      Development/Tools
 License:    GPLv2
 BuildArch:  noarch
 URL:        http://www.tizen.org
-Source0:    %{name}-%{version}.tar.gz
+Source0:    %{name}-%{version}.tar.bz2
 Requires:   python >= 2.5
 Requires:   git-core
 Requires:   osc >= 0.131
@@ -51,6 +51,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc README.rst
+%{_mandir}/man1/*
 %{python_sitelib}/*
 %dir %{_datadir}/%{name}
 %{_datadir}/%{name}/*
