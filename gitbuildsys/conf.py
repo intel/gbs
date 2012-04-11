@@ -240,7 +240,7 @@ class ConfigMgr(object):
     DEFAULT_CONF_TEMPLATE="""[general]
 ; general settings
 tmpdir = $general__tmpdir
-
+editor = 
 [build]
 ; settings for build subcommand
 build_server = $build__build_server

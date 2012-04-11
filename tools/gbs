@@ -208,6 +208,41 @@ class TizenPkg(cmdln.Cmdln):
         from gitbuildsys import cmd_import as cmd
         cmd.do(opts, args)
 
+
+    @cmdln.alias("ch")
+    @cmdln.option('-s', '--since',
+                  default=None,
+                  dest='since',
+                  help='commit to start from')
+    @cmdln.option('-V', '--version',
+                  default=None,
+                  dest='version',
+                  help='version number to show in changelog, default is commit ID or a string refer to this commit')
+    @cmdln.option('-F', '--full',
+                  action="store_true",
+                  default=False,
+                  dest='full_msg',
+                  help='include full message in commits')
+    @cmdln.option('-a', '--author',
+                  default=None,
+                  dest='author',
+                  help='specified the changelog author, default is the same one with git')
+    def do_changelog(self, subcmd, opts, *args):
+        """${cmd_name}: update the changelog file with the git commit messages
+
+        Usage:
+            gbs changelog --since [--version] [--full] [--author]
+
+        Examples:
+          $ gbs changelog
+          $ gbs changelog --since=COMMIT_ID
+          $ gbs changelog --git-author='Fist Last <last.fist@foo.com>'
+        ${cmd_option_list}
+        """
+
+        from gitbuildsys import cmd_changelog as cmd
+        cmd.do(opts, args)
+
     @cmdln.alias("import-orig")
     @cmdln.option('--author-name',
                   default=None,

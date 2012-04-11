@@ -76,13 +76,23 @@ class Git:
         """
         return filter(None, self._exec_git('ls-files').splitlines())
 
-    def rev_parse(self, name):
+    def rev_parse(self, name, *extar):
         """ Find the SHA1 of a given name commit id"""
-        options = [ "--quiet", "--verify", name ]
+        options = list(extar) + [ "--quiet", "--verify", name ]
         cmd = ['git', 'rev-parse']
         ret, commit = runner.runtool(' '.join(cmd + options))
         if ret == 0:
             return commit.strip()
+        else:
+            return None
+
+    def descibe(self, git_obj):
+        options = [ "--tags", git_obj ]
+        cmd = ['git', 'describe']
+        ret, string = runner.runtool(' '.join(cmd + options))
+
+        if ret == 0:
+            return string.strip()
         else:
             return None
 
