@@ -87,12 +87,14 @@ TMPDIR      = configmgr.get('tmpdir')
 
 def do(opts, args):
 
+    if os.geteuid() != 0:
+        msger.error('Root permission is required, please use sudo and try again')
+
     workdir = os.getcwd()
     if len(args) > 1:
         msger.error('only one work directory can be specified in args.')
     if len(args) == 1:
         workdir = args[0]
-
 
     hostarch = utils.get_hostarch()
     buildarch = hostarch
@@ -165,8 +167,6 @@ def do(opts, args):
         distconf = bc_filename
         """
 
-    need_root = True # TODO: kvm don't need root.
-
     build_cmd  = configmgr.get('build_cmd', 'localbuild')
     build_root = configmgr.get('build_root', 'localbuild')
     if opts.buildroot:
@@ -192,15 +192,6 @@ def do(opts, args):
     if opts.noinit:
         cmd += ['--noinit']
     cmd += [specfile]
-
-    if need_root:
-        sucmd = configmgr.get('su-wrapper', 'localbuild').split()
-        if sucmd[0] == 'su':
-            if sucmd[-1] == '-c':
-                sucmd.pop()
-            cmd = sucmd + ['-s', cmd[0], 'root', '--' ] + cmd[1:]
-        else:
-            cmd = sucmd + cmd
 
     if hostarch != buildarch and buildarch in change_personality:
         cmd = [ change_personality[buildarch] ] + cmd;
