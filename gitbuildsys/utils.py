@@ -21,6 +21,7 @@ import os
 import glob
 import platform
 import re
+import tempfile
 
 import msger
 import runner
@@ -101,15 +102,16 @@ def parse_spec(spec_path, macro):
 
     if which(rpmb_cmd):
         # rpmbuild has been installed in system, use it
+        tmp_dir = tempfile.mkdtemp(dir='/tmp/')
         rpmb_cmdline = ("%s -bp --nodeps --force "
-                        "tmp.spec --define '_topdir .' "
-                        "--define '_builddir .' "
-                        "--define '_sourcedir .' "
-                        "--define '_rpmdir .' "
-                        "--define '_specdir .' "
-                        "--define '_srcrpmdir .'") % rpmb_cmd
+                        "%s/tmp.spec --define '_topdir %s' "
+                        "--define '_builddir %s' "
+                        "--define '_sourcedir %s' "
+                        "--define '_rpmdir %s' "
+                        "--define '_specdir %s' "
+                        "--define '_srcrpmdir %s'") % (rpmb_cmd, tmp_dir, tmp_dir, tmp_dir, tmp_dir, tmp_dir, tmp_dir, tmp_dir)
 
-        wf = open('tmp.spec', 'w')
+        wf = open(os.path.join(tmp_dir, 'tmp.spec'), 'w')
         with file(spec_path) as f:
             for line in f:
                 if line.startswith('%prep'):
@@ -120,11 +122,9 @@ def parse_spec(spec_path, macro):
         outs = runner.outs(rpmb_cmdline, catch=3)
 
         # clean up
-        os.unlink('tmp.spec')
-        if os.path.isdir('BUILDROOT'):
+        if os.path.exists(tmp_dir):
             import shutil
-            shutil.rmtree('BUILDROOT', ignore_errors=True)
-
+            shutil.rmtree(tmp_dir, ignore_errors=True)
         for line in outs.splitlines():
             if line.startswith('+ echo '):
                 return line[7:].rstrip()
