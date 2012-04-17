@@ -87,6 +87,18 @@ class Gbs(cmdln.Cmdln):
                   dest='noinit',
                   help='Skip initialization of build root and start ' \
                        'with build immediately')
+    @cmdln.option('--ccache',
+                  action="store_true",
+                  default=False,
+                  dest='ccache',
+                  help='Use ccache to speed up rebuilds')
+    @cmdln.option('-I', '--incremental',
+                  action="store_true",
+                  default=False,
+                  dest='incremental',
+                  help='Do incremental build, which need support of spec file,'
+                       ' and tar ball unpack stage should be enabled with the '
+                       'condition of RPM macro RSYNCDONE')
     @cmdln.option('--debuginfo',
                   action='store_true',
                   default=False,

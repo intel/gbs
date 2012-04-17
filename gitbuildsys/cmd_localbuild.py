@@ -189,13 +189,13 @@ def do(opts, args):
         msger.error('No package repository specified.')
 
     if opts.noinit:
-        cmd += ['--noinit']
+        cmd += ['--no-init']
+    if opts.ccache:
+        cmd += ['--ccache']
     cmd += [specfile]
 
     if hostarch != buildarch and buildarch in change_personality:
         cmd = [ change_personality[buildarch] ] + cmd;
-
-    msger.info(' '.join(cmd))
 
     if buildarch.startswith('arm'):
         try:
@@ -224,6 +224,12 @@ def do(opts, args):
     except GbpError, exc:
         msger.error(str(exc))
  
+    if opts.incremental:
+        cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
+        cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % (name, version)]
+
+    msger.info(' '.join(cmd))
+
     # runner.show() can't support interactive mode, so use subprocess insterad.
     try:
         rc = subprocess.call(cmd)
