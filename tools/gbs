@@ -23,29 +23,6 @@ from gitbuildsys.__version__ import VERSION
 from gitbuildsys import msger, cmdln, errors, utils, runner
 from gitbuildsys.conf import configmgr
 
-def _fall_to_shell(cmdname):
-    def raw_wrapper(name):
-        return name
-
-    def sh_wrapper(_name):
-        def _run_embed_sh(_self, argv):
-            # this command is a shell script wrapper
-            shpath = os.path.join(utils.get_share_dir(), cmdname + '.sh')
-            cmdlist = ['bash', shpath]
-            if msger.get_loglevel() == 'debug':
-                cmdlist.append('-d')
-            elif msger.get_loglevel() == 'verbose':
-                cmdlist.append('-v')
-            runner.embed(cmdlist + list(argv)[1:])
-        return _run_embed_sh
-
-    cmdmod = 'gitbuildsys.cmd_' + cmdname
-    try:
-        __import__(cmdmod)
-        return raw_wrapper
-    except ImportError:
-        return sh_wrapper
-
 class Gbs(cmdln.Cmdln):
     """
     Usage: gbs [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
@@ -154,8 +131,7 @@ class Gbs(cmdln.Cmdln):
                   dest='base_obsprj',
                   help='Base OBS project being used to branch from, ' \
                        'use "Trunk" if not specified')
-    @_fall_to_shell('build')
-    def do_build(self, _subcmd, opts, *args):
+    def do_build(self, subcmd, opts, *args):
         """${cmd_name}: test building for current pkg
 
         Usage:
