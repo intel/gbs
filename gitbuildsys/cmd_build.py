@@ -20,17 +20,12 @@
 """
 
 import os
-import time
 import tempfile
 import glob
-import shutil
-import urlparse
 
 import msger
-import runner
 import utils
 from conf import configmgr
-import git
 import obspkg
 import errors
 
@@ -72,7 +67,7 @@ def do(opts, args):
                 "user": USER,
                 "passwdx": PASSWDX,
             }
-    (fd, oscrcpath) = tempfile.mkstemp(dir=tmpdir,prefix='.oscrc')
+    (fd, oscrcpath) = tempfile.mkstemp(dir=tmpdir, prefix='.oscrc')
     os.close(fd)
     f = file(oscrcpath, 'w+')
     f.write(oscrc)
@@ -122,7 +117,7 @@ def do(opts, args):
 	       "--git-ignore-new", "--git-builder=osc",
 	       "--git-export-dir=%s" % oscworkdir,
 	       "--git-packaging-dir=packaging"]):
-	    msger.error("Failed to get packaging info from git tree")
+        msger.error("Failed to get packaging info from git tree")
 
     localpkg.update_local()
 
