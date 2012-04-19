@@ -34,6 +34,8 @@ import git
 import obspkg
 import errors
 
+from gbp.scripts.buildpackage_rpm import main as gbp_build
+
 OSCRC_TEMPLATE = """[general]
 apiurl = %(apiurl)s
 plaintext_passwd=0
@@ -116,16 +118,11 @@ def do(opts, args):
     oscworkdir = localpkg.get_workdir()
     localpkg.remove_all()
 
-    source = utils.parse_spec(specfile, 'SOURCE0')
-    urlres = urlparse.urlparse(source)
-
-    tarball = '%s/%s' % (oscworkdir, os.path.basename(urlres.path))
-    msger.info('archive git tree to tarball: %s' % os.path.basename(tarball))
-    mygit = git.Git(workdir)
-    mygit.archive("%s-%s/" % (name, version), tarball)
-
-    for f in glob.glob('%s/packaging/*' % workdir):
-        shutil.copy(f, oscworkdir)
+    if gbp_build(["argv[0] placeholder", "--git-export-only",
+	       "--git-ignore-new", "--git-builder=osc",
+	       "--git-export-dir=%s" % oscworkdir,
+	       "--git-packaging-dir=packaging"]):
+	    msger.error("Failed to get packaging info from git tree")
 
     localpkg.update_local()
 
