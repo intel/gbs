@@ -49,16 +49,16 @@ class Changes():
 
         self.changesfile = filename
         with open(filename) as changes:
-            l = changes.readline()
-            while l:
+            line = changes.readline()
+            while line:
                 entry = []
-                if l.startswith('*'):
-                    entry.append(l)
-                    while l:
-                        l = changes.readline()
-                        if l.startswith('*'):
+                if line.startswith('*'):
+                    entry.append(line)
+                    while line:
+                        line = changes.readline()
+                        if line.startswith('*'):
                             break
-                        entry.append(l)
+                        entry.append(line)
                 self.log_entries.append(entry)
 
     def get_entry(self, index=0):
@@ -70,8 +70,8 @@ class Changes():
         import datetime
         if not entry:
             return None
-        for re in self.entry_res:
-            match = re.match(entry[0])
+        for regexp in self.entry_res:
+            match = regexp.match(entry[0])
             if match:
                 date = match.group(1)
                 author = match.group(2)
@@ -95,21 +95,21 @@ class Changes():
         top_entry.append('\n')
 
         """ add the new entry to the top of changelog """
-        with open(self.changesfile, 'r+') as f:
-            lines = f.readlines()
+        with open(self.changesfile, 'r+') as chlog:
+            lines = chlog.readlines()
             lines = top_entry + lines
-            f.seek(0)
-            for l in lines:
-                f.write(l)
-            f.flush()
+            chlog.seek(0)
+            for line in lines:
+                chlog.write(line)
+            chlog.flush()
 """
 convert commits to log entry message
 """
 def commits_to_log_entry_body(commits, git_repo):
     """ itemized by author """
     contributions = {}
-    for c in commits:
-        commit_info =  git_repo.get_commit_info(c)
+    for commit in commits:
+        commit_info =  git_repo.get_commit_info(commit)
         if commit_info['author'] not in contributions:
             contributions[commit_info['author']] = []
         contributions[commit_info['author']].append(commit_info['subject'])
@@ -123,10 +123,7 @@ def commits_to_log_entry_body(commits, git_repo):
 
     return entry_body
 
-def do(opts, args):
-
-    opts_full_msg = opts.full_msg
-    opts_author = opts.author
+def do(opts, _args):
 
     project_root_dir = '.'
 
@@ -151,10 +148,10 @@ def do(opts, args):
 
     """ save to a temp file
     """
-    fd, fn_changes = tempfile.mkstemp()
-    f = os.fdopen(fd, 'w')
-    f.write(''.join(open(origin_changes).readlines()))
-    f.close()
+    fds, fn_changes = tempfile.mkstemp()
+    fds2 = os.fdopen(fds, 'w')
+    fds2.write(''.join(open(origin_changes).readlines()))
+    fds2.close()
 
     changes = Changes(fn_changes)
 
@@ -163,7 +160,7 @@ def do(opts, args):
     if opts.since:
         commitid_since = repo.rev_parse(opts.since)
         if not commitid_since:
-            mesger.error("Invalid since commit object name: %s" %(opts.since))
+            msger.error("Invalid since commit object name: %s" %(opts.since))
     else:
         version = changes.parse_entry(changes.get_entry())[2]
         commitid_since = repo.rev_parse(version)
