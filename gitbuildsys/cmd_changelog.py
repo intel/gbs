@@ -19,12 +19,14 @@
 """Implementation of subcmd: changelog
 """
 
-import os, datetime
-import tempfile, glob
-import subprocess, shutil
+import os
+import datetime
+import tempfile
+import glob
+import subprocess
+import shutil
 
 import msger
-import runner
 import errors
 
 from conf import configmgr
@@ -67,7 +69,6 @@ class Changes():
         return self.log_entries[index]
 
     def parse_entry(self, entry):
-        import datetime
         if not entry:
             return None
         for regexp in self.entry_res:
