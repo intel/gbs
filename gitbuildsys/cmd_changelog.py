@@ -31,7 +31,7 @@ from conf import configmgr
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
-EDITOR=configmgr.get('editor') or 'vi'
+EDITOR = configmgr.get('editor') or 'vi'
 
 class Changes():
     import re
@@ -86,12 +86,12 @@ class Changes():
         date_str = date.strftime("%a %b %d %Y")
         """ first line start with '*'  """
         if version:
-            top_entry = ["* %s %s - %s\n" %(date_str, author, version)]
+            top_entry = ["* %s %s - %s\n" % (date_str, author, version)]
         else:
-            top_entry = ["* %s %s\n" %(date_str, author)]
+            top_entry = ["* %s %s\n" % (date_str, author)]
         """ every body line start with '-' """
         for line in body:
-            top_entry.append("- %s\n" %line)
+            top_entry.append("- %s\n" % line)
         top_entry.append('\n')
 
         """ add the new entry to the top of changelog """
@@ -180,8 +180,8 @@ def do(opts, args):
     if opts.author:
         log_author = opts.author
     else:
-        log_author = "%s <%s>" %(repo.get_config('user.name'), 
-			         repo.get_config('user.email'))
+        log_author = "%s <%s>" % (repo.get_config('user.name'), \
+			          repo.get_config('user.email'))
 
     if opts.version:
         log_version = opts.version
