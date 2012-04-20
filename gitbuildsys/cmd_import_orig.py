@@ -18,110 +18,21 @@
 
 """Implementation of subcmd: import
 """
-
-import os
-import time
-import tempfile
-import glob
-import shutil
-
 import msger
-import runner
-import utils
-from conf import configmgr
-import git
-import errors
 
-USER        = configmgr.get('user', 'build')
-TMPDIR      = configmgr.get('tmpdir')
-COMM_NAME   = configmgr.get('commit_name', 'import')
-COMM_EMAIL  = configmgr.get('commit_email', 'import')
+from gbp.scripts.import_orig_rpm import main as gbp_import_orig
 
 def do(opts, args):
-    global COMM_NAME
-    global COMM_EMAIL
-
-    workdir = os.getcwd()
-    tmpdir = '%s/%s' % (TMPDIR, USER)
-    if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir)
 
     if len(args) != 1:
-        msger.error('missing argument, please reference gbs import-orig --help.')
-    else:
-        tarball = args[0]
+        msger.error('missing argument, please run gbs import-orig --help.')
 
-    try:
-        repo = git.Git('.')
-    except errors.GitInvalid:
-        msger.error("no git repository found.")
-
-    tardir = tempfile.mkdtemp(prefix='%s/' % (tmpdir))
-    upstream = utils.UpstreamTarball(tarball)
-    (pkgname, pkgversion) = upstream.guess_version() or ('', '')
-    if not ( pkgname and pkgversion ):
-        msger.error('can\'t parse out package name or version! Please check '
-                    'the tarball.  The format of tarball name should be '
-                    'name-version-tizen.<ext> or name-version.<ext>')
-
-    try:
-        COMM_NAME = repo.get_config('user.name')
-        COMM_EMAIL = repo.get_config('user.email')
-    except errors.GitError:
-        pass
-    if opts.author_name:
-        COMM_NAME = opts.author_name
-    if opts.author_email:
-        COMM_EMAIL = opts.author_email
-    if not COMM_NAME:
+    if not opts.author_name:
         msger.error('commit user name must be specified')
-    if not COMM_EMAIL:
+    if not opts.author_email:
         msger.error('commit user email must be specified')
 
-    try:
-        msger.info('unpack upstream tar ball ...')
-        upstream.unpack(tardir)
-    except errors.UnpackError:
-        msger.error('unpacking %s failed' % tarball)
-    except errors.FormatError, e:
-        msger.error(e.msg)
-
-    tag = repo.version_to_tag("%(version)s", pkgversion)
-    msg = "Upstream version %s" % (pkgversion)
-
-    if opts.upstream_branch:
-        upstream_branch = opts.upstream_branch
-    else:
-        upstream_branch = 'upstream'
-    if not repo.has_branch(upstream_branch):
-        msger.error('upstream branch not exists, please create one manually')
-
-    os.chdir(repo.path)
-    repo.clean_branch(upstream_branch)
-    if repo.find_tag(tag):
-        msger.error('don\'t need to import, already in version %s' % tag)
-
-    msger.info('submit the upstream data')
-    commit = repo.commit_dir(upstream.unpacked, msg,
-                             author = {'name':COMM_NAME,
-                                         'email':COMM_EMAIL
-                                      }
-                            )
-    if commit and opts.tag:
-        msger.info('create tag named: %s' % tag)
-        repo.create_tag(tag, msg, commit)
-
-    if commit is None:
-        msger.info('don\'t need import, already in version %s' % tag)
-
-    repo.checkout_branch('master')
-    
-    if commit and not opts.no_merge:
-        try:
-            msger.info('merge imported upstream branch to master branch')
-            # TODO: add commit name/email support
-            repo.merge(commit)
-        except:
-            msger.error('merge failed, please resolve')
+    if gbp_import_orig(['argv[0] placeholder', args[0]]):
+        msger.error('Failed to import %s' % args[0])
 
     msger.info('done.')
