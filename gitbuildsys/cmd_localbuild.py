@@ -20,21 +20,20 @@
 """
 
 import os
-import sys
-import time
 import tempfile
 import glob
-import shutil
 import subprocess
 import urlparse
 
 import msger
-import runner
 import utils
 import errors
 from conf import configmgr
-import git
-import buildservice
+
+from gbp.scripts.buildpackage_rpm import git_archive
+from gbp.pkg import compressor_aliases
+from gbp.rpm.git import GitRepositoryError, RpmGitRepository
+import gbp.rpm as rpm
 
 change_personality = {
             'i686':  'linux32',
@@ -213,19 +212,24 @@ def do(opts, args):
         except errors.QemuError, e:
             msger.error('%s' % e)
 
-    name = utils.parse_spec(specfile, 'name')
-    version = utils.parse_spec(specfile, 'version')
-    if not name or not version:
+    spec = rpm.parse_spec(specfile)
+    if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
 
-    source = utils.parse_spec(specfile, 'SOURCE0')
-    urlres = urlparse.urlparse(source)
+    urlres = urlparse.urlparse(spec.orig_file)
 
     tarball = 'packaging/%s' % os.path.basename(urlres.path)
     msger.info('generate tar ball: %s' % tarball)
-    mygit = git.Git(workdir)
-    mygit.archive("%s-%s/" % (name, version), tarball)
+    try:
+        repo = RpmGitRepository(os.path.curdir)
+    except GitRepositoryError:
+        msger.error("%s is not a git repository" % (os.path.curdir))
 
+    comp_type = compressor_aliases.get(spec.orig_comp, None)
+    if not git_archive(repo, spec, "./packaging", 'HEAD', comp_type,
+                       comp_level=9, with_submodules=True):
+        msger.error("Cannot create source tarball %s" % tarball)
+ 
     # runner.show() can't support interactive mode, so use subprocess insterad.
     try:
         rc = subprocess.call(cmd)
