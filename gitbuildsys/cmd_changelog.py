@@ -84,17 +84,17 @@ class Changes():
 
     def add_entry(self, author, version, date, body):
         date_str = date.strftime("%a %b %d %Y")
-        """ first line start with '*'  """
+        # first line start with '*'
         if version:
             top_entry = ["* %s %s - %s\n" % (date_str, author, version)]
         else:
             top_entry = ["* %s %s\n" % (date_str, author)]
-        """ every body line start with '-' """
+        # every body line start with '-'
         for line in body:
             top_entry.append("- %s\n" % line)
         top_entry.append('\n')
 
-        """ add the new entry to the top of changelog """
+        # add the new entry to the top of changelog
         with open(self.changesfile, 'r+') as chlog:
             lines = chlog.readlines()
             lines = top_entry + lines
@@ -102,11 +102,9 @@ class Changes():
             for line in lines:
                 chlog.write(line)
             chlog.flush()
-"""
-convert commits to log entry message
-"""
+
 def commits_to_log_entry_body(commits, git_repo):
-    """ itemized by author """
+    """Convert commits to log entry messages itemized by author."""
     contributions = {}
     for commit in commits:
         commit_info =  git_repo.get_commit_info(commit)
@@ -146,8 +144,7 @@ def do(opts, _args):
 
     origin_changes = changes_file_list[0]
 
-    """ save to a temp file
-    """
+    # save to a temp file
     fds, fn_changes = tempfile.mkstemp()
     fds2 = os.fdopen(fds, 'w')
     fds2.write(''.join(open(origin_changes).readlines()))
@@ -155,8 +152,7 @@ def do(opts, _args):
 
     changes = Changes(fn_changes)
 
-    """ get the commit start from the opts.sinece
-    """
+    # get the commit start from the opts.sinece
     if opts.since:
         commitid_since = repo.rev_parse(opts.since)
         if not commitid_since:
