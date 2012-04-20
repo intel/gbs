@@ -28,7 +28,8 @@ import runner
 import errors
 
 from conf import configmgr
-import git
+
+from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
 EDITOR=configmgr.get('editor') or 'vi'
 
@@ -131,8 +132,8 @@ def do(opts, args):
     project_root_dir = '.'
 
     try:
-        repo = git.Git(project_root_dir)
-    except errors.GitInvalid:
+        repo = RpmGitRepository(project_root_dir)
+    except GitRepositoryError:
         msger.error("No git repository found.")
 
     if not repo.is_clean():
@@ -169,7 +170,7 @@ def do(opts, args):
         if not commitid_since:
             msger.error("Can't get last commit ID in log, please specify it by '--since'")
 
-    commits = repo.commits(commitid_since, 'HEAD')
+    commits = repo.get_commits(commitid_since, 'HEAD')
     if not commits:
         msger.error("Nothing found between %s and HEAD" %commitid_since)
 
@@ -183,8 +184,9 @@ def do(opts, args):
     if opts.version:
         log_version = opts.version
     else:
-        log_version = repo.descibe('HEAD')
-        if not log_version:
+        try:
+            log_version = repo.find_tag('HEAD')
+        except GitRepositoryError:
             log_version = repo.rev_parse('HEAD', '--short')
 
     log_date = datetime.datetime.today()
