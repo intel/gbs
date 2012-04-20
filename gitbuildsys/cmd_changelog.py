@@ -78,7 +78,8 @@ class Changes():
                 version = match.group(3)
 
                 body = ''.join(entry[1:])
-                return datetime.datetime.strptime(date, "%a %b %d %Y"), author, version, body
+                return datetime.datetime.strptime(date, "%a %b %d %Y"), \
+                       author, version, body
         return None
 
     def add_entry(self, author, version, date, body):
@@ -106,21 +107,19 @@ convert commits to log entry message
 """
 def commits_to_log_entry_body(commits, git_repo):
     """ itemized by author """
-    author_contribution = {}
+    contributions = {}
     for c in commits:
         commit_info =  git_repo.get_commit_info(c)
-        if author_contribution.has_key(commit_info['author']):
-            author_contribution[commit_info['author']].append(commit_info['subject'])
-        else:
-            author_contribution[commit_info['author']] = []
-            author_contribution[commit_info['author']].append(commit_info['subject'])
+        if commit_info['author'] not in contributions:
+            contributions[commit_info['author']] = []
+        contributions[commit_info['author']].append(commit_info['subject'])
 
     entry_body = []
-    author_list = author_contribution.keys()
+    author_list = contributions.keys()
     author_list.sort()
     for author in author_list:
         entry_body.append("[ %s ]" %author)
-        entry_body.extend(author_contribution[author])
+        entry_body.extend(contributions[author])
 
     return entry_body
 
@@ -142,7 +141,8 @@ def do(opts, args):
     changes_file_list = glob.glob("%s/packaging/*.changes" %(project_root_dir))
 
     if len(changes_file_list) > 1:
-        msger.warning("Found more than one changes files, %s is taken " %(changes_file_list[0]))
+        msger.warning("Found more than one changes files, %s is taken " \
+			% (changes_file_list[0]))
 
     elif len(changes_file_list) == 0:
         msger.error("Found no changes file under packaging dir")
@@ -165,10 +165,11 @@ def do(opts, args):
         if not commitid_since:
             mesger.error("Invalid since commit object name: %s" %(opts.since))
     else:
-        dummy1, dummy2, version, dummy4 = changes.parse_entry(changes.get_entry())
+        version = changes.parse_entry(changes.get_entry())[2]
         commitid_since = repo.rev_parse(version)
         if not commitid_since:
-            msger.error("Can't get last commit ID in log, please specify it by '--since'")
+            msger.error("Can't find last commit ID in the log, "\
+			"please specify it by '--since'")
 
     commits = repo.get_commits(commitid_since, 'HEAD')
     if not commits:
@@ -179,7 +180,8 @@ def do(opts, args):
     if opts.author:
         log_author = opts.author
     else:
-        log_author = "%s <%s>" %(repo.get_config('user.name'), repo.get_config('user.email'))
+        log_author = "%s <%s>" %(repo.get_config('user.name'), 
+			         repo.get_config('user.email'))
 
     if opts.version:
         log_version = opts.version
