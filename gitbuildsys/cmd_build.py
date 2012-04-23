@@ -24,11 +24,11 @@ import tempfile
 import glob
 
 import msger
-import utils
 from conf import configmgr
 import obspkg
 import errors
 
+import gbp.rpm
 from gbp.scripts.buildpackage_rpm import main as gbp_build
 
 OSCRC_TEMPLATE = """[general]
@@ -83,9 +83,8 @@ def do(opts, args):
         msger.warning('multiple specfiles found.')
 
     # get 'name' and 'version' from spec file
-    name = utils.parse_spec(specfile, 'name')
-    version = utils.parse_spec(specfile, 'version')
-    if not name or not version:
+    spec = gbp.rpm.parse_spec(specfile)
+    if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
 
     if opts.base_obsprj is None:
@@ -108,8 +107,8 @@ def do(opts, args):
         except errors.ObsError, e:
             msger.error('%s' % e)
 
-    msger.info('checking out %s/%s to %s ...' % (target_prj, name, tmpdir))
-    localpkg = obspkg.ObsPackage(tmpdir, target_prj, name, APISERVER, oscrcpath)
+    msger.info('checking out %s/%s to %s ...' % (target_prj, spec.name, tmpdir))
+    localpkg = obspkg.ObsPackage(tmpdir, target_prj, spec.name, APISERVER, oscrcpath)
     oscworkdir = localpkg.get_workdir()
     localpkg.remove_all()
 
@@ -128,4 +127,4 @@ def do(opts, args):
     msger.info('local changes submitted to build server successfully')
     msger.info('follow the link to monitor the build progress:\n'
                '  %s/package/show?package=%s&project=%s' \
-               % (APISERVER.replace('api', 'build'), name, target_prj))
+               % (APISERVER.replace('api', 'build'), spec.name, target_prj))

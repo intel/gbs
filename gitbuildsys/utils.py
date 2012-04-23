@@ -93,51 +93,6 @@ def get_share_dir():
     # TODO need to be better
     return '/usr/share/gbs/'
 
-def parse_spec(spec_path, macro):
-    """Parse the spec file to get the specified `macro`
-    """
-
-    rpmb_cmd = 'rpmbuild'
-
-    if which(rpmb_cmd):
-        # rpmbuild has been installed in system, use it
-        rpmb_cmdline = ("%s -bp --nodeps --force "
-                        "tmp.spec --define '_topdir .' "
-                        "--define '_builddir .' "
-                        "--define '_sourcedir .' "
-                        "--define '_rpmdir .' "
-                        "--define '_specdir .' "
-                        "--define '_srcrpmdir .'") % rpmb_cmd
-
-        wf = open('tmp.spec', 'w')
-        with file(spec_path) as f:
-            for line in f:
-                if line.startswith('%prep'):
-                    line ='%%prep\necho %%{%s}\nexit\n' % macro
-                wf.write(line)
-        wf.close()
-
-        outs = runner.outs(rpmb_cmdline, catch=3)
-
-        # clean up
-        os.unlink('tmp.spec')
-        if os.path.isdir('BUILDROOT'):
-            import shutil
-            shutil.rmtree('BUILDROOT', ignore_errors=True)
-
-        for line in outs.splitlines():
-            if line.startswith('+ echo '):
-                return line[7:].rstrip()
-
-        msger.warning('invalid spec file, cannot get the value of macro %s' \
-                      % macro)
-        return ''
-
-    else:
-        # TBD parse it directly
-        msger.warning('cannot support parsing spec without rpmbuild command')
-        return ''
-
 def get_processors():
     """
     get number of processors (online) based on
