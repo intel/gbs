@@ -47,7 +47,7 @@ class Changes():
 
     def __init__(self, filename):
         if not os.path.isfile(filename):
-            raise errors.GBSError("%s is not a general file" %filename)
+            raise errors.GBSError("%s is not a general file" % filename)
 
         self.changesfile = filename
         with open(filename) as changes:
@@ -117,7 +117,7 @@ def commits_to_log_entry_body(commits, git_repo):
     author_list = contributions.keys()
     author_list.sort()
     for author in author_list:
-        entry_body.append("[ %s ]" %author)
+        entry_body.append("[ %s ]" % author)
         entry_body.extend(contributions[author])
 
     return entry_body
@@ -134,11 +134,11 @@ def do(opts, _args):
     if not repo.is_clean():
         msger.error("Git tree is not clean")
 
-    changes_file_list = glob.glob("%s/packaging/*.changes" %(project_root_dir))
+    changes_file_list = glob.glob("%s/packaging/*.changes" % project_root_dir)
 
     if len(changes_file_list) > 1:
         msger.warning("Found more than one changes files, %s is taken " \
-			% (changes_file_list[0]))
+                       % (changes_file_list[0]))
 
     elif len(changes_file_list) == 0:
         msger.error("Found no changes file under packaging dir")
@@ -153,21 +153,21 @@ def do(opts, _args):
 
     changes = Changes(fn_changes)
 
-    # get the commit start from the opts.sinece
+    # get the commit start from the opts.since
     if opts.since:
         commitid_since = repo.rev_parse(opts.since)
         if not commitid_since:
-            msger.error("Invalid since commit object name: %s" %(opts.since))
+            msger.error("Invalid since commit object name: %s" % (opts.since))
     else:
         version = changes.parse_entry(changes.get_entry())[2]
         commitid_since = repo.rev_parse(version)
         if not commitid_since:
             msger.error("Can't find last commit ID in the log, "\
-			"please specify it by '--since'")
+                       "please specify it by '--since'")
 
     commits = repo.get_commits(commitid_since, 'HEAD')
     if not commits:
-        msger.error("Nothing found between %s and HEAD" %commitid_since)
+        msger.error("Nothing found between %s and HEAD" % commitid_since)
 
     log_entry_body = commits_to_log_entry_body(commits, repo)
 
@@ -175,7 +175,7 @@ def do(opts, _args):
         log_author = opts.author
     else:
         log_author = "%s <%s>" % (repo.get_config('user.name'), \
-			          repo.get_config('user.email'))
+                                 repo.get_config('user.email'))
 
     if opts.version:
         log_version = opts.version
@@ -189,7 +189,7 @@ def do(opts, _args):
 
     changes.add_entry(log_author, log_version, log_date, log_entry_body)
 
-    subprocess.call("%s %s" %(EDITOR, fn_changes), shell=True)
+    subprocess.call("%s %s" % (EDITOR, fn_changes), shell=True)
 
     shutil.move(fn_changes, origin_changes)
     msger.info("Change log file updated.")
