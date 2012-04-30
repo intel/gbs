@@ -41,7 +41,7 @@ class Changes():
     log_entries = []
 
     entry_res = [
-        re.compile(r'^\*\s+(\w{3} \w{3} \d{2} \d{4})\s+([\w\s<.-]+@[\w.-]+>)[\s-]+([\w.-]+)'),
+        re.compile(r'^\*\s+(\w{3} \w{3} \d{2} \d{4})\s+([\w\s<.-]+@[\w.-]+>)[\s-]+([\w\d.@-]+)'),
         re.compile(r'^\*\s+(\w{3} \w{3} \d{2} \d{4})\s+([\w\s<.-]+@[\w.-]+>)()')
         ]
 
@@ -83,44 +83,49 @@ class Changes():
                        author, version, body
         return None
 
-    def add_entry(self, author, version, date, body):
-        date_str = date.strftime("%a %b %d %Y")
-        # first line start with '*'
-        if version:
-            top_entry = ["* %s %s - %s\n" % (date_str, author, version)]
-        else:
-            top_entry = ["* %s %s\n" % (date_str, author)]
-        # every body line start with '-'
-        for line in body:
-            top_entry.append("- %s\n" % line)
-        top_entry.append('\n')
+    def add_entries(self, new_entries):
+        """Add new entries to the top of changelog."""
+        lines = new_entries[:]
+        lines.append('\n')
+        with open(self.changesfile) as chlog:
+            lines.extend(chlog.readlines())
+        with open(self.changesfile, 'w') as chlog:
+            chlog.writelines(lines)
 
-        # add the new entry to the top of changelog
-        with open(self.changesfile, 'r+') as chlog:
-            lines = chlog.readlines()
-            lines = top_entry + lines
-            chlog.seek(0)
-            for line in lines:
-                chlog.write(line)
-            chlog.flush()
 
-def commits_to_log_entry_body(commits, git_repo):
-    """Convert commits to log entry messages itemized by author."""
-    contributions = {}
+def make_log_entries(commits, git_repo):
+    entries = []
+    prevdate = None
+    prevauthor = None
+    cr = ""
     for commit in commits:
         commit_info =  git_repo.get_commit_info(commit)
-        if commit_info['author'] not in contributions:
-            contributions[commit_info['author']] = []
-        contributions[commit_info['author']].append(commit_info['subject'])
 
-    entry_body = []
-    author_list = contributions.keys()
-    author_list.sort()
-    for author in author_list:
-        entry_body.append("[ %s ]" % author)
-        entry_body.extend(contributions[author])
+        # set version to <tag>@<sha1> or <sha1> if tag is not found
+        version = git_repo.rev_parse(commit, ['--short'])
+        try:
+            version = "%s@%s" % (git_repo.find_tag('HEAD'), version)
+        except GitRepositoryError:
+            pass
 
-    return entry_body
+        # Add new entry header if date is changed
+        date = datetime.datetime.fromtimestamp(int(commit_info["timestamp"]))
+        if not prevdate or (date.year, date.month, date.day) != \
+               (prevdate.year, prevdate.month, prevdate.day):
+            entries.append("%s* %s %s <%s> %s\n" % (cr, date.strftime("%a %b %d %Y"),
+                                                commit_info["author"],
+                                                commit_info["email"],
+                                                version))
+            cr = "\n"
+        # Track authors
+        elif not prevauthor or prevauthor != commit_info["author"]:
+            entries.append("[ %s ]\n" % commit_info["author"])
+
+        entries.append("- %s\n" % commit_info["subject"])
+        prevdate = date
+        prevauthor = commit_info["author"]
+    return entries
+
 
 def do(opts, _args):
 
@@ -159,8 +164,8 @@ def do(opts, _args):
         if not commitid_since:
             msger.error("Invalid since commit object name: %s" % (opts.since))
     else:
-        version = changes.parse_entry(changes.get_entry())[2]
-        commitid_since = repo.rev_parse(version)
+        sha1 = changes.parse_entry(changes.get_entry())[2].split('@')[-1]
+        commitid_since = repo.rev_parse(sha1)
         if not commitid_since:
             msger.error("Can't find last commit ID in the log, "\
                        "please specify it by '--since'")
@@ -169,27 +174,9 @@ def do(opts, _args):
     if not commits:
         msger.error("Nothing found between %s and HEAD" % commitid_since)
 
-    log_entry_body = commits_to_log_entry_body(commits, repo)
+    new_entries = make_log_entries(commits, repo)
+    changes.add_entries(new_entries)
 
-    if opts.author:
-        log_author = opts.author
-    else:
-        log_author = "%s <%s>" % (repo.get_config('user.name'), \
-                                 repo.get_config('user.email'))
-
-    if opts.version:
-        log_version = opts.version
-    else:
-        try:
-            log_version = repo.find_tag('HEAD')
-        except GitRepositoryError:
-            log_version = repo.rev_parse('HEAD', '--short')
-
-    log_date = datetime.datetime.today()
-
-    changes.add_entry(log_author, log_version, log_date, log_entry_body)
-
-    subprocess.call("%s %s" % (EDITOR, fn_changes), shell=True)
-
+    rc = subprocess.call("%s %s" % (EDITOR, fn_changes), shell=True)
     shutil.move(fn_changes, origin_changes)
     msger.info("Change log file updated.")
