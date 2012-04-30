@@ -41,8 +41,8 @@ class Changes():
     log_entries = []
 
     entry_res = [
-        re.compile(r'^\*\s+(\w{3} \w{3} \d{2} \d{4})\s+([\w\s<.]+@[\w.]+>)[\s-]+([\w.-]+)'),
-        re.compile(r'^\*\s+(\w{3} \w{3} \d{2} \d{4})\s+([\w\s<.]+@[\w.]+>)()')
+        re.compile(r'^\*\s+(\w{3} \w{3} \d{2} \d{4})\s+([\w\s<.-]+@[\w.-]+>)[\s-]+([\w.-]+)'),
+        re.compile(r'^\*\s+(\w{3} \w{3} \d{2} \d{4})\s+([\w\s<.-]+@[\w.-]+>)()')
         ]
 
     def __init__(self, filename):
