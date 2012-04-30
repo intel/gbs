@@ -19,15 +19,11 @@
 """Implementation of subcmd: changelog
 """
 
-import os
 import datetime
-import tempfile
 import glob
 import subprocess
-import shutil
 
 import msger
-import errors
 
 from conf import configmgr
 
