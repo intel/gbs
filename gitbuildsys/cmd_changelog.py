@@ -50,10 +50,11 @@ def get_latest_rev(changesfile):
 
 
 def make_log_entries(commits, git_repo):
+    """Make changelog entries from the set of git commits."""
     entries = []
     prevdate = None
     prevauthor = None
-    cr = ""
+    cret = ""
     for commit in commits:
         commit_info =  git_repo.get_commit_info(commit)
 
@@ -68,11 +69,12 @@ def make_log_entries(commits, git_repo):
         date = datetime.datetime.fromtimestamp(int(commit_info["timestamp"]))
         if not prevdate or (date.year, date.month, date.day) != \
                (prevdate.year, prevdate.month, prevdate.day):
-            entries.append("%s* %s %s <%s> %s\n" % (cr, date.strftime("%a %b %d %Y"),
+            entries.append("%s* %s %s <%s> %s\n" % (cret,
+                                                date.strftime("%a %b %d %Y"),
                                                 commit_info["author"],
                                                 commit_info["email"],
                                                 version))
-            cr = "\n"
+            cret = "\n"
         # Track authors
         elif not prevauthor or prevauthor != commit_info["author"]:
             entries.append("[ %s ]\n" % commit_info["author"])
