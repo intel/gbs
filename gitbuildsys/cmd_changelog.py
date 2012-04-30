@@ -35,62 +35,22 @@ from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
 EDITOR = configmgr.get('editor') or 'vi'
 
-class Changes():
-    import re
 
-    log_entries = []
+def add_entries(changesfile, new_entries):
+    """Add new entries to the top of changelog."""
+    lines = new_entries[:]
+    lines.append("\n")
+    with open(changesfile) as chlog:
+        lines.extend(chlog.readlines())
+    with open(changesfile, "w") as chlog:
+        chlog.writelines(lines)
 
-    entry_res = [
-        re.compile(r'^\*\s+(\w{3} \w{3} \d{2} \d{4})\s+([\w\s<.-]+@[\w.-]+>)[\s-]+([\w\d.@-]+)'),
-        re.compile(r'^\*\s+(\w{3} \w{3} \d{2} \d{4})\s+([\w\s<.-]+@[\w.-]+>)()')
-        ]
 
-    def __init__(self, filename):
-        if not os.path.isfile(filename):
-            raise errors.GBSError("%s is not a general file" % filename)
-
-        self.changesfile = filename
-        with open(filename) as changes:
-            line = changes.readline()
-            while line:
-                entry = []
-                if line.startswith('*'):
-                    entry.append(line)
-                    while line:
-                        line = changes.readline()
-                        if line.startswith('*'):
-                            break
-                        entry.append(line)
-                self.log_entries.append(entry)
-
-    def get_entry(self, index=0):
-        if not self.log_entries:
-            return None
-        return self.log_entries[index]
-
-    def parse_entry(self, entry):
-        if not entry:
-            return None
-        for regexp in self.entry_res:
-            match = regexp.match(entry[0])
-            if match:
-                date = match.group(1)
-                author = match.group(2)
-                version = match.group(3)
-
-                body = ''.join(entry[1:])
-                return datetime.datetime.strptime(date, "%a %b %d %Y"), \
-                       author, version, body
-        return None
-
-    def add_entries(self, new_entries):
-        """Add new entries to the top of changelog."""
-        lines = new_entries[:]
-        lines.append('\n')
-        with open(self.changesfile) as chlog:
-            lines.extend(chlog.readlines())
-        with open(self.changesfile, 'w') as chlog:
-            chlog.writelines(lines)
+def get_latest_rev(changesfile):
+    """Get latest git revision from the changelog."""
+    with open(changesfile) as chlog:
+        line = chlog.readline()
+        return line.strip().split(" ")[-1].split("@")[-1]
 
 
 def make_log_entries(commits, git_repo):
@@ -156,15 +116,13 @@ def do(opts, _args):
     fds2.write(''.join(open(origin_changes).readlines()))
     fds2.close()
 
-    changes = Changes(fn_changes)
-
     # get the commit start from the opts.since
     if opts.since:
         commitid_since = repo.rev_parse(opts.since)
         if not commitid_since:
             msger.error("Invalid since commit object name: %s" % (opts.since))
     else:
-        sha1 = changes.parse_entry(changes.get_entry())[2].split('@')[-1]
+        sha1 = get_latest_rev(fn_changes)
         commitid_since = repo.rev_parse(sha1)
         if not commitid_since:
             msger.error("Can't find last commit ID in the log, "\
@@ -175,7 +133,7 @@ def do(opts, _args):
         msger.error("Nothing found between %s and HEAD" % commitid_since)
 
     new_entries = make_log_entries(commits, repo)
-    changes.add_entries(new_entries)
+    add_entries(fn_changes, new_entries)
 
     rc = subprocess.call("%s %s" % (EDITOR, fn_changes), shell=True)
     shutil.move(fn_changes, origin_changes)
