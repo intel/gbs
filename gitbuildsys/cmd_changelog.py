@@ -108,13 +108,7 @@ def do(opts, _args):
     elif len(changes_file_list) == 0:
         msger.error("Found no changes file under packaging dir")
 
-    origin_changes = changes_file_list[0]
-
-    # save to a temp file
-    fds, fn_changes = tempfile.mkstemp()
-    fds2 = os.fdopen(fds, 'w')
-    fds2.write(''.join(open(origin_changes).readlines()))
-    fds2.close()
+    fn_changes = changes_file_list[0]
 
     # get the commit start from the opts.since
     if opts.since:
@@ -135,6 +129,5 @@ def do(opts, _args):
     new_entries = make_log_entries(commits, repo)
     add_entries(fn_changes, new_entries)
 
-    rc = subprocess.call("%s %s" % (EDITOR, fn_changes), shell=True)
-    shutil.move(fn_changes, origin_changes)
+    subprocess.call("%s %s" % (EDITOR, fn_changes), shell=True)
     msger.info("Change log file updated.")
