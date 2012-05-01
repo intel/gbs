@@ -72,6 +72,19 @@ CATCHERR_SAVED_2 = -1
 STDOUT = sys.stdout
 STDERR = sys.stderr
 
+# Configure gbp logging
+import gbp.log
+gbp.log.logger.format = '%(color)s%(levelname)s: %(coloroff)s%(message)s'
+
+# Mapping for gbs->gbp log levels
+GBP_LOG_LEVELS = {
+                    'quiet': gbp.log.Logger.ERROR,
+                    'normal': gbp.log.Logger.INFO,
+                    'verbose': gbp.log.Logger.DEBUG,
+                    'debug': gbp.log.Logger.DEBUG,
+                    'never': gbp.log.Logger.ERROR
+                 }
+
 class PrintBuf(object):
     """Object to buffer the output of 'print' statement string
     """
@@ -270,6 +283,9 @@ def set_loglevel(level):
 
     LOG_LEVEL = LOG_LEVELS[level]
 
+    # set git-buildpackage log level
+    gbp.log.logger.set_level(GBP_LOG_LEVELS[level])
+
 def set_interactive(mode=True):
     global INTERACTIVE
     if mode:
@@ -281,23 +297,23 @@ def raw(msg=''):
     _general_print('', NO_COLOR, msg)
 
 def info(msg):
-    head, msg = _split_msg('Info', msg)
+    head, msg = _split_msg('info', msg)
     _general_print(head, INFO_COLOR, msg)
 
 def verbose(msg):
-    head, msg = _split_msg('Verbose', msg)
+    head, msg = _split_msg('verbose', msg)
     _general_print(head, INFO_COLOR, msg, level = 'verbose')
 
 def warning(msg):
-    head, msg = _split_msg('Warning', msg)
+    head, msg = _split_msg('warn', msg)
     _color_perror(head, WARN_COLOR, msg)
 
 def debug(msg):
-    head, msg = _split_msg('Debug', msg)
+    head, msg = _split_msg('debug', msg)
     _color_perror(head, ERR_COLOR, msg, level = 'debug')
 
 def error(msg):
-    head, msg = _split_msg('Error', msg)
+    head, msg = _split_msg('error', msg)
     _color_perror(head, ERR_COLOR, msg)
     sys.exit(1)
 
