@@ -16,20 +16,19 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import os, sys
-import io
-import ConfigParser
+import os
+import sys
 
 from gitbuildsys.__version__ import VERSION
 from gitbuildsys import msger, cmdln, errors, utils, runner
 from gitbuildsys.conf import configmgr
 
 def _fall_to_shell(cmdname):
-    def raw_wrapper(f):
-        return f
+    def raw_wrapper(name):
+        return name
 
-    def sh_wrapper(f):
-        def _run_embed_sh(self, argv):
+    def sh_wrapper(_name):
+        def _run_embed_sh(_self, argv):
             # this command is a shell script wrapper
             shpath = os.path.join(utils.get_share_dir(), cmdname + '.sh')
             cmdlist = ['bash', shpath]
@@ -47,7 +46,7 @@ def _fall_to_shell(cmdname):
     except ImportError:
         return sh_wrapper
 
-class TizenPkg(cmdln.Cmdln):
+class Gbs(cmdln.Cmdln):
     """
     Usage: gbs [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
 
@@ -79,16 +78,16 @@ class TizenPkg(cmdln.Cmdln):
         if self.options.debug:
             msger.set_loglevel('debug')
 
-    @cmdln.alias("lb")
+    @cmdln.alias('lb')
     @cmdln.option('-D', '--dist',
                   default=None,
                   dest='dist',
                   help='Specify distribution configure file, which should' \
                        'be full path')
     @cmdln.option('-R', '--repository',
-                  action="append",
+                  action='append',
                   default=None,
-                  type="string",
+                  type='string',
                   dest='repositories',
                   help='Specify package repositories, Supported format ' \
                        'is rpm-md')
@@ -101,22 +100,22 @@ class TizenPkg(cmdln.Cmdln):
                   dest='arch',
                   help='build target arch ')
     @cmdln.option('-C', '--clean',
-                  action="store_true",
+                  action='store_true',
                   default=False,
                   dest='clean',
                   help='Delete old build root before initializing it')
     @cmdln.option('--noinit',
-                  action="store_true",
+                  action='store_true',
                   default=False,
                   dest='noinit',
-                  help='Skip initialization of build root and start with build immediately')
+                  help='Skip initialization of build root and start ' \
+                       'with build immediately')
     @cmdln.option('--debuginfo',
-                  action="store_true",
+                  action='store_true',
                   default=False,
                   dest='debuginfo',
                   help='Enable build debuginfo sub-packages')
-
-    def do_localbuild(self, subcmd, opts, *args):
+    def do_localbuild(self, _subcmd, opts, *args):
         """${cmd_name}: local build package
 
         Usage:
@@ -124,7 +123,7 @@ class TizenPkg(cmdln.Cmdln):
 
             [package git dir] is optional, if not specified, current dir wuold
             be used.
-            
+
         Examples:
             gbs localbuild -R http://example1.org/packages/ \\
                            -R http://example2.org/packages/ \\
@@ -132,9 +131,9 @@ class TizenPkg(cmdln.Cmdln):
                            -D /usr/share/gbs/tizen-1.0.conf
 
         Note:
-        
+
         if -D not specified, distconf key in ~/.gbs.conf would be used.
-        If distconf key is None, dist conf file would be got  from  OBS 
+        If distconf key is None, dist conf file would be got  from  OBS
         project (Trunk by default).
 
         ${cmd_option_list}
@@ -144,7 +143,7 @@ class TizenPkg(cmdln.Cmdln):
         cmd.do(opts, args)
 
 
-    @cmdln.alias("bl")
+    @cmdln.alias('bl')
     @cmdln.option('-T', '--target-obsprj',
                   default=None,
                   dest='target_obsprj',
@@ -156,7 +155,7 @@ class TizenPkg(cmdln.Cmdln):
                   help='Base OBS project being used to branch from, ' \
                        'use "Trunk" if not specified')
     @_fall_to_shell('build')
-    def do_build(self, subcmd, opts, *args):
+    def do_build(self, _subcmd, opts, *args):
         """${cmd_name}: test building for current pkg
 
         Usage:
@@ -165,7 +164,7 @@ class TizenPkg(cmdln.Cmdln):
             [package git dir] is optional, if not specified, current dir wuold
             be used.
 
-        Examples:    
+        Examples:
           $ gbs build
           $ gbs build -B Test
           $ gbs build -B Test -T home:<userid>:gbs
@@ -177,7 +176,7 @@ class TizenPkg(cmdln.Cmdln):
         cmd.do(opts, args)
 
 
-    @cmdln.alias("im")
+    @cmdln.alias('im')
     @cmdln.option('--author-name',
                   default=None,
                   dest='author_name',
@@ -187,19 +186,19 @@ class TizenPkg(cmdln.Cmdln):
                   dest='author_email',
                   help='author email of git commit')
     @cmdln.option('--tag',
-                  action="store_true",
+                  action='store_true',
                   default=False,
                   dest='tag',
-                  help='Create tag while import new version of upstream tar ball')
+                  help='Create tag while import new upstream tar ball')
     @cmdln.option('--upstream_branch',
                   default=None,
                   dest='upstream_branch',
                   help='specify upstream branch for new version of package')
     @cmdln.option('--no-merge',
-                  action="store_true",
+                  action='store_true',
                   default=False,
                   dest='no_merge',
-                  help='Dont merge new upstream branch to master branch, please user merge it manually')
+                  help='Don\'t merge new upstream branch to master')
     def do_import(self, subcmd, opts, *args):
         """${cmd_name}: Import spec file/source rpm/tar ball to git repository
 
@@ -218,7 +217,7 @@ class TizenPkg(cmdln.Cmdln):
         cmd.do(opts, args)
 
 
-    @cmdln.alias("ch")
+    @cmdln.alias('ch')
     @cmdln.option('-s', '--since',
                   default=None,
                   dest='since',
@@ -239,13 +238,13 @@ class TizenPkg(cmdln.Cmdln):
         from gitbuildsys import cmd_changelog as cmd
         cmd.do(opts, args)
 
-    @cmdln.alias("cfg")
+    @cmdln.alias('cfg')
     @cmdln.option('-s', '--section',
                         metavar='SECTION',
                         default='general',
                         help='specify the section inside config file, ' \
                              'use "general" as the default')
-    def do_getconfig(self, subcmd, opts, *args):
+    def do_getconfig(self, _subcmd, opts, *args):
         """${cmd_name}: query values of config file
 
         Usage:
@@ -270,8 +269,7 @@ class TizenPkg(cmdln.Cmdln):
 
 if __name__ == '__main__':
     try:
-        mic = TizenPkg()
-        sys.exit(mic.main())
+        sys.exit(Gbs().main())
 
     except KeyboardInterrupt:
         msger.error('\n^C catched, program aborted.')
