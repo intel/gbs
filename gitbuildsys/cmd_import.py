@@ -45,7 +45,10 @@ def do(opts, args):
                             "--packaging-dir=packaging", args[0]]):
             msger.error("Failed to import %s" % args[0])
     else:
-        if gbp_import_orig(['argv[0] placeholder', args[0]]):
+        params = ['argv[0] placeholder', args[0]]
+        if opts.no_merge:
+            params.append('--no-merge')
+        if gbp_import_orig(params):
             msger.error('Failed to import %s' % args[0])
 
     msger.info('done.')
