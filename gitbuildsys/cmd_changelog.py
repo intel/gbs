@@ -19,6 +19,7 @@
 """Implementation of subcmd: changelog
 """
 
+import os
 import datetime
 import glob
 import subprocess
@@ -99,14 +100,19 @@ def do(opts, _args):
 
     changes_file_list = glob.glob("%s/packaging/*.changes" % project_root_dir)
 
-    if len(changes_file_list) > 1:
-        msger.warning("Found more than one changes files, %s is taken " \
-                       % (changes_file_list[0]))
-
-    elif len(changes_file_list) == 0:
-        msger.error("Found no changes file under packaging dir")
-
-    fn_changes = changes_file_list[0]
+    if changes_file_list:
+        fn_changes = changes_file_list[0]
+        if len(changes_file_list) > 1:
+            msger.warning("Found more than one changes files, %s is taken " \
+                           % (changes_file_list[0]))
+    else:
+        # Create .changes file with the same name as a spec
+        spec_file_list = glob.glob("%s/packaging/*.spec" % project_root_dir)
+        if spec_file_list:
+            fn_changes = os.path.splitext(spec_file_list[0])[0] + ".changes"
+            open(fn_changes, 'w').close() # touch
+        else:
+            msger.error("Found no changes nor spec files under packaging dir")
 
     # get the commit start from the opts.since
     if opts.since:
@@ -115,10 +121,13 @@ def do(opts, _args):
             msger.error("Invalid since commit object name: %s" % (opts.since))
     else:
         sha1 = get_latest_rev(fn_changes)
-        commitid_since = repo.rev_parse(sha1)
-        if not commitid_since:
-            msger.error("Can't find last commit ID in the log, "\
-                       "please specify it by '--since'")
+        if sha1:
+            commitid_since = repo.rev_parse(sha1)
+            if not commitid_since:
+                msger.error("Can't find last commit ID in the log, "\
+                           "please specify it by '--since'")
+        else:
+            commitid_since = None
 
     commits = repo.get_commits(commitid_since, 'HEAD')
     if not commits:
