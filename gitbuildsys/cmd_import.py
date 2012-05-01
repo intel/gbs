@@ -18,6 +18,7 @@
 
 """Implementation of subcmd: import
 """
+import os
 
 import msger
 
@@ -26,10 +27,10 @@ from gbp.scripts.import_orig_rpm import main as gbp_import_orig
 
 def do(opts, args):
 
-    if not opts.author_name:
-        msger.error('commit user name must be specified')
-    if not opts.author_email:
-        msger.error('commit user email must be specified')
+    if opts.author_name:
+        os.environ["GIT_AUTHOR_NAME"] = opts.author_name
+    if opts.author_email:
+        os.environ["GIT_AUTHOR_EMAIL"] = opts.author_email
 
     if len(args) < 1:
         msger.error('missing argument, please reference gbs import --help.')
