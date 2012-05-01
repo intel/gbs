@@ -226,12 +226,11 @@ class Gbs(cmdln.Cmdln):
         """${cmd_name}: update the changelog file with the git commit messages
 
         Usage:
-            gbs changelog --since [--version] [--full] [--author]
+            gbs changelog [--since]
 
         Examples:
           $ gbs changelog
           $ gbs changelog --since=COMMIT_ID
-          $ gbs changelog --git-author='Fist Last <last.fist@foo.com>'
         ${cmd_option_list}
         """
 
