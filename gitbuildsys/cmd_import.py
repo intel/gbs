@@ -22,6 +22,7 @@
 import msger
 
 from gbp.scripts.import_srpm import main as gbp_import_srpm
+from gbp.scripts.import_orig_rpm import main as gbp_import_orig
 
 def do(opts, args):
 
@@ -44,7 +45,8 @@ def do(opts, args):
                             "--packaging-dir=packaging", args[0]]):
             msger.error("Failed to import %s" % args[0])
     else:
-        msger.error('gbs import only support importing specfile or source rpm')
+        if gbp_import_orig(['argv[0] placeholder', args[0]]):
+            msger.error('Failed to import %s' % args[0])
 
     msger.info('done.')
 
