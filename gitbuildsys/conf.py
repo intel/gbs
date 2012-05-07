@@ -219,7 +219,7 @@ class ConfigMgr(object):
                 'tmpdir': '/var/tmp'
             },
             'build': {
-                'build_server': 'https://build.tizen.org',
+                'build_server': 'https://api.tizen.org',
                 'user':         'my_user_id',
                 'passwd':       '',
                 'passwdx':      '',
