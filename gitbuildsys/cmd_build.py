@@ -67,12 +67,11 @@ def do(opts, args):
                 "user": USER,
                 "passwdx": PASSWDX,
             }
-    (fd, oscrcpath) = tempfile.mkstemp(dir=tmpdir, prefix='.oscrc')
-    os.close(fd)
-    f = file(oscrcpath, 'w+')
-    f.write(oscrc)
-    f.close()
-    
+    (fds, oscrcpath) = tempfile.mkstemp(dir=tmpdir, prefix='.oscrc')
+    os.close(fds)
+    with file(oscrcpath, 'w+') as foscrc:
+        foscrc.write(oscrc)
+
     # TODO: check ./packaging dir at first
     specs = glob.glob('%s/packaging/*.spec' % workdir)
     if not specs:
@@ -104,18 +103,19 @@ def do(opts, args):
         msger.info('creating %s for package build ...' % target_prj)
         try:
             prj.branch_from(base_prj)
-        except errors.ObsError, e:
-            msger.error('%s' % e)
+        except errors.ObsError, exc:
+            msger.error('%s' % exc)
 
     msger.info('checking out %s/%s to %s ...' % (target_prj, spec.name, tmpdir))
-    localpkg = obspkg.ObsPackage(tmpdir, target_prj, spec.name, APISERVER, oscrcpath)
+    localpkg = obspkg.ObsPackage(tmpdir, target_prj, spec.name,
+                                 APISERVER, oscrcpath)
     oscworkdir = localpkg.get_workdir()
     localpkg.remove_all()
 
     if gbp_build(["argv[0] placeholder", "--git-export-only",
-	       "--git-ignore-new", "--git-builder=osc",
-	       "--git-export-dir=%s" % oscworkdir,
-	       "--git-packaging-dir=packaging"]):
+                  "--git-ignore-new", "--git-builder=osc",
+                  "--git-export-dir=%s" % oscworkdir,
+                  "--git-packaging-dir=packaging"]):
         msger.error("Failed to get packaging info from git tree")
 
     localpkg.update_local()
