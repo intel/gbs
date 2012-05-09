@@ -221,12 +221,12 @@ def do(opts, args):
     tarball = 'packaging/%s' % os.path.basename(urlres.path)
     msger.info('generate tar ball: %s' % tarball)
     try:
-        repo = RpmGitRepository(os.path.curdir)
+        repo = RpmGitRepository(workdir)
     except GitRepositoryError:
         msger.error("%s is not a git repository" % (os.path.curdir))
 
     comp_type = compressor_aliases.get(spec.orig_comp, None)
-    if not git_archive(repo, spec, "./packaging", 'HEAD', comp_type,
+    if not git_archive(repo, spec, "%s/packaging" % workdir, 'HEAD', comp_type,
                        comp_level=9, with_submodules=True):
         msger.error("Cannot create source tarball %s" % tarball)
  
