@@ -105,17 +105,17 @@ class TizenPkg(cmdln.Cmdln):
                   dest='debuginfo',
                   help='Enable build debuginfo sub-packages')
 
-    def do_localbuild(self, subcmd, opts, *args):
+    def do_build(self, subcmd, opts, *args):
         """${cmd_name}: local build package
 
         Usage:
-            gbs localbuild -R repository -A ARCH [options] [package git dir]
+            gbs build -R repository -A ARCH [options] [package git dir]
 
             [package git dir] is optional, if not specified, current dir wuold
             be used.
             
         Examples:
-            gbs localbuild -R http://example1.org/packages/ \\
+            gbs build -R http://example1.org/packages/ \\
                            -R http://example2.org/packages/ \\
                            -A i586                          \\
                            -D /usr/share/gbs/tizen-1.0.conf
@@ -129,11 +129,11 @@ class TizenPkg(cmdln.Cmdln):
         ${cmd_option_list}
         """
 
-        from gitbuildsys import cmd_localbuild as cmd
+        from gitbuildsys import cmd_build as cmd
         cmd.do(opts, args)
 
 
-    @cmdln.alias("bl")
+    @cmdln.alias("rb")
     @cmdln.option('-T', '--target-obsprj',
                   default=None,
                   dest='target_obsprj',
@@ -144,24 +144,24 @@ class TizenPkg(cmdln.Cmdln):
                   dest='base_obsprj',
                   help='Base OBS project being used to branch from, ' \
                        'use "Trunk" if not specified')
-    def do_build(self, subcmd, opts, *args):
-        """${cmd_name}: test building for current pkg
+    def do_remotebuild(self, subcmd, opts, *args):
+        """${cmd_name}: remote build package
 
         Usage:
-            gbs build [options] [package git dir]
+            gbs remotebuild [options] [package git dir]
 
             [package git dir] is optional, if not specified, current dir wuold
             be used.
 
         Examples:    
-          $ gbs build
-          $ gbs build -B Test
-          $ gbs build -B Test -T home:<userid>:gbs
-          $ gbs build <package git directory>
+          $ gbs remotebuild
+          $ gbs remotebuild -B Test
+          $ gbs remotebuild -B Test -T home:<userid>:gbs
+          $ gbs remotebuild <package git directory>
         ${cmd_option_list}
         """
 
-        from gitbuildsys import cmd_build as cmd
+        from gitbuildsys import cmd_remotebuild as cmd
         cmd.do(opts, args)
 
 

@@ -218,13 +218,13 @@ class ConfigMgr(object):
             'general': {
                 'tmpdir': '/var/tmp'
             },
-            'build': {
+            'remotebuild': {
                 'build_server': 'https://api.tizen.org',
                 'user':         'my_user_id',
                 'passwd':       '',
                 'passwdx':      '',
             },
-            'localbuild': {
+            'build': {
                 'build_cmd':    '/usr/bin/build',
                 'build_root':   '/var/tmp/build-root-gbs',
                 'su-wrapper':   'sudo',
@@ -241,12 +241,12 @@ class ConfigMgr(object):
 ; general settings
 tmpdir = $general__tmpdir
 
-[build]
+[remotebuild]
 ; settings for build subcommand
 build_server = $build__build_server
 user = $build__user
 passwdx = $build__passwdx
-[localbuild]
+[build]
 build_cmd = /usr/bin/build
 build_root= /var/tmp/build-root-gbs
 su-wrapper= sudo

@@ -1,7 +1,7 @@
 #!/usr/bin/python -tt
 # vim: ai ts=4 sts=4 et sw=4
 #
-# Copyright (c) 2011 Intel, Inc.
+# Copyright (c) 2012 Intel, Inc.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -20,19 +20,53 @@
 """
 
 import os
+import sys
 import time
 import tempfile
 import glob
 import shutil
+import subprocess
 import urlparse
 
 import msger
 import runner
 import utils
+import errors
 from conf import configmgr
 import git
-import obspkg
-import errors
+import buildservice
+
+change_personality = {
+            'i686':  'linux32',
+            'i586':  'linux32',
+            'i386':  'linux32',
+            'ppc':   'powerpc32',
+            's390':  's390',
+            'sparc': 'linux32',
+            'sparcv8': 'linux32',
+          }
+
+obsarchmap = {
+            'i686':     'i586',
+            'i586':     'i586',
+          }
+
+buildarchmap = {
+            'i686':     'i686',
+            'i586':     'i686',
+            'i386':     'i686',
+          }
+
+supportedarchs = [
+            'x86_64',
+            'i686',
+            'i586',
+            'armv7hl',
+            'armv7el',
+            'armv7tnhl',
+            'armv7nhl',
+            'armv7l',
+          ]
 
 OSCRC_TEMPLATE = """[general]
 apiurl = %(apiurl)s
@@ -46,18 +80,41 @@ user=%(user)s
 passx=%(passwdx)s
 """
 
-APISERVER   = configmgr.get('build_server', 'build')
-USER        = configmgr.get('user', 'build')
-PASSWDX     = configmgr.get('passwdx', 'build')
+APISERVER   = configmgr.get('build_server', 'remotebuild')
+USER        = configmgr.get('user', 'remotebuild')
+PASSWDX     = configmgr.get('passwdx', 'remotebuild')
 TMPDIR      = configmgr.get('tmpdir')
 
 def do(opts, args):
+
+    if os.geteuid() != 0:
+        msger.error('Root permission is required, please use sudo and try again')
 
     workdir = os.getcwd()
     if len(args) > 1:
         msger.error('only one work directory can be specified in args.')
     if len(args) == 1:
         workdir = args[0]
+
+    hostarch = utils.get_hostarch()
+    buildarch = hostarch
+    if opts.arch:
+        if opts.arch in buildarchmap:
+            buildarch = buildarchmap[opts.arch]
+        else:
+            buildarch = opts.arch
+    if not buildarch in supportedarchs:
+        msger.error('arch %s not supported, supported archs are: %s ' % \
+                   (buildarch, ','.join(supportedarchs)))
+
+    specs = glob.glob('%s/packaging/*.spec' % workdir)
+    if not specs:
+        msger.error('no spec file found under /packaging sub-directory')
+
+    specfile = specs[0] #TODO:
+    if len(specs) > 1:
+        msger.warning('multiple specfiles found.')
+
 
     tmpdir = '%s/%s' % (TMPDIR, USER)
     if not os.path.exists(tmpdir):
@@ -75,65 +132,111 @@ def do(opts, args):
     f = file(oscrcpath, 'w+')
     f.write(oscrc)
     f.close()
-    
-    # TODO: check ./packaging dir at first
-    specs = glob.glob('%s/packaging/*.spec' % workdir)
-    if not specs:
-        msger.error('no spec file found under /packaging sub-directory')
 
-    specfile = specs[0] #TODO:
-    if len(specs) > 1:
-        msger.warning('multiple specfiles found.')
+    distconf = configmgr.get('distconf', 'build')
+    if opts.dist:
+        distconf = opts.dist
 
-    # get 'name' and 'version' from spec file
+    # get dist build config info from OBS prject.
+    bc_filename = None
+    if distconf is None:
+        msger.error('no dist config specified, see: gbs localbuild -h.')
+        """
+        msger.info('get build config file from OBS server')
+        bc_filename = '%s/%s.conf' % (tmpdir, name)
+        bs = buildservice.BuildService(apiurl=APISERVER, oscrc=oscrcpath)
+        prj = 'Trunk'
+        arch = None
+        for repo in bs.get_repos(prj):
+            archs = bs.get_ArchitectureList(prj, repo.name)
+            if buildarch in obsarchmap and obsarchmap[buildarch] in archs:
+                arch = obsarchmap[buildarch]
+                break
+            for a in archs:
+                if msger.ask('Get build conf from %s/%s, OK? '\
+                             % (repo.name, a)):
+                    arch = a
+        if arch is None:
+            msger.error('target arch is not correct, please check.')
+
+        bc = bs.get_buildconfig('Trunk', arch)
+        bc_file = open(bc_filename, 'w')
+        bc_file.write(bc)
+        bc_file.flush()
+        bc_file.close()
+        distconf = bc_filename
+        """
+
+    build_cmd  = configmgr.get('build_cmd', 'build')
+    build_root = configmgr.get('build_root', 'build')
+    if opts.buildroot:
+        build_root = opts.buildroot
+    cmd = [ build_cmd,
+            '--root='+build_root,
+            '--dist='+distconf,
+            '--arch='+buildarch ]
+    build_jobs = utils.get_processors()
+    if build_jobs > 1:
+        cmd += ['--jobs=%s' % build_jobs]
+    if opts.clean:
+        cmd += ['--clean']
+    if opts.debuginfo:
+        cmd += ['--debug']
+
+    if opts.repositories:
+        for repo in opts.repositories:
+            cmd += ['--repository='+repo]
+    else:
+        msger.error('No package repository specified.')
+
+    if opts.noinit:
+        cmd += ['--no-init']
+    if opts.ccache:
+        cmd += ['--ccache']
+    cmd += [specfile]
+
+    if hostarch != buildarch and buildarch in change_personality:
+        cmd = [ change_personality[buildarch] ] + cmd;
+
+    if buildarch.startswith('arm'):
+        try:
+            utils.setup_qemu_emulator()
+        except errors.QemuError, e:
+            msger.error('%s' % e)
+
     name = utils.parse_spec(specfile, 'name')
     version = utils.parse_spec(specfile, 'version')
     if not name or not version:
         msger.error('can\'t get correct name or version from spec file.')
 
-    if opts.base_obsprj is None:
-        # TODO, get current branch of git to determine it
-        base_prj = 'Trunk'
-    else:
-        base_prj = opts.base_obsprj
-
-    if opts.target_obsprj is None:
-        target_prj = "home:%s:gbs:%s" % (USER, base_prj)
-    else:
-        target_prj = opts.target_obsprj
-
-    prj = obspkg.ObsProject(target_prj, apiurl = APISERVER, oscrc = oscrcpath)
-    msger.info('checking status of obs project: %s ...' % target_prj)
-    if prj.is_new():
-        msger.info('creating %s for package build ...' % target_prj)
-        try:
-            prj.branch_from(base_prj)
-        except errors.ObsError, e:
-            msger.error('%s' % e)
-
-    msger.info('checking out %s/%s to %s ...' % (target_prj, name, tmpdir))
-    localpkg = obspkg.ObsPackage(tmpdir, target_prj, name, APISERVER, oscrcpath)
-    oscworkdir = localpkg.get_workdir()
-    localpkg.remove_all()
-
     source = utils.parse_spec(specfile, 'SOURCE0')
     urlres = urlparse.urlparse(source)
 
-    tarball = '%s/%s' % (oscworkdir, os.path.basename(urlres.path))
-    msger.info('archive git tree to tarball: %s' % os.path.basename(tarball))
+    tarball = 'packaging/%s' % os.path.basename(urlres.path)
+    msger.info('generate tar ball: %s' % tarball)
     mygit = git.Git(workdir)
     mygit.archive("%s-%s/" % (name, version), tarball)
 
-    for f in glob.glob('%s/packaging/*' % workdir):
-        shutil.copy(f, oscworkdir)
+    if opts.incremental:
+        cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
+        cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % (name, version)]
 
-    localpkg.update_local()
+    msger.info(' '.join(cmd))
 
-    msger.info('commit packaging files to build server ...')
-    localpkg.commit ('submit packaging files to obs for OBS building')
-
-    os.unlink(oscrcpath)
-    msger.info('local changes submitted to build server successfully')
-    msger.info('follow the link to monitor the build progress:\n'
-               '  %s/package/show?package=%s&project=%s' \
-               % (APISERVER.replace('api', 'build'), name, target_prj))
+    # runner.show() can't support interactive mode, so use subprocess insterad.
+    try:
+        rc = subprocess.call(cmd)
+        if rc:
+            msger.error('rpmbuild fails')
+        else:
+            msger.info('The buildroot was: %s' % build_root)
+            msger.info('Done')
+    except KeyboardInterrupt, i:
+        msger.info('keyboard interrupt, killing build ...')
+        subprocess.call(cmd + ["--kill"])
+        msger.error('interrrupt from keyboard')
+    finally:
+        os.unlink("%s/%s" % (workdir, tarball))
+        os.unlink(oscrcpath)
+        if bc_filename:
+            os.unlink(bc_filename)
