@@ -119,6 +119,8 @@ def parse_spec(spec_path, macro):
                 wf.write(line)
         wf.close()
 
+        runner.quiet("sed -i \'/ExclusiveArch/d\' %s" % os.path.join(tmp_dir, 'tmp.spec'))
+        runner.quiet("sed -i \'/BuildArch/d\' %s" % os.path.join(tmp_dir, 'tmp.spec'))
         outs = runner.outs(rpmb_cmdline, catch=3)
 
         # clean up
