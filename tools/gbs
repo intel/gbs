@@ -185,11 +185,6 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='author_email',
                   help='author email of git commit')
-    @cmdln.option('--tag',
-                  action='store_true',
-                  default=False,
-                  dest='tag',
-                  help='Create tag while import new upstream tar ball')
     @cmdln.option('--upstream_branch',
                   default='upstream',
                   dest='upstream_branch',
