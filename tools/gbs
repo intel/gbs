@@ -191,7 +191,7 @@ class Gbs(cmdln.Cmdln):
                   dest='tag',
                   help='Create tag while import new upstream tar ball')
     @cmdln.option('--upstream_branch',
-                  default=None,
+                  default='upstream',
                   dest='upstream_branch',
                   help='specify upstream branch for new version of package')
     @cmdln.option('--no-merge',

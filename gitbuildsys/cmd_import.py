@@ -37,20 +37,20 @@ def do(opts, args):
     if len(args) > 1:
         msger.error('too many arguments! Please reference gbs import --help.')
 
+    params = ["argv[0] placeholder", "--packaging-dir=packaging",
+              "--upstream-branch=%s" % opts.upstream_branch, args[0]]
+
     if args[0].endswith('.src.rpm'):
-        if gbp_import_srpm(["argv[0] placeholder",
-                            "--packaging-dir=packaging", args[0]]):
+        if gbp_import_srpm(params):
             msger.error("Failed to import %s" % args[0])
     elif args[0].endswith('.spec'):
-        if gbp_import_srpm(["argv[0] placeholder", "--unpacked",
-                            "--packaging-dir=packaging", args[0]]):
+        params.insert(1, "--unpacked")
+        if gbp_import_srpm(params):
             msger.error("Failed to import %s" % args[0])
     else:
-        params = ['argv[0] placeholder', args[0]]
         if opts.no_merge:
-            params.append('--no-merge')
+            params.insert(1, '--no-merge')
         if gbp_import_orig(params):
             msger.error('Failed to import %s' % args[0])
 
     msger.info('done.')
-
