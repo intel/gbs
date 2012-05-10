@@ -116,18 +116,20 @@ def do(opts, _args):
 
     # get the commit start from the opts.since
     if opts.since:
-        commitid_since = repo.rev_parse(opts.since)
-        if not commitid_since:
-            msger.error("Invalid since commit object name: %s" % (opts.since))
+        since = opts.since
     else:
-        sha1 = get_latest_rev(fn_changes)
-        if sha1:
-            commitid_since = repo.rev_parse(sha1)
-            if not commitid_since:
+        since = get_latest_rev(fn_changes)
+
+    commitid_since = None
+    if since:
+        try:
+            commitid_since = repo.rev_parse(since)
+        except GitRepositoryError:
+            if opts.since:
+                msger.error("Invalid commit: %s" % (opts.since))
+            else:
                 msger.error("Can't find last commit ID in the log, "\
-                           "please specify it by '--since'")
-        else:
-            commitid_since = None
+                            "please specify it by '--since'")
 
     commits = repo.get_commits(commitid_since, 'HEAD')
     if not commits:
