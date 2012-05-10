@@ -283,7 +283,7 @@ class Git:
         }
 
         zipcmds = {
-                'gz': 'gzip',
+                'gz': 'gzip -f',
                 'bz2': 'bzip2 -f',
                 'xz': 'xz -f',
         }
