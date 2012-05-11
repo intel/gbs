@@ -27,6 +27,7 @@ import msger
 from conf import configmgr
 import obspkg
 import errors
+from utils import Workdir
 
 import gbp.rpm
 from gbp.scripts.buildpackage_rpm import main as gbp_build
@@ -112,11 +113,12 @@ def do(opts, args):
     oscworkdir = localpkg.get_workdir()
     localpkg.remove_all()
 
-    if gbp_build(["argv[0] placeholder", "--git-export-only",
-                  "--git-ignore-new", "--git-builder=osc",
-                  "--git-export-dir=%s" % oscworkdir,
-                  "--git-packaging-dir=packaging"]):
-        msger.error("Failed to get packaging info from git tree")
+    with Workdir(workdir):
+        if gbp_build(["argv[0] placeholder", "--git-export-only",
+                      "--git-ignore-new", "--git-builder=osc",
+                      "--git-export-dir=%s" % oscworkdir,
+                      "--git-packaging-dir=packaging"]):
+            msger.error("Failed to get packaging info from git tree")
 
     localpkg.update_local()
 
