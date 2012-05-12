@@ -214,7 +214,7 @@ It's recommended to use `--help` or `help <subcmd>` to get the help message,
 for the tool is more or less self-documented.
 
 Running 'gbs remotebuild'
-------------------------
+-------------------------
 
 Subcommand `remotebuild` is used to push local git code to remote obs build server
 to build. The usage of subcommand `remotebuild` can be available using `gbs remotebuild --help`
