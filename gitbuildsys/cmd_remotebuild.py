@@ -105,6 +105,9 @@ def do(opts, args):
     prj = obspkg.ObsProject(target_prj, apiurl = APISERVER, oscrc = oscrcpath)
     msger.info('checking status of obs project: %s ...' % target_prj)
     if prj.is_new():
+        if opts.target_obsprj and not target_prj.startswith('home:%s:' % USER):
+            msger.error('no permission to create project %s, only subpackage '\
+                        'of home:%s is allowed ' % (target_prj, USER))
         msger.info('creating %s for package build ...' % target_prj)
         try:
             prj.branch_from(base_prj)
@@ -129,8 +132,12 @@ def do(opts, args):
 
     localpkg.update_local()
 
-    msger.info('commit packaging files to build server ...')
-    localpkg.commit ('submit packaging files to obs for OBS building')
+    try:
+        msger.info('commit packaging files to build server ...')
+        localpkg.commit ('submit packaging files to obs for OBS building')
+    except errors.ObsError, e:
+        msger.error('commit packages fail: %s, please check the permission '\
+                    'of target project:%s' % (e,target_prj))
 
     os.unlink(oscrcpath)
     msger.info('local changes submitted to build server successfully')
