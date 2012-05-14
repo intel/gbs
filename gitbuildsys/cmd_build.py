@@ -68,23 +68,6 @@ supportedarchs = [
             'armv7l',
           ]
 
-OSCRC_TEMPLATE = """[general]
-apiurl = %(apiurl)s
-plaintext_passwd=0
-use_keyring=0
-http_debug = %(http_debug)s
-debug = %(debug)s
-gnome_keyring=0
-[%(apiurl)s]
-user=%(user)s
-passx=%(passwdx)s
-"""
-
-APISERVER   = configmgr.get('build_server', 'remotebuild')
-USER        = configmgr.get('user', 'remotebuild')
-PASSWDX     = configmgr.get('passwdx', 'remotebuild')
-TMPDIR      = configmgr.get('tmpdir')
-
 def do(opts, args):
 
     if os.geteuid() != 0:
@@ -115,57 +98,9 @@ def do(opts, args):
     if len(specs) > 1:
         msger.warning('multiple specfiles found.')
 
-
-    tmpdir = '%s/%s' % (TMPDIR, USER)
-    if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir)
-
-    oscrc = OSCRC_TEMPLATE % {
-                "http_debug": 1 if msger.get_loglevel() == 'debug' else 0,
-                "debug": 1 if msger.get_loglevel() == 'verbose' else 0,
-                "apiurl": APISERVER,
-                "user": USER,
-                "passwdx": PASSWDX,
-            }
-    (fd, oscrcpath) = tempfile.mkstemp(dir=tmpdir,prefix='.oscrc')
-    os.close(fd)
-    f = file(oscrcpath, 'w+')
-    f.write(oscrc)
-    f.close()
-
     distconf = configmgr.get('distconf', 'build')
     if opts.dist:
         distconf = opts.dist
-
-    # get dist build config info from OBS prject.
-    bc_filename = None
-    if distconf is None:
-        msger.error('no dist config specified, see: gbs localbuild -h.')
-        """
-        msger.info('get build config file from OBS server')
-        bc_filename = '%s/%s.conf' % (tmpdir, name)
-        bs = buildservice.BuildService(apiurl=APISERVER, oscrc=oscrcpath)
-        prj = 'Trunk'
-        arch = None
-        for repo in bs.get_repos(prj):
-            archs = bs.get_ArchitectureList(prj, repo.name)
-            if buildarch in obsarchmap and obsarchmap[buildarch] in archs:
-                arch = obsarchmap[buildarch]
-                break
-            for a in archs:
-                if msger.ask('Get build conf from %s/%s, OK? '\
-                             % (repo.name, a)):
-                    arch = a
-        if arch is None:
-            msger.error('target arch is not correct, please check.')
-
-        bc = bs.get_buildconfig('Trunk', arch)
-        bc_file = open(bc_filename, 'w')
-        bc_file.write(bc)
-        bc_file.flush()
-        bc_file.close()
-        distconf = bc_filename
-        """
 
     build_cmd  = configmgr.get('build_cmd', 'build')
     build_root = configmgr.get('build_root', 'build')
@@ -237,6 +172,3 @@ def do(opts, args):
         msger.error('interrrupt from keyboard')
     finally:
         os.unlink("%s/%s" % (workdir, tarball))
-        os.unlink(oscrcpath)
-        if bc_filename:
-            os.unlink(bc_filename)
