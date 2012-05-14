@@ -30,10 +30,10 @@ import utils
 import errors
 from conf import configmgr
 
-from gbp.scripts.buildpackage_rpm import git_archive
-from gbp.pkg import compressor_aliases
+from gbp.scripts.buildpackage_rpm import git_archive, guess_comp_type
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 import gbp.rpm as rpm
+from gbp.errors import GbpError
 
 change_personality = {
             'i686':  'linux32',
@@ -225,10 +225,13 @@ def do(opts, args):
     except GitRepositoryError:
         msger.error("%s is not a git repository" % (os.path.curdir))
 
-    comp_type = compressor_aliases.get(spec.orig_comp, None)
-    if not git_archive(repo, spec, "%s/packaging" % workdir, 'HEAD', comp_type,
-                       comp_level=9, with_submodules=True):
-        msger.error("Cannot create source tarball %s" % tarball)
+    try:
+        comp_type = guess_comp_type(spec)
+        if not git_archive(repo, spec, "%s/packaging" % workdir, 'HEAD', comp_type,
+                           comp_level=9, with_submodules=True):
+            msger.error("Cannot create source tarball %s" % tarball)
+    except GbpError, exc:
+        msger.error(str(exc))
  
     # runner.show() can't support interactive mode, so use subprocess insterad.
     try:
