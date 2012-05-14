@@ -36,6 +36,8 @@ def do(opts, args):
         msger.error('missing argument, please reference gbs import --help.')
     if len(args) > 1:
         msger.error('too many arguments! Please reference gbs import --help.')
+    if not os.path.exists(args[0]):
+        msger.error('%s not exist' % specfile)
 
     params = ["argv[0] placeholder", "--packaging-dir=packaging",
               "--upstream-branch=%s" % opts.upstream_branch, args[0]]
