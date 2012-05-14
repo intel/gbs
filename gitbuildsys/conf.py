@@ -243,9 +243,9 @@ tmpdir = $general__tmpdir
 
 [remotebuild]
 ; settings for build subcommand
-build_server = $build__build_server
-user = $build__user
-passwdx = $build__passwdx
+build_server = $remotebuild__build_server
+user = $remotebuild__user
+passwdx = $remotebuild__passwdx
 [build]
 build_cmd = /usr/bin/build
 build_root= /var/tmp/build-root-gbs
@@ -322,10 +322,10 @@ commit_email=
 
             # user and passwd in [build] section need user input
             defaults = self.DEFAULTS.copy()
-            defaults['build']['user'] = raw_input('Username: ')
+            defaults['remotebuild']['user'] = raw_input('Username for remote build server: ')
             msger.info('Your password will be encoded before saving ...')
-            defaults['build']['passwd'] = ''
-            defaults['build']['passwdx'] = \
+            defaults['remotebuild']['passwd'] = ''
+            defaults['remotebuild']['passwdx'] = \
                         base64.b64encode(getpass.getpass().encode('bz2'))
 
             with open(fpath, 'w') as wf:
