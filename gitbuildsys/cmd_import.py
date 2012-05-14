@@ -33,7 +33,7 @@ from conf import configmgr
 import git
 import errors
 
-USER        = configmgr.get('user', 'build')
+USER        = configmgr.get('user', 'remotebuild')
 TMPDIR      = configmgr.get('tmpdir')
 COMM_NAME   = configmgr.get('commit_name', 'import')
 COMM_EMAIL  = configmgr.get('commit_email', 'import')
@@ -63,6 +63,8 @@ def do(opts, args):
     if len(args) > 1:
         msger.error('too many arguments! Please reference gbs import --help.')
     if args[0].endswith('.src.rpm'):
+        if not os.path.exists(args[0]):
+            msger.error('%s not exist' % args[0])
         srcrpmdir = tempfile.mkdtemp(prefix='%s/%s' % (tmpdir, 'src.rpm'))
 
         msger.info('unpack source rpm package: %s' % args[0])
@@ -77,6 +79,8 @@ def do(opts, args):
             shutil.move(f, "%s/SPECS/" % srcrpmdir)
     elif args[0].endswith('.spec'):
         specfile = args[0]
+        if not os.path.exists(specfile):
+            msger.error('%s not exist' % specfile)
     else:
         msger.error('gbs import only support importing specfile or source rpm')
 
