@@ -26,6 +26,7 @@ import time
 import urlparse
 import urllib2
 import xml.etree.cElementTree as ElementTree
+import errors
 from osc import conf, core
 
 class ObsError(Exception):
@@ -1132,7 +1133,10 @@ class BuildService(object):
         pac_path = os.path.basename(os.path.normpath(pac.absdir))
         files = {}
         files[pac_path] = pac.todo
-        core.Project(prj).commit(tuple([pac_path]), msg=msg, files=files)
+        try:
+            core.Project(prj).commit(tuple([pac_path]), msg=msg, files=files)
+        except urllib2.HTTPError, e:
+            raise errors.ObsError('%s' % e)   
         core.store_unlink_file(pac.absdir, '_commit_msg')
 
     def branchPkg(self, src_project, src_package, rev=None, target_project=None, target_package=None):
