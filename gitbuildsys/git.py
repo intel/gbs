@@ -99,6 +99,7 @@ class Git:
         """Return the branches list, current working branch is the first
         element.
         """
+        current_branch = None
         branches = []
         for line in self._exec_git('branch', ['--no-color']).splitlines():
             br = line.strip().split()[-1]
