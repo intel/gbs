@@ -32,7 +32,7 @@ from conf import configmgr
 import git
 import errors
 
-USER        = configmgr.get('user', 'build')
+USER        = configmgr.get('user', 'remotebuild')
 TMPDIR      = configmgr.get('tmpdir')
 COMM_NAME   = configmgr.get('commit_name', 'import')
 COMM_EMAIL  = configmgr.get('commit_email', 'import')
