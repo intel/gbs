@@ -231,6 +231,21 @@ class UpstreamTarball(object):
             if m:
                 return (m.group('package'), m.group('version'))
 
+def find_binary_path(binary):
+    if os.environ.has_key("PATH"):
+        paths = os.environ["PATH"].split(":")
+    else:
+        paths = []
+        if os.environ.has_key("HOME"):
+            paths += [os.environ["HOME"] + "/bin"]
+        paths += ["/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/sbin", "/bin"]
+
+    for path in paths:
+        bin_path = "%s/%s" % (path, binary)
+        if os.path.exists(bin_path):
+            return bin_path
+    return None
+
 def is_statically_linked(binary):
     return ", statically linked, " in runner.outs(['file', binary])
 
