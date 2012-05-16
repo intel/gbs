@@ -11,8 +11,8 @@ Overview
 ========
 git-build-system is a command line tools for Tizen package developers
 
-* gbs build : build rpm package from git repository on OBS
-* gbs local-build : build rpm package from git repository at local
+* gbs remotebuild : build rpm package from git repository on OBS
+* gbs build : build rpm package from git repository at local
 * gbs import-orig: import source tarball to current git repository, which can be used to upgrade a package
 * gbs import : import source rpm or specfile to git repository
 * gbs submit : maintain the changelogs file, sanity check etc.
@@ -161,13 +161,13 @@ configuration file by yourself.  Just make sure it looks like as below:
   [general]
   ; general settings
   tmpdir = /var/tmp
-  [build]
+  [remotebuild]
   ; settings for build subcommand
   build_server = <OBS API URL>
   user = <USER_NAME>
   passwd  = <PASSWORD in base64 string>
   passwdx = <PASSWORD encoded in base64 string>
-  [localbuild]
+  [build]
   build_cmd = /usr/bin/build
   build_root= /var/tmp/build-root-gbs
   su-wrapper= su -c
@@ -177,10 +177,10 @@ configuration file by yourself.  Just make sure it looks like as below:
   commit_email= <Author Email>
 
 In this configuration file, there are three sections: [common] is for general
-setting, [build] section is for the options of gbs build, and [localbuild]
-is for gbs localbuild.
+setting, [remotebuild] section is for the options of gbs remotebuild, and [build]
+is for gbs build.
 
-In the [build] section, the following values can be specified:
+In the [remotebuild] section, the following values can be specified:
 
 build_server
     OBS API url, which point to remote OBS. Available value can be:
@@ -192,7 +192,7 @@ passwd
 passwdx
     encoded OBS account user passwd, this key would be generated automaticlly.
 
-In the [localbuild] section, the following values can be specified:
+In the [build] section, the following values can be specified:
 
 build_cmd
     build script path for building RPMs in a chroot environment
@@ -213,17 +213,17 @@ Usages
 It's recommended to use `--help` or `help <subcmd>` to get the help message,
 for the tool is more or less self-documented.
 
-Running 'gbs build'
---------------------
+Running 'gbs remotebuild'
+------------------------
 
-Subcommand `build` is used to push local git code to remote obs build server
-to build. The usage of subcommand `build` can be available using `gbs build --help`
+Subcommand `remotebuild` is used to push local git code to remote obs build server
+to build. The usage of subcommand `remotebuild` can be available using `gbs remotebuild --help`
 ::
 
-  build (bl): test building for current pkg
+  remotebuild (rb): remote build package
 
   Usage:
-      gbs build [options] [OBS_project]
+      gbs remotebuild [options] [package git dir]
 
   Options:
       -h, --help          show this help message and exit
@@ -234,36 +234,36 @@ to build. The usage of subcommand `build` can be available using `gbs build --he
                           OBS target project being used to build package, use
                           "home:<userid>:gbs:Trunk" if not specified
 
-Before running gbs build, you need to prepare a package git repository first,
-and packaging directory must be exist and have spec file in it. The spec file
-is used to prepare package name, version and tar ball format, and tar ball
+Before running gbs remotebuild, you need to prepare a package git repository
+first, and packaging directory must be exist and have spec file in it. The spec
+file is used to prepare package name, version and tar ball format, and tar ball
 format is specified using SOURCE field in specfile.
 
 Once git reposoritory and packaging directory are  ready,  goto  the  root
 directory of git repository, run gbs build as follows:
 ::
 
-  $ gbs build
-  $ gbs build -B Test
-  $ gbs build -B Test -T home:<userid>:gbs
+  $ gbs remotebuild
+  $ gbs remotebuild -B Test
+  $ gbs remotebuild -B Test -T home:<userid>:gbs
 
-Running 'gbs localbuild'
+Running 'gbs build'
 ------------------------
 
-Subcommand `localbuild` is used to build rpm package at local by rpmbuild. The
-usage of subcommand `localbuild` can be available using `gbs localbuild --help`
+Subcommand `build` is used to build rpm package at local by rpmbuild. The
+usage of subcommand `build` can be available using `gbs build --help`
 ::
 
-  localbuild (lb): local build package
+  build (lb): local build package
   Usage:
-      gbs localbuild -R repository -A ARCH [options] [package git dir]
+      gbs build -R repository -A arch [options] [package git dir]
       [package git dir] is optional, if not specified, current dir would
       be used.
   Examples:
-      gbs localbuild -R http://example1.org/packages/ \
-                     -R http://example2.org/packages/ \
-                     -A i586                          \
-                     -D /usr/share/gbs/tizen-1.0.conf
+      gbs build -R http://example1.org/packages/ \
+                -R http://example2.org/packages/ \
+                -A i586                          \
+                -D /usr/share/gbs/tizen-1.0.conf
   Note:
   if -D not specified, distconf key in ~/.gbs.conf would be used.
   Options:
@@ -285,17 +285,17 @@ usage of subcommand `localbuild` can be available using `gbs localbuild --help`
 
 git repository and packaging directory should be prepared like `gbs build`.
 
-Examples to run gbs localbuild:
+Examples to run gbs build:
 
 1) Use specified dist file in command line using -D option
 ::
 
-  $ gbs localbuild -R http://example1.org/ -A i586 -D /usr/share/gbs/tizen-1.0.conf
+  $ gbs build -R http://example1.org/ -A i586 -D /usr/share/gbs/tizen-1.0.conf
 
 2) Use dist conf file specified in ~/.gbs.conf, if distconf key exist.
 ::
 
-  $ gbs localbuild -R http://example1.org/ -A i586
+  $ gbs build -R http://example1.org/ -A i586
 
 3) Multi repos specified
 ::
@@ -305,19 +305,19 @@ Examples to run gbs localbuild:
 4) With --noinit option, Skip initialization of build root and start with build immediately
 ::
 
-  $ gbs localbuild -R http://example1.org/ -A i586  --noinit
+  $ gbs build -R http://example1.org/ -A i586  --noinit
 
 5) Specify a package git directory, instead of running in git top directory
 ::
 
-  $ gbs localbuild -R http://example1.org/ -A i586  PackageKit
+  $ gbs build -R http://example1.org/ -A i586  PackageKit
 
 6) Local repo example
 ::
 
-  $ gbs localbuild -R /path/to/repo/dir/ -A i586
+  $ gbs build -R /path/to/repo/dir/ -A i586
 
-'''BKM''': to have quick test with local repo, you can run 'gbs localbuild' 
+'''BKM''': to have quick test with local repo, you can run 'gbs build' 
 with remote repo. rpm packages will be downloaded to localdir /var/cache/\
 build/md5-value/, then you can use the following command to create it as local
 repo
@@ -326,9 +326,9 @@ repo
   $ mv /var/cache/build/md5-value/ /var/cache/build/localrepo
   $ cd /var/cache/build/localrepo
   $ createrepo . # if createrepo is not available, you should install it first
-  $ gbs localbuild -R /var/cache/build/localrepo/ -A i586/armv7hl
+  $ gbs build -R /var/cache/build/localrepo/ -A i586/armv7hl
 
-If gbs localbuild fails with dependencies, you should download it manually and
+If gbs build fails with dependencies, you should download it manually and
 put it to /var/cache/build/localrepo, then createrepo again.
 
 

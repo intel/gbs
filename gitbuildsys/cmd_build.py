@@ -1,7 +1,7 @@
 #!/usr/bin/python -tt
 # vim: ai ts=4 sts=4 et sw=4
 #
-# Copyright (c) 2011 Intel, Inc.
+# Copyright (c) 2012 Intel, Inc.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -16,21 +16,56 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-"""Implementation of subcmd: build
+"""Implementation of subcmd: localbuild
 """
 
 import os
 import tempfile
 import glob
+import subprocess
+import urlparse
 
 import msger
-from conf import configmgr
-import obspkg
+import utils
 import errors
-from utils import Workdir
+from conf import configmgr
 
-import gbp.rpm
-from gbp.scripts.buildpackage_rpm import main as gbp_build
+from gbp.scripts.buildpackage_rpm import git_archive, guess_comp_type
+from gbp.rpm.git import GitRepositoryError, RpmGitRepository
+import gbp.rpm as rpm
+from gbp.errors import GbpError
+
+change_personality = {
+            'i686':  'linux32',
+            'i586':  'linux32',
+            'i386':  'linux32',
+            'ppc':   'powerpc32',
+            's390':  's390',
+            'sparc': 'linux32',
+            'sparcv8': 'linux32',
+          }
+
+obsarchmap = {
+            'i686':     'i586',
+            'i586':     'i586',
+          }
+
+buildarchmap = {
+            'i686':     'i686',
+            'i586':     'i686',
+            'i386':     'i686',
+          }
+
+supportedarchs = [
+            'x86_64',
+            'i686',
+            'i586',
+            'armv7hl',
+            'armv7el',
+            'armv7tnhl',
+            'armv7nhl',
+            'armv7l',
+          ]
 
 OSCRC_TEMPLATE = """[general]
 apiurl = %(apiurl)s
@@ -51,11 +86,34 @@ TMPDIR      = configmgr.get('tmpdir')
 
 def do(opts, args):
 
+    if os.geteuid() != 0:
+        msger.error('Root permission is required, please use sudo and try again')
+
     workdir = os.getcwd()
     if len(args) > 1:
         msger.error('only one work directory can be specified in args.')
     if len(args) == 1:
         workdir = args[0]
+
+    hostarch = utils.get_hostarch()
+    buildarch = hostarch
+    if opts.arch:
+        if opts.arch in buildarchmap:
+            buildarch = buildarchmap[opts.arch]
+        else:
+            buildarch = opts.arch
+    if not buildarch in supportedarchs:
+        msger.error('arch %s not supported, supported archs are: %s ' % \
+                   (buildarch, ','.join(supportedarchs)))
+
+    specs = glob.glob('%s/packaging/*.spec' % workdir)
+    if not specs:
+        msger.error('no spec file found under /packaging sub-directory')
+
+    specfile = specs[0] #TODO:
+    if len(specs) > 1:
+        msger.warning('multiple specfiles found.')
+
 
     tmpdir = '%s/%s' % (TMPDIR, USER)
     if not os.path.exists(tmpdir):
@@ -68,65 +126,124 @@ def do(opts, args):
                 "user": USER,
                 "passwdx": PASSWDX,
             }
-    (fds, oscrcpath) = tempfile.mkstemp(dir=tmpdir, prefix='.oscrc')
-    os.close(fds)
-    with file(oscrcpath, 'w+') as foscrc:
-        foscrc.write(oscrc)
+    (fd, oscrcpath) = tempfile.mkstemp(dir=tmpdir,prefix='.oscrc')
+    os.close(fd)
+    f = file(oscrcpath, 'w+')
+    f.write(oscrc)
+    f.close()
 
-    # TODO: check ./packaging dir at first
-    specs = glob.glob('%s/packaging/*.spec' % workdir)
-    if not specs:
-        msger.error('no spec file found under /packaging sub-directory')
+    distconf = configmgr.get('distconf', 'localbuild')
+    if opts.dist:
+        distconf = opts.dist
 
-    specfile = specs[0] #TODO:
-    if len(specs) > 1:
-        msger.warning('multiple specfiles found.')
+    # get dist build config info from OBS prject.
+    bc_filename = None
+    if distconf is None:
+        msger.error('no dist config specified, see: gbs localbuild -h.')
+        """
+        msger.info('get build config file from OBS server')
+        bc_filename = '%s/%s.conf' % (tmpdir, name)
+        bs = buildservice.BuildService(apiurl=APISERVER, oscrc=oscrcpath)
+        prj = 'Trunk'
+        arch = None
+        for repo in bs.get_repos(prj):
+            archs = bs.get_ArchitectureList(prj, repo.name)
+            if buildarch in obsarchmap and obsarchmap[buildarch] in archs:
+                arch = obsarchmap[buildarch]
+                break
+            for a in archs:
+                if msger.ask('Get build conf from %s/%s, OK? '\
+                             % (repo.name, a)):
+                    arch = a
+        if arch is None:
+            msger.error('target arch is not correct, please check.')
 
-    # get 'name' and 'version' from spec file
-    spec = gbp.rpm.parse_spec(specfile)
+        bc = bs.get_buildconfig('Trunk', arch)
+        bc_file = open(bc_filename, 'w')
+        bc_file.write(bc)
+        bc_file.flush()
+        bc_file.close()
+        distconf = bc_filename
+        """
+
+    build_cmd  = configmgr.get('build_cmd', 'localbuild')
+    build_root = configmgr.get('build_root', 'localbuild')
+    if opts.buildroot:
+        build_root = opts.buildroot
+    cmd = [ build_cmd,
+            '--root='+build_root,
+            '--dist='+distconf,
+            '--arch='+buildarch ]
+    build_jobs = utils.get_processors()
+    if build_jobs > 1:
+        cmd += ['--jobs=%s' % build_jobs]
+    if opts.clean:
+        cmd += ['--clean']
+    if opts.debuginfo:
+        cmd += ['--debug']
+
+    if opts.repositories:
+        for repo in opts.repositories:
+            cmd += ['--repository='+repo]
+    else:
+        msger.error('No package repository specified.')
+
+    if opts.noinit:
+        cmd += ['--no-init']
+    if opts.ccache:
+        cmd += ['--ccache']
+    cmd += [specfile]
+
+    if hostarch != buildarch and buildarch in change_personality:
+        cmd = [ change_personality[buildarch] ] + cmd;
+
+    if buildarch.startswith('arm'):
+        try:
+            utils.setup_qemu_emulator()
+        except errors.QemuError, e:
+            msger.error('%s' % e)
+
+    spec = rpm.parse_spec(specfile)
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
 
-    if opts.base_obsprj is None:
-        # TODO, get current branch of git to determine it
-        base_prj = 'Trunk'
-    else:
-        base_prj = opts.base_obsprj
+    urlres = urlparse.urlparse(spec.orig_file)
 
-    if opts.target_obsprj is None:
-        target_prj = "home:%s:gbs:%s" % (USER, base_prj)
-    else:
-        target_prj = opts.target_obsprj
+    tarball = 'packaging/%s' % os.path.basename(urlres.path)
+    msger.info('generate tar ball: %s' % tarball)
+    try:
+        repo = RpmGitRepository(workdir)
+    except GitRepositoryError:
+        msger.error("%s is not a git repository" % (os.path.curdir))
 
-    prj = obspkg.ObsProject(target_prj, apiurl = APISERVER, oscrc = oscrcpath)
-    msger.info('checking status of obs project: %s ...' % target_prj)
-    if prj.is_new():
-        msger.info('creating %s for package build ...' % target_prj)
-        try:
-            prj.branch_from(base_prj)
-        except errors.ObsError, exc:
-            msger.error('%s' % exc)
+    try:
+        comp_type = guess_comp_type(spec)
+        if not git_archive(repo, spec, "%s/packaging" % workdir, 'HEAD', comp_type,
+                           comp_level=9, with_submodules=True):
+            msger.error("Cannot create source tarball %s" % tarball)
+    except GbpError, exc:
+        msger.error(str(exc))
+ 
+    if opts.incremental:
+        cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
+        cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % (name, version)]
 
-    msger.info('checking out %s/%s to %s ...' % (target_prj, spec.name, tmpdir))
-    localpkg = obspkg.ObsPackage(tmpdir, target_prj, spec.name,
-                                 APISERVER, oscrcpath)
-    oscworkdir = localpkg.get_workdir()
-    localpkg.remove_all()
+    msger.info(' '.join(cmd))
 
-    with Workdir(workdir):
-        if gbp_build(["argv[0] placeholder", "--git-export-only",
-                      "--git-ignore-new", "--git-builder=osc",
-                      "--git-export-dir=%s" % oscworkdir,
-                      "--git-packaging-dir=packaging"]):
-            msger.error("Failed to get packaging info from git tree")
-
-    localpkg.update_local()
-
-    msger.info('commit packaging files to build server ...')
-    localpkg.commit ('submit packaging files to obs for OBS building')
-
-    os.unlink(oscrcpath)
-    msger.info('local changes submitted to build server successfully')
-    msger.info('follow the link to monitor the build progress:\n'
-               '  %s/package/show?package=%s&project=%s' \
-               % (APISERVER.replace('api', 'build'), spec.name, target_prj))
+    # runner.show() can't support interactive mode, so use subprocess insterad.
+    try:
+        rc = subprocess.call(cmd)
+        if rc:
+            msger.error('rpmbuild fails')
+        else:
+            msger.info('The buildroot was: %s' % build_root)
+            msger.info('Done')
+    except KeyboardInterrupt, i:
+        msger.info('keyboard interrupt, killing build ...')
+        subprocess.call(cmd + ["--kill"])
+        msger.error('interrrupt from keyboard')
+    finally:
+        os.unlink("%s/%s" % (workdir, tarball))
+        os.unlink(oscrcpath)
+        if bc_filename:
+            os.unlink(bc_filename)
