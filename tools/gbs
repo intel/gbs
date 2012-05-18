@@ -23,6 +23,15 @@ from gitbuildsys.__version__ import VERSION
 from gitbuildsys import msger, cmdln, errors, utils, runner
 from gitbuildsys.conf import configmgr
 
+def handle_repository(option, opt_str, value, parser):
+    if not value:
+        raise errors.Usage("option %s: need value" % opt_str)
+    if value[0] == '-':
+        raise errors.Usage("option %s: invalid value %s" % (opt_str, value))
+    if getattr(parser.values, option.dest) is None:
+        setattr(parser.values, option.dest, [])
+    getattr(parser.values, option.dest).append(value)
+
 class Gbs(cmdln.Cmdln):
     """
     Usage: gbs [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
@@ -62,10 +71,11 @@ class Gbs(cmdln.Cmdln):
                   help='Specify distribution configure file, which should' \
                        'be full path')
     @cmdln.option('-R', '--repository',
-                  action='append',
+                  action="callback",
                   default=None,
                   type='string',
                   dest='repositories',
+                  callback=handle_repository,
                   help='Specify package repositories, Supported format ' \
                        'is rpm-md')
     @cmdln.option('-B', '--buildroot',
