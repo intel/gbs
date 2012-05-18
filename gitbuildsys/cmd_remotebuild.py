@@ -44,9 +44,9 @@ user=%(user)s
 passx=%(passwdx)s
 """
 
-APISERVER   = configmgr.get('build_server', 'build')
-USER        = configmgr.get('user', 'build')
-PASSWDX     = configmgr.get('passwdx', 'build')
+APISERVER   = configmgr.get('build_server', 'remotebuild')
+USER        = configmgr.get('user', 'remotebuild')
+PASSWDX     = configmgr.get('passwdx', 'remotebuild')
 TMPDIR      = configmgr.get('tmpdir')
 
 def do(opts, args):

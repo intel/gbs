@@ -97,12 +97,12 @@ def do(opts, args):
         msger.warning('multiple specfiles found.')
 
 
-    distconf = configmgr.get('distconf', 'localbuild')
+    distconf = configmgr.get('distconf', 'build')
     if opts.dist:
         distconf = opts.dist
 
-    build_cmd  = configmgr.get('build_cmd', 'localbuild')
-    build_root = configmgr.get('build_root', 'localbuild')
+    build_cmd  = configmgr.get('build_cmd', 'build')
+    build_root = configmgr.get('build_root', 'build')
     if opts.buildroot:
         build_root = opts.buildroot
     cmd = [ build_cmd,
