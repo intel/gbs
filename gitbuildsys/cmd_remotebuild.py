@@ -31,6 +31,7 @@ from utils import Workdir
 
 import gbp.rpm
 from gbp.scripts.buildpackage_rpm import main as gbp_build
+from gbp.git import repository
 
 OSCRC_TEMPLATE = """[general]
 apiurl = %(apiurl)s
@@ -56,6 +57,10 @@ def do(opts, args):
         msger.error('only one work directory can be specified in args.')
     if len(args) == 1:
         workdir = args[0]
+    try:
+        repo = repository.GitRepository(workdir)
+    except repository.GitRepositoryError:
+        msger.error('%s is not a git dir' % workdir)
 
     tmpdir = '%s/%s' % (TMPDIR, USER)
     if not os.path.exists(tmpdir):
