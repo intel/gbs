@@ -295,8 +295,9 @@ class BuildService(object):
             if e.code == 404:
                 new_prj = True
             else:
-                raise e
-
+                raise errors.ObsError("%s" % e)
+        except urllib2.URLError, e:
+            raise errors.ObsError("%s" % e)
         return new_prj
 
     def genRequestInfo(self, reqid, show_detail = True):
