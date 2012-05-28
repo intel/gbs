@@ -77,6 +77,25 @@ class Gbs(cmdln.Cmdln):
         if self.options.debug:
             msger.set_loglevel('debug')
 
+    @cmdln.alias('ex')
+    @cmdln.option('-o', '--outdir',
+                  default=None,
+                  dest='outdir',
+                  help='Output directory')
+    def do_export(self, _subcmd, opts, *args):
+        """${cmd_name}: export files and prepare for build
+
+        Usage:
+            gbs export
+
+        Note:
+
+        ${cmd_option_list}
+        """
+
+        from gitbuildsys import cmd_export as cmd
+        cmd.do(opts, args)
+
     @cmdln.alias('lb')
     @cmdln.option('-D', '--dist',
                   default=None,
