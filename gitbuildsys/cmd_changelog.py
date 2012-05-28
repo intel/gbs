@@ -30,7 +30,7 @@ from conf import configmgr
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
-EDITOR = configmgr.get('editor') or 'vi'
+EDITOR = configmgr.get('editor') or os.getenv('EDITOR') or 'vi'
 
 
 def add_entries(changesfile, new_entries):
