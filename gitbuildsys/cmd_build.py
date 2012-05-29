@@ -138,22 +138,23 @@ def do(opts, args):
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
 
-    urlres = urlparse.urlparse(spec.orig_file)
-
-    tarball = 'packaging/%s' % os.path.basename(urlres.path)
-    msger.info('generate tar ball: %s' % tarball)
     try:
         repo = RpmGitRepository(workdir)
     except GitRepositoryError:
         msger.error("%s is not a git repository" % (os.path.curdir))
 
-    try:
-        comp_type = guess_comp_type(spec)
-        if not git_archive(repo, spec, "%s/packaging" % workdir, 'HEAD',
-                           comp_type, comp_level=9, with_submodules=True):
-            msger.error("Cannot create source tarball %s" % tarball)
-    except GbpError, exc:
-        msger.error(str(exc))
+    tarball = None
+    if spec.orig_file:
+        urlres = urlparse.urlparse(spec.orig_file)
+        tarball = 'packaging/%s' % os.path.basename(urlres.path)
+        msger.info('generate tar ball: %s' % tarball)
+        try:
+            comp_type = guess_comp_type(spec)
+            if not git_archive(repo, spec, "%s/packaging" % workdir, 'HEAD',
+                               comp_type, comp_level=9, with_submodules=True):
+                msger.error("Cannot create source tarball %s" % tarball)
+        except GbpError, exc:
+            msger.error(str(exc))
  
     if opts.incremental:
         cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
@@ -175,4 +176,5 @@ def do(opts, args):
         subprocess.call(cmd + ["--kill"])
         msger.error('interrrupt from keyboard')
     finally:
-        os.unlink("%s/%s" % (workdir, tarball))
+        if spec.orig_file:
+            os.unlink("%s/%s" % (workdir, tarball))
