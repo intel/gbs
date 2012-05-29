@@ -290,3 +290,22 @@ def setup_qemu_emulator():
         fd.close()
 
     return qemu_emulator
+
+def guess_spec(workdir, default_spec):
+    if default_spec:
+        if not os.path.exists(default_spec):
+            msger.error('%s does not exit' % default_spec)
+        return default_spec
+    git_project =  os.path.basename(workdir)
+    specfile = '%s/packaging/%s.spec' % (workdir, git_project)
+    if not os.path.exists(specfile):
+        specs = glob.glob('%s/packaging/*.spec' % workdir)
+        if not specs:
+            msger.error('no spec file found under',
+                        '/packaging sub-directory of %s' % workdir)
+
+        if len(specs) > 1:
+            msger.error("Can't decide which spec file to use.")
+        else:
+            specfile = specs[0]
+    return specfile

@@ -26,6 +26,7 @@ import shutil
 import errno
 
 import msger
+import utils
 
 from gbp.scripts.buildpackage_rpm import git_archive, guess_comp_type
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
@@ -66,19 +67,7 @@ def do(opts, args):
     if opts.outdir:
         outdir = opts.outdir
 
-    git_project =  os.path.basename(workdir)
-    specfile = '%s/packaging/%s.spec' % (workdir, git_project)
-    if not os.path.exists(specfile):
-        specs = glob.glob('%s/packaging/*.spec' % workdir)
-        if not specs:
-            msger.error('no spec file found under',
-                        '/packaging sub-directory of %s' % workdir)
-
-        if len(specs) > 1:
-            msger.error("Can't decide which spec file to use.")
-        else:
-            specfile = specs[0]
-
+    specfile = utils.guess_spec(workdir, opts.spec)
     spec = rpm.parse_spec(specfile)
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')

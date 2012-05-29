@@ -82,6 +82,10 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='outdir',
                   help='Output directory')
+    @cmdln.option('--spec',
+                  default=None,
+                  dest='spec',
+                  help='Specify a spec file to use')
     def do_export(self, _subcmd, opts, *args):
         """${cmd_name}: export files and prepare for build
 
@@ -141,6 +145,10 @@ class Gbs(cmdln.Cmdln):
                   help='Do incremental build, which need support of spec file,'
                        ' and tar ball unpack stage should be enabled with the '
                        'condition of RPM macro RSYNCDONE')
+    @cmdln.option('--spec',
+                  default=None,
+                  dest='spec',
+                  help='Specify a spec file to use')
     @cmdln.option('--debuginfo',
                   action='store_true',
                   default=False,
@@ -191,6 +199,10 @@ class Gbs(cmdln.Cmdln):
                   callback=handle_project,
                   help='Base OBS project being used to branch from, ' \
                        'use "Trunk" if not specified')
+    @cmdln.option('--spec',
+                  default=None,
+                  dest='spec',
+                  help='Specify a spec file to use')
     def do_remotebuild(self, subcmd, opts, *args):
         """${cmd_name}: remote build package
 

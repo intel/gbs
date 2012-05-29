@@ -92,11 +92,7 @@ def do(opts, args):
     if not specs:
         msger.error('no spec file found under /packaging sub-directory')
 
-    specfile = specs[0] #TODO:
-    if len(specs) > 1:
-        msger.warning('multiple specfiles found.')
-
-
+    specfile = utils.guess_spec(workdir, opts.spec)
     distconf = configmgr.get('distconf', 'build')
     if opts.dist:
         distconf = opts.dist

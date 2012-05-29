@@ -27,7 +27,7 @@ import msger
 from conf import configmgr
 import obspkg
 import errors
-from utils import Workdir
+import utils
 
 import gbp.rpm
 from gbp.scripts.buildpackage_rpm import main as gbp_build
@@ -83,10 +83,7 @@ def do(opts, args):
     if not specs:
         msger.error('no spec file found under /packaging sub-directory')
 
-    specfile = specs[0] #TODO:
-    if len(specs) > 1:
-        msger.warning('multiple specfiles found.')
-
+    specfile = utils.guess_spec(workdir, opts.spec)
     # get 'name' and 'version' from spec file
     spec = gbp.rpm.parse_spec(specfile)
     if not spec.name or not spec.version:
@@ -121,7 +118,7 @@ def do(opts, args):
     oscworkdir = localpkg.get_workdir()
     localpkg.remove_all()
 
-    with Workdir(workdir):
+    with utils.Workdir(workdir):
         if gbp_build(["argv[0] placeholder", "--git-export-only",
                       "--git-ignore-new", "--git-builder=osc",
                       "--git-export-dir=%s" % oscworkdir,
