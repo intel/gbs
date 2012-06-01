@@ -16,7 +16,6 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-from __future__ import with_statement
 import os
 import glob
 import platform
@@ -47,12 +46,9 @@ SUPPORT_DISTS = (
 
 def linux_distribution():
     try:
-        (dist, ver, id) = platform.linux_distribution( \
-                              supported_dists = SUPPORT_DISTS)
+        return platform.linux_distribution(supported_dists = SUPPORT_DISTS)
     except:
-        (dist, ver, id) = platform.dist( \
-                              supported_dists = SUPPORT_DISTS)
-    return (dist, ver, id)
+        return platform.dist(supported_dists = SUPPORT_DISTS)
 
 class Workdir(object):
     def __init__(self, path):
@@ -62,14 +58,14 @@ class Workdir(object):
     def __enter__(self):
         os.chdir(self._newdir)
 
-    def __exit__(self, type, value, tb):
+    def __exit__(self, _type, _value, _tb):
         os.chdir(self._cwd)
 
 def which(cmd):
     def is_exe(fpath):
         return os.path.exists(fpath) and os.access(fpath, os.X_OK)
 
-    fpath, fname = os.path.split(cmd)
+    fpath, _fname = os.path.split(cmd)
     if fpath:
         if is_exe(cmd):
             return cmd
@@ -111,14 +107,14 @@ def get_hostarch():
         hostarch = 'i586'
     return hostarch
 
-def get_ext(file, level = 1):
+def get_ext(path, level = 1):
     """ get ext of specified file
     """
     ext = ''
     for i in range(level):
-        (file, curext) = os.path.splitext(file)
+        (path, curext) = os.path.splitext(path)
         if curext == '':
-           return ext
+            return ext
         ext = curext+ext
     return ext
 
@@ -132,7 +128,8 @@ class UnpackTarArchive(object):
         if not compression:
             compression = '-a'
 
-        cmd = ' '.join(['tar']+ exclude + ['-C', dir, compression, '-xf', archive ])
+        cmd = ' '.join(['tar']+ exclude + ['-C', dir, compression,
+                                           '-xf', archive ])
         ret = runner.quiet(cmd)
         if ret != 0:
             raise errors.UnpackError("Unpacking of %s failed" % archive)
@@ -221,10 +218,10 @@ class UpstreamTarball(object):
         extensions = r'\.tar\.(%s)' % "|".join(known_compressions)
 
         version_filters = map ( lambda x: x % (version_chars, extensions),
-                           ( # Tizen package-<version>-tizen.tar.gz:
-                             r'^(?P<package>[a-z\d\.\+\-]+)-(?P<version>%s+)-tizen%s',
-                             # Upstream package-<version>.tar.gz:
-                             r'^(?P<package>[a-zA-Z\d\.\+\-]+)-(?P<version>[0-9]%s*)%s'))
+            ( # Tizen package-<version>-tizen.tar.gz:
+              r'^(?P<package>[a-z\d\.\+\-]+)-(?P<version>%s+)-tizen%s',
+              # Upstream package-<version>.tar.gz:
+              r'^(?P<package>[a-zA-Z\d\.\+\-]+)-(?P<version>[0-9]%s*)%s'))
         if extra_regex:
             version_filters = extra_regex + version_filters
 
@@ -240,7 +237,8 @@ def find_binary_path(binary):
         paths = []
         if os.environ.has_key("HOME"):
             paths += [os.environ["HOME"] + "/bin"]
-        paths += ["/usr/local/sbin", "/usr/local/bin", "/usr/sbin", "/usr/bin", "/sbin", "/bin"]
+        paths += ["/usr/local/sbin", "/usr/local/bin", "/usr/sbin",
+                  "/usr/bin", "/sbin", "/bin"]
 
     for path in paths:
         bin_path = "%s/%s" % (path, binary)
@@ -258,12 +256,14 @@ def setup_qemu_emulator():
         runner.show([modprobecmd, "binfmt_misc"])
     if not os.path.exists("/proc/sys/fs/binfmt_misc/register"):
         mountcmd = find_binary_path("mount")
-        runner.show([mountcmd, "-t", "binfmt_misc", "none", "/proc/sys/fs/binfmt_misc"])
+        runner.show([mountcmd, "-t", "binfmt_misc", "none",
+                     "/proc/sys/fs/binfmt_misc"])
 
     # qemu_emulator is a special case, we can't use find_binary_path
     # qemu emulator should be a statically-linked executable file
     qemu_emulator = "/usr/bin/qemu-arm"
-    if not os.path.exists(qemu_emulator) or not is_statically_linked(qemu_emulator):
+    if not os.path.exists(qemu_emulator) or \
+           not is_statically_linked(qemu_emulator):
         qemu_emulator = "/usr/bin/qemu-arm-static"
     if not os.path.exists(qemu_emulator):
         raise errors.QemuError("Please install a statically-linked qemu-arm")
@@ -277,19 +277,20 @@ def setup_qemu_emulator():
     if is_statically_linked(qemu_emulator) and os.path.exists(node):
         return qemu_emulator
 
-    # unregister it if it has been registered and is a dynamically-linked executable
+    # unregister it if it has been registered and
+    # is a dynamically-linked executable
     if not is_statically_linked(qemu_emulator) and os.path.exists(node):
         qemu_unregister_string = "-1\n"
-        fd = open("/proc/sys/fs/binfmt_misc/arm", "w")
-        fd.write(qemu_unregister_string)
-        fd.close()
+        fds = open("/proc/sys/fs/binfmt_misc/arm", "w")
+        fds.write(qemu_unregister_string)
+        fds.close()
 
     # register qemu emulator for interpreting other arch executable file
     if not os.path.exists(node):
         qemu_arm_string = ":arm:M::\\x7fELF\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\x28\\x00:\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\x00\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfa\\xff\\xff\\xff:%s:\n" % qemu_emulator
-        fd = open("/proc/sys/fs/binfmt_misc/register", "w")
-        fd.write(qemu_arm_string)
-        fd.close()
+        fds = open("/proc/sys/fs/binfmt_misc/register", "w")
+        fds.write(qemu_arm_string)
+        fds.close()
 
     return qemu_emulator
 
