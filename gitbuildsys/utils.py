@@ -127,8 +127,7 @@ def guess_spec(workdir, default_spec):
     if not os.path.exists(specfile):
         specs = glob.glob('%s/packaging/*.spec' % workdir)
         if not specs:
-            msger.error('no spec file found under',
-                        '/packaging sub-directory of %s' % workdir)
+            msger.error('no spec file found under %s/packaging' % workdir)
 
         if len(specs) > 1:
             msger.error("Can't decide which spec file to use.")
