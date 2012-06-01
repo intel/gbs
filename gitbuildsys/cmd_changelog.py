@@ -23,8 +23,10 @@ import os
 import datetime
 import glob
 import subprocess
+import shutil
 
 import msger
+import utils
 
 from conf import configmgr
 
@@ -110,7 +112,6 @@ def do(opts, _args):
         spec_file_list = glob.glob("%s/packaging/*.spec" % project_root_dir)
         if spec_file_list:
             fn_changes = os.path.splitext(spec_file_list[0])[0] + ".changes"
-            open(fn_changes, 'w').close() # touch
         else:
             msger.error("Found no changes nor spec files under packaging dir")
 
@@ -136,7 +137,16 @@ def do(opts, _args):
         msger.error("Nothing found between %s and HEAD" % commitid_since)
 
     new_entries = make_log_entries(commits, repo)
-    add_entries(fn_changes, new_entries)
 
-    subprocess.call("%s %s" % (EDITOR, fn_changes), shell=True)
-    msger.info("Change log file updated.")
+    # create temporary copy and update it with new entries
+    temp = utils.TempCopy(fn_changes)
+    add_entries(temp.name, new_entries)
+    temp.update_stat()
+
+    subprocess.call("%s %s" % (EDITOR, temp.name), shell=True)
+
+    if temp.is_changed():
+	msger.info("Change log has been updated.")
+    else:
+        msger.info("Change log has not been updated")
+

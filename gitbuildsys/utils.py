@@ -21,6 +21,8 @@ import os
 import glob
 import platform
 import re
+import tempfile
+import shutil
 
 import msger
 import runner
@@ -309,3 +311,34 @@ def guess_spec(workdir, default_spec):
         else:
             specfile = specs[0]
     return specfile
+
+class TempCopy(object):
+    """Copy original file to temporary file in the same directory as
+       original. Creates empty termporary file if original doesn't exist.
+       Deletes termporary file when object is destroyed.
+    """
+
+    def __init__(self, orig_fpath):
+        self.orig_fpath = orig_fpath
+
+        # create temp file
+        tmpffd, self.name = tempfile.mkstemp(dir=os.path.dirname(orig_fpath))
+        os.close(tmpffd)
+
+        # copy original file to temp
+        if os.path.exists(orig_fpath):
+            shutil.copy2(orig_fpath, self.name)
+
+        self.stat = os.stat(self.name)
+
+    def update_stat(self):
+        """Updates stat info."""
+        self.stat = os.stat(self.name)
+
+    def is_changed(self):
+        """Check if temporary file has been changed."""
+        return os.stat(self.name) != self.stat
+
+    def __del__(self):
+        if os.path.exists(self.name):
+            os.unlink(self.name)
