@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 Name:       gbs
 Summary:    The command line tools for Tizen package developers
-Version:    0.6
+Version:    0.6.2
 Release:    1
 Group:      Development/Tools
 License:    GPLv2
@@ -11,7 +11,7 @@ Source0:    %{name}-%{version}.tar.bz2
 Requires:   python >= 2.5
 Requires:   git-core
 Requires:   osc >= 0.131
-Requires:   build >= 2011.10.10
+Requires:   build >= 2012.04.17
 Requires:   qemu >= 0.14.1
 Requires:   qemu-arm-static >= 0.14.1
 %if 0%{?fedora_version}
