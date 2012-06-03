@@ -16,13 +16,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import os
 import sys
 import re
 
 from gitbuildsys.__version__ import VERSION
-from gitbuildsys import msger, cmdln, errors, utils, runner
-from gitbuildsys.conf import configmgr
+from gitbuildsys import msger, cmdln, errors
 
 def handle_repository(option, opt_str, value, parser):
     if not value:
@@ -265,7 +263,7 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='since',
                   help='commit to start from')
-    def do_changelog(self, subcmd, opts, *args):
+    def do_changelog(self, _subcmd, opts, *args):
         """${cmd_name}: update the changelog file with the git commit messages
 
         Usage:
