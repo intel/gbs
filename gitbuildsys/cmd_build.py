@@ -68,9 +68,6 @@ supportedarchs = [
 
 def do(opts, args):
 
-    if os.geteuid() != 0:
-        msger.error('Root permission is required, please try again with sudo')
-
     workdir = os.getcwd()
     if len(args) > 1:
         msger.error('only one work directory can be specified in args.')
@@ -105,6 +102,11 @@ def do(opts, args):
             '--root='+build_root,
             '--dist='+distconf,
             '--arch='+buildarch ]
+
+    suwrapper = configmgr.get('su-wrapper', 'build')
+    if suwrapper:
+        cmd = [suwrapper] + cmd
+
     build_jobs = utils.get_processors()
     if build_jobs > 1:
         cmd += ['--jobs=%s' % build_jobs]
@@ -164,6 +166,7 @@ def do(opts, args):
     msger.info(' '.join(cmd))
 
     # runner.show() can't support interactive mode, so use subprocess insterad.
+    msger.debug("running command %s" % cmd)
     try:
         rc = subprocess.call(cmd)
         if rc:
