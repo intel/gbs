@@ -211,7 +211,7 @@ def do(opts, args):
         cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
         cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % (name, version)]
 
-    sucmd = configmgr.get('su-wrapper', 'build').split()
+    sucmd = configmgr.get('su_wrapper', 'build').split()
     if sucmd[0] == 'su':
         if sucmd[-1] == '-c':
             sucmd.pop()

@@ -165,13 +165,14 @@ configuration file by yourself.  Just make sure it looks like as below:
   ; settings for build subcommand
   build_server = <OBS API URL>
   user = <USER_NAME>
-  passwd  = <PASSWORD in base64 string>
-  passwdx = <PASSWORD encoded in base64 string>
+  passwd  = <PASSWORD in plaintext> (will be updated w/ base64 encoded one)
+
   [build]
   build_cmd = /usr/bin/build
   build_root= /var/tmp/build-root-gbs
-  su-wrapper= su -c
+  su_wrapper= sudo
   distconf=/usr/share/gbs/tizen-1.0.conf
+
   [import]
   commit_name= <Author Name>
   commit_email= <Author Email>
