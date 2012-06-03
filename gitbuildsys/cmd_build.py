@@ -27,6 +27,7 @@ import glob
 import shutil
 import subprocess
 import urlparse
+import re
 
 import msger
 import runner
@@ -67,6 +68,58 @@ supportedarchs = [
             'armv7nhl',
             'armv7l',
           ]
+
+def get_reops_conf():
+
+    repos = set()
+    # get repo settings form build section
+    for opt in configmgr.options('build'):
+        if opt.startswith('repo'):
+            try:
+                (name, key) = opt.split('.')
+            except ValueError:
+                raise Exception("Invalid repo option: %s" % opt)
+            else:
+                if key not in ('url', 'user', 'passwdx'):
+                    raise Exception("Invalid repo option: %s" % opt)
+                repos.add(name)
+
+    # get repo settings form build section
+    repo_urls = []
+    repo_auths = []
+    for repo in repos:
+        repo_auth = ''
+        # get repo url
+        try:
+            repo_url = configmgr.get(repo + '.url', 'build')
+            repo_urls.append(repo_url)
+        except:
+            continue
+
+        try:
+            repo_server = re.match('(https?://.*?)/.*', repo_url).groups()[0]
+        except AttributeError:
+            raise Exception("Invalid repo url: %s" % opt)
+        repo_auth = 'url' + ':' + repo_server + ';'
+
+        valid = True
+        for key in ['user', 'passwdx']:
+            try:
+                value = configmgr.get(repo+'.'+ key, 'build').strip()
+            except:
+                valid = False
+                break
+            if not value:
+                valid = False
+                break
+            repo_auth = repo_auth + key + ':' + value + ';'
+
+        if not valid:
+            continue
+        repo_auth = repo_auth[:-1]
+        repo_auths.append(repo_auth)
+
+    return repo_urls, ''.join(repo_auths)
 
 def do(opts, args):
 
@@ -115,9 +168,14 @@ def do(opts, args):
     if opts.debuginfo:
         cmd += ['--debug']
 
+    repos_urls_conf, repo_auth_conf = get_reops_conf()
+
     if opts.repositories:
         for repo in opts.repositories:
             cmd += ['--repository='+repo]
+    elif repos_urls_conf:
+        for url in repos_urls_conf:
+            cmd += ['--repository=' + url ]
     else:
         msger.error('No package repository specified.')
 
@@ -159,7 +217,7 @@ def do(opts, args):
             sucmd.pop()
         cmd = sucmd + ['-s', cmd[0], 'root', '--' ] + cmd[1:]
     else:
-        cmd = sucmd + cmd
+        cmd = sucmd + ['GBS_BUILD_REPOAUTH=%s' % repo_auth_conf ] + cmd
 
     # runner.show() can't support interactive mode, so use subprocess insterad.
     try:
