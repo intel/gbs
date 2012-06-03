@@ -70,9 +70,6 @@ supportedarchs = [
 
 def do(opts, args):
 
-    if os.geteuid() != 0:
-        msger.error('Root permission is required, please use sudo and try again')
-
     workdir = os.getcwd()
     if len(args) > 1:
         msger.error('only one work directory can be specified in args.')
@@ -156,6 +153,14 @@ def do(opts, args):
         cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
         cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % (name, version)]
 
+    sucmd = configmgr.get('su-wrapper', 'build').split()
+    if sucmd[0] == 'su':
+        if sucmd[-1] == '-c':
+            sucmd.pop()
+        cmd = sucmd + ['-s', cmd[0], 'root', '--' ] + cmd[1:]
+    else:
+        cmd = sucmd + cmd
+
     # runner.show() can't support interactive mode, so use subprocess insterad.
     try:
         rc = subprocess.call(cmd)
@@ -169,4 +174,5 @@ def do(opts, args):
         subprocess.call(cmd + ["--kill"])
         msger.error('interrrupt from keyboard')
     finally:
-        os.unlink("%s/%s" % (workdir, tarball))
+        if os.path.exists(os.path.join(workdir, tarball)):
+            os.unlink(os.path.join(workdir, tarball))
