@@ -156,8 +156,6 @@ def do(opts, args):
         cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
         cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % (name, version)]
 
-    msger.info(' '.join(cmd))
-
     # runner.show() can't support interactive mode, so use subprocess insterad.
     try:
         rc = subprocess.call(cmd)
