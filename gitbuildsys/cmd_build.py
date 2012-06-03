@@ -69,6 +69,14 @@ supportedarchs = [
             'armv7l',
           ]
 
+def get_env_proxies():
+    proxies = []
+    for name, value in os.environ.items():
+        name = name.lower()
+        if value and name.endswith('_proxy'):
+            proxies.append('%s=%s' % (name, value))
+    return proxies
+
 def get_reops_conf():
 
     repos = set()
@@ -188,6 +196,8 @@ def do(opts, args):
     if hostarch != buildarch and buildarch in change_personality:
         cmd = [ change_personality[buildarch] ] + cmd;
 
+    proxies = get_env_proxies()
+
     if buildarch.startswith('arm'):
         try:
             utils.setup_qemu_emulator()
@@ -212,7 +222,7 @@ def do(opts, args):
         cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % (name, version)]
 
     # if current user is root, don't run with sucmd
-    if os.getuid == 0:
+    if os.getuid() == 0:
         os.environ['GBS_BUILD_REPOAUTH'] = repo_auth_conf
     else:
         sucmd = configmgr.get('su_wrapper', 'build').split()
@@ -221,7 +231,7 @@ def do(opts, args):
                 sucmd.pop()
             cmd = sucmd + ['-s', cmd[0], 'root', '--' ] + cmd[1:]
         else:
-            cmd = sucmd + ['GBS_BUILD_REPOAUTH=%s' % repo_auth_conf ] + cmd
+            cmd = sucmd + proxies + ['GBS_BUILD_REPOAUTH=%s' % repo_auth_conf ] + cmd
     # runner.show() can't support interactive mode, so use subprocess insterad.
     try:
         rc = subprocess.call(cmd)
