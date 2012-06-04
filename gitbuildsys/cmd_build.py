@@ -239,6 +239,8 @@ def do(opts, args):
             msger.error('rpmbuild fails')
         else:
             msger.info('The buildroot was: %s' % build_root)
+            msger.info('Binaries RPM packges can be found here:\n     %s/%s' % \
+                       (build_root, 'home/abuild/rpmbuild/RPMS/'))
             msger.info('Done')
     except KeyboardInterrupt, i:
         msger.info('keyboard interrupt, killing build ...')
