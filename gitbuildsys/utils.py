@@ -339,8 +339,8 @@ def setup_qemu_emulator():
             os.write(tmpfd, "echo '%s' > /proc/sys/fs/binfmt_misc/register" % qemu_arm_string)
             os.close(tmpfd)
             # on this way can work to use sudo register qemu emulator
-            ret = subprocess.call('sudo sh %s' % tmppth)
-            if ret:
+            ret = os.system('sudo sh %s' % tmppth)
+            if ret != 0:
                 raise errors.QemuError('failed to set up qemu arm environment')
         except IOError:
             raise errors.QemuError('failed to set up qemu arm environment')
