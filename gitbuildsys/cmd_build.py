@@ -136,7 +136,11 @@ def do(opts, args):
         except errors.QemuError, exc:
             msger.error('%s' % exc)
 
-    spec = rpm.parse_spec(specfile)
+    try:
+         spec = rpm.parse_spec(specfile)
+    except GbpError, err:
+         msger.error('%s' % err)
+
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
 

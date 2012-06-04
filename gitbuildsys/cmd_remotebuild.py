@@ -32,6 +32,7 @@ import utils
 import gbp.rpm
 from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.git import repository
+from gbp.errors import GbpError
 
 OSCRC_TEMPLATE = """[general]
 apiurl = %(apiurl)s
@@ -85,7 +86,11 @@ def do(opts, args):
 
     specfile = utils.guess_spec(workdir, opts.spec)
     # get 'name' and 'version' from spec file
-    spec = gbp.rpm.parse_spec(specfile)
+    try:
+        spec = gbp.rpm.parse_spec(specfile)
+    except GbpError, err:
+        msger.error('%s' % err)
+
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
 
