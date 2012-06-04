@@ -13,7 +13,8 @@ Depends: ${misc:Depends}, ${python:Depends},
  osc (>= 0.131),
  build (>= 2012.04.17),
  rpm,
- qemu-arm-static (>= 0.14.1) | qemu-user-static
+ qemu-arm-static (>= 0.14.1) | qemu-user-static,
+ binfmt-support
 Description: The command line tools for Tizen package developers
   The command line tools for Tizen package developers will
   be used to do packaging related tasks. 
