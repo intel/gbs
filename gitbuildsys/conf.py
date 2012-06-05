@@ -250,6 +250,14 @@ passwdx = $remotebuild__passwdx
 build_cmd = /usr/bin/build
 build_root= /var/tmp/build-root-gbs
 su-wrapper= sudo
+repo1.url=
+repo1.user=
+repo1.passwd=
+repo1.passwdx=
+repo2.url=
+repo2.user=
+repo2.passwd=
+repo2.passwdx=
 distconf= /usr/share/gbs/tizen-1.0.conf
 [import]
 commit_name=
@@ -376,6 +384,15 @@ commit_email=
             return True
         else:
             return False
+
+    def options(self, section='general'):
+        try:
+            return  self.cfgparser.options(section)
+        except NoSectionError:
+            if section in self.DEFAULTS:
+                return self.DEFAULTS[section]
+            else:
+                raise errors.ConfigError('invalid section %s' % (section))
 
     def get(self, opt, section='general'):
         if opt == 'passwd':
