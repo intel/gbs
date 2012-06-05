@@ -162,6 +162,14 @@ def setup_qemu_emulator():
 
     return qemu_emulator
 
+def get_env_proxies():
+    proxies = []
+    for name, value in os.environ.items():
+        name = name.lower()
+        if value and name.endswith('_proxy'):
+            proxies.append('%s=%s' % (name, value))
+    return proxies
+
 def get_reops_conf():
 
     repos = set()
@@ -279,6 +287,8 @@ def do(opts, args):
     if hostarch != buildarch and buildarch in change_personality:
         cmd = [ change_personality[buildarch] ] + cmd
 
+    proxies = get_env_proxies()
+
     if buildarch.startswith('arm'):
         try:
             setup_qemu_emulator()
@@ -327,7 +337,8 @@ def do(opts, args):
                     sucmd.pop()
                 cmd = sucmd + ['-s', cmd[0], 'root', '--' ] + cmd[1:]
             else:
-                cmd = sucmd + ['GBS_BUILD_REPOAUTH=%s' % repo_auth_conf ] + cmd
+                cmd = sucmd + proxies + ['GBS_BUILD_REPOAUTH=%s' % \
+                      repo_auth_conf ] + cmd
 
     # runner.show() can't support interactive mode, so use subprocess insterad.
     msger.debug("running command %s" % cmd)
