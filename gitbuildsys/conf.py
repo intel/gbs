@@ -19,6 +19,7 @@
 from __future__ import with_statement
 import os, sys
 import base64
+from collections import defaultdict
 from ConfigParser import *
 import msger
 import errors
@@ -254,13 +255,13 @@ su_wrapper = $build__su_wrapper
 distconf = $build__distconf
 
 ; optional, repos definitions
-repo1.url=
-repo1.user=
-repo1.passwd=
-repo2.url=
-repo2.user=
-repo2.passwd=
-distconf= /usr/share/gbs/tizen-1.0.conf
+#repo1.url=
+#repo1.user=
+#repo1.passwd=
+; one more repo
+#repo2.url=
+#repo2.user=
+#repo2.passwd=
 [import]
 ; optional, for git author information
 commit_name = $import__commit_name
@@ -292,6 +293,8 @@ commit_email = $import__commit_email
                     msger.error('No config file available')
 
         self.cfgparser.read(fpaths)
+
+        self.replaced_keys = defaultdict(list)
         self._check_passwd()
 
     def _lookfor_confs(self):
@@ -351,18 +354,22 @@ commit_email = $import__commit_email
 
     def _check_passwd(self):
         for sec in self.DEFAULTS.keys():
-            if 'passwd' in self.DEFAULTS[sec]:
-                plainpass = self._get('passwd', sec)
-                if not plainpass:
-                    # None or ''
-                    continue
+            for key in self.options(sec):
+                if key.endswith('passwd'):
+                    plainpass = self._get(key, sec)
+                    if not plainpass:
+                        # None or ''
+                        continue
 
-                msger.warning('plaintext password in config file will '
-                              'be replaced by encoded one')
-                self.set('passwd',
-                         base64.b64encode(plainpass.encode('bz2')),
-                         sec)
-                self.update()
+                    self.replaced_keys[sec].append(key)
+                    self.set(key,
+                             base64.b64encode(plainpass.encode('bz2')),
+                             sec)
+
+        if self.replaced_keys:
+            msger.warning('plaintext password in config file will '
+                          'be replaced by encoded one')
+            self.update()
 
     def _get(self, opt, section='general'):
         try:
@@ -390,7 +397,12 @@ commit_email = $import__commit_email
 
     def options(self, section='general'):
         try:
-            return  self.cfgparser.options(section)
+            opts = self.cfgparser.options(section)
+            if section in self.replaced_keys:
+                opts = list(set(opts) - set(self.replaced_keys[section]))
+
+            return opts
+
         except NoSectionError:
             if section in self.DEFAULTS:
                 return self.DEFAULTS[section]
@@ -409,9 +421,9 @@ commit_email = $import__commit_email
             return self._get(opt, section)
 
     def set(self, opt, val, section='general', replace_opt=None):
-        if opt == 'passwd':
-            opt = 'passwdx'
-            replace_opt = 'passwd'
+        if opt.endswith('passwd'):
+            replace_opt = opt
+            opt += 'x'
         return self.cfgparser.set(section, opt, val, replace_opt)
 
     def update(self):
