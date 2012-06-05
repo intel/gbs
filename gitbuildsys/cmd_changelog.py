@@ -47,9 +47,11 @@ def add_entries(changesfile, new_entries):
 
 def get_latest_rev(changesfile):
     """Get latest git revision from the changelog."""
-    with open(changesfile) as chlog:
-        line = chlog.readline()
-        return line.strip().split(" ")[-1].split("@")[-1]
+    if os.path.exists(changesfile):
+        with open(changesfile) as chlog:
+            line = chlog.readline()
+            return line.strip().split(" ")[-1].split("@")[-1]
+    return ''
 
 
 def make_log_entries(commits, git_repo):
