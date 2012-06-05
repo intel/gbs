@@ -228,7 +228,7 @@ class ConfigMgr(object):
                 'build_cmd':    '/usr/bin/build',
                 'build_root':   '/var/tmp/build-root-gbs',
                 'su-wrapper':   'sudo',
-                'distconf':     None,
+                'distconf':     '/usr/share/gbs/tizen-1.0.conf',
             },
             'import': {
                 'commit_name':    None,
