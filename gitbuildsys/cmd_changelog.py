@@ -148,6 +148,10 @@ def do(opts, _args):
     subprocess.call("%s %s" % (EDITOR, temp.name), shell=True)
 
     if temp.is_changed():
+        try:
+            shutil.copy2(temp.name, fn_changes)
+        except (IOError, shutil.Error), excobj:
+            msger.error("Can't update %s: %s" % (fn_changes, str(excobj)))
 	msger.info("Change log has been updated.")
     else:
         msger.info("Change log has not been updated")
