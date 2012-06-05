@@ -327,7 +327,7 @@ def do(opts, args):
                 (spec.name, spec.version)]
 
     # if current user is root, don't run with sucmd
-    if os.getuid == 0:
+    if os.getuid() == 0:
         os.environ['GBS_BUILD_REPOAUTH'] = repo_auth_conf
     else:
         sucmd = configmgr.get('su-wrapper', 'build').split()
