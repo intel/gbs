@@ -185,10 +185,6 @@ def do(opts, args):
             '--dist='+distconf,
             '--arch='+buildarch ]
 
-    suwrapper = configmgr.get('su-wrapper', 'build')
-    if suwrapper:
-        cmd = [suwrapper] + cmd
-
     build_jobs = get_processors()
     if build_jobs > 1:
         cmd += ['--jobs=%s' % build_jobs]
@@ -249,6 +245,15 @@ def do(opts, args):
         cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % \
                 (spec.name, spec.version)]
 
+    sucmd = configmgr.get('su-wrapper', 'build').split()
+    if sucmd:
+        if sucmd[0] == 'su':
+            if sucmd[-1] == '-c':
+                sucmd.pop()
+            cmd = sucmd + ['-s', cmd[0], 'root', '--' ] + cmd[1:]
+        else:
+            cmd = sucmd + cmd
+
     # runner.show() can't support interactive mode, so use subprocess insterad.
     msger.debug("running command %s" % cmd)
     try:
@@ -263,5 +268,5 @@ def do(opts, args):
         subprocess.call(cmd + ["--kill"])
         msger.error('interrrupt from keyboard')
     finally:
-        if spec.orig_file:
-            os.unlink("%s/%s" % (workdir, tarball))
+        if spec.orig_file and os.path.exists(os.path.join(workdir, tarball)):
+            os.unlink(os.path.join(workdir, tarball))
