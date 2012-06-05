@@ -133,6 +133,7 @@ def setup_qemu_emulator():
 
     # unregister it if it has been registered and
     # is a dynamically-linked executable
+    # FIXME: fix permission issue if qemu-arm dynamically used
     if not is_statically_linked(qemu_emulator) and os.path.exists(node):
         qemu_unregister_string = "-1\n"
         fds = open("/proc/sys/fs/binfmt_misc/arm", "w")
@@ -141,10 +142,23 @@ def setup_qemu_emulator():
 
     # register qemu emulator for interpreting other arch executable file
     if not os.path.exists(node):
-        qemu_arm_string = ":arm:M::\\x7fELF\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\x28\\x00:\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\x00\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfa\\xff\\xff\\xff:%s:\n" % qemu_emulator
-        fds = open("/proc/sys/fs/binfmt_misc/register", "w")
-        fds.write(qemu_arm_string)
-        fds.close()
+        qemu_arm_string = ":arm:M::\\x7fELF\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\x28\\x00:\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\x00\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfa\\xff\\xff\\xff:%s:" % qemu_emulator
+        try:
+            (tmpfd, tmppth) = tempfile.mkstemp()
+            os.write(tmpfd, "echo '%s' > /proc/sys/fs/binfmt_misc/register" % qemu_arm_string)
+            os.close(tmpfd)
+            # on this way can work to use sudo register qemu emulator
+            sucmd = configmgr.get('su-wrapper', 'build')
+            if sucmd:
+                ret = os.system('%s sh %s' % (sucmd, tmppth))
+            else:
+                ret = os.system('sudo sh %s' % tmppth)
+            if ret != 0:
+                raise errors.QemuError('failed to set up qemu arm environment')
+        except IOError:
+            raise errors.QemuError('failed to set up qemu arm environment')
+        finally:
+            os.unlink(tmppth)
 
     return qemu_emulator
 
