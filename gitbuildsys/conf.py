@@ -231,8 +231,8 @@ class ConfigMgr(object):
                 'distconf':     '/usr/share/gbs/tizen-1.0.conf',
             },
             'import': {
-                'commit_name':    None,
-                'commit_email':   None,
+                'commit_name':    '',
+                'commit_email':   '',
             },
 
     }
@@ -246,22 +246,25 @@ editor =
 build_server = $remotebuild__build_server
 user = $remotebuild__user
 passwdx = $remotebuild__passwdx
+
 [build]
-build_cmd = /usr/bin/build
-build_root= /var/tmp/build-root-gbs
-su-wrapper= sudo
+build_cmd = $build__build_cmd
+build_root = $build__build_root
+su_wrapper = $build__su_wrapper
+distconf = $build__distconf
+
+; optional, repos definitions
 repo1.url=
 repo1.user=
 repo1.passwd=
-repo1.passwdx=
 repo2.url=
 repo2.user=
 repo2.passwd=
-repo2.passwdx=
 distconf= /usr/share/gbs/tizen-1.0.conf
 [import]
-commit_name=
-commit_email=
+; optional, for git author information
+commit_name = $import__commit_name
+commit_email = $import__commit_email
 """
 
     # make the manager class as singleton
