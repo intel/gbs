@@ -165,7 +165,7 @@ def get_reops_conf():
 
     # get repo settings form build section
     repo_urls = []
-    repo_auths = []
+    repo_auths = set()
     for repo in repos:
         repo_auth = ''
         # get repo url
@@ -196,9 +196,9 @@ def get_reops_conf():
         if not valid:
             continue
         repo_auth = repo_auth[:-1]
-        repo_auths.append(repo_auth)
+        repo_auths.add(repo_auth)
 
-    return repo_urls, ''.join(repo_auths)
+    return repo_urls, ' '.join(repo_auths)
 
 def do(opts, args):
 
@@ -302,14 +302,18 @@ def do(opts, args):
         cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % \
                 (spec.name, spec.version)]
 
-    sucmd = configmgr.get('su-wrapper', 'build').split()
-    if sucmd:
-        if sucmd[0] == 'su':
-            if sucmd[-1] == '-c':
-                sucmd.pop()
-            cmd = sucmd + ['-s', cmd[0], 'root', '--' ] + cmd[1:]
-        else:
-            cmd = sucmd + ['GBS_BUILD_REPOAUTH=%s' % repo_auth_conf ] + cmd
+    # if current user is root, don't run with sucmd
+    if os.getuid == 0:
+        os.environ['GBS_BUILD_REPOAUTH'] = repo_auth_conf
+    else:
+        sucmd = configmgr.get('su-wrapper', 'build').split()
+        if sucmd:
+            if sucmd[0] == 'su':
+                if sucmd[-1] == '-c':
+                    sucmd.pop()
+                cmd = sucmd + ['-s', cmd[0], 'root', '--' ] + cmd[1:]
+            else:
+                cmd = sucmd + ['GBS_BUILD_REPOAUTH=%s' % repo_auth_conf ] + cmd
 
     # runner.show() can't support interactive mode, so use subprocess insterad.
     msger.debug("running command %s" % cmd)
