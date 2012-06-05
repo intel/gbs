@@ -148,11 +148,7 @@ def setup_qemu_emulator():
             os.write(tmpfd, "echo '%s' > /proc/sys/fs/binfmt_misc/register" % qemu_arm_string)
             os.close(tmpfd)
             # on this way can work to use sudo register qemu emulator
-            sucmd = configmgr.get('su-wrapper', 'build')
-            if sucmd:
-                ret = os.system('%s sh %s' % (sucmd, tmppth))
-            else:
-                ret = os.system('sudo sh %s' % tmppth)
+            ret = os.system('sudo sh %s' % tmppth)
             if ret != 0:
                 raise errors.QemuError('failed to set up qemu arm environment')
         except IOError:
@@ -330,15 +326,8 @@ def do(opts, args):
     if os.getuid() == 0:
         os.environ['GBS_BUILD_REPOAUTH'] = repo_auth_conf
     else:
-        sucmd = configmgr.get('su-wrapper', 'build').split()
-        if sucmd:
-            if sucmd[0] == 'su':
-                if sucmd[-1] == '-c':
-                    sucmd.pop()
-                cmd = sucmd + ['-s', cmd[0], 'root', '--' ] + cmd[1:]
-            else:
-                cmd = sucmd + proxies + ['GBS_BUILD_REPOAUTH=%s' % \
-                      repo_auth_conf ] + cmd
+        cmd = ['sudo'] + proxies + ['GBS_BUILD_REPOAUTH=%s' % \
+              repo_auth_conf ] + cmd
 
     # runner.show() can't support interactive mode, so use subprocess insterad.
     msger.debug("running command %s" % cmd)

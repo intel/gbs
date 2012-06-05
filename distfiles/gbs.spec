@@ -14,6 +14,7 @@ Requires:   osc >= 0.131
 Requires:   build >= 2011.10.10
 Requires:   qemu >= 0.14.1
 Requires:   qemu-arm-static >= 0.14.1
+Requires:   sudo
 %if 0%{?fedora_version}
 Requires:   rpm-build
 %else

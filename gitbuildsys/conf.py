@@ -228,7 +228,6 @@ class ConfigMgr(object):
             'build': {
                 'build_cmd':    '/usr/bin/build',
                 'build_root':   '/var/tmp/build-root-gbs',
-                'su-wrapper':   'sudo',
                 'distconf':     '/usr/share/gbs/tizen-1.0.conf',
             },
             'import': {
@@ -251,7 +250,6 @@ passwdx = $remotebuild__passwdx
 [build]
 build_cmd = $build__build_cmd
 build_root = $build__build_root
-su_wrapper = $build__su_wrapper
 distconf = $build__distconf
 
 ; optional, repos definitions
