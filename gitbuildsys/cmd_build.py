@@ -249,8 +249,6 @@ def do(opts, args):
         cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % \
                 (spec.name, spec.version)]
 
-    msger.info(' '.join(cmd))
-
     # runner.show() can't support interactive mode, so use subprocess insterad.
     msger.debug("running command %s" % cmd)
     try:
