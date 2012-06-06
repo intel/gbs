@@ -224,7 +224,7 @@ def do(opts, args):
     if len(args) > 1:
         msger.error('only one work directory can be specified in args.')
     if len(args) == 1:
-        workdir = args[0]
+        workdir = os.path.abspath(args[0])
 
     hostarch = get_hostarch()
     buildarch = hostarch

@@ -52,13 +52,13 @@ def do(opts, args):
     """
     workdir = os.getcwd()
 
-    if not os.path.exists("%s/packaging" % workdir):
-        msger.error('No packaging directory, so there is nothing to export.')
-
     if len(args) > 1:
         msger.error('only one work directory can be specified in args.')
     if len(args) == 1:
-        workdir = args[0]
+        workdir = os.path.abspath(args[0])
+
+    if not os.path.exists("%s/packaging" % workdir):
+        msger.error('No packaging directory, so there is nothing to export.')
 
     if not os.path.isdir("%s/.git" % workdir):
         msger.error('Not a git repository (%s), aborting' % workdir)
