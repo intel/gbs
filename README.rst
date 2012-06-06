@@ -12,44 +12,36 @@ Overview
 git-build-system is a command line tools for Tizen package developers
 
 * gbs remotebuild : build rpm package from git repository on OBS
-* gbs build : build rpm package from git repository at local
-* gbs import-orig: import source tarball to current git repository, which can be used to upgrade a package
+* gbs build  : build rpm package from git repository at local
 * gbs import : import source rpm or specfile to git repository
+* gbs changelog   : generate changelog from git commits to changelog file
 * gbs submit : maintain the changelogs file, sanity check etc.
+* gbs export : export git tree as tar ball, format of tar ball is from spec
 
 It supports native running in many mainstream Linux distributions, including:
 
-* Fedora (14 and above)
-* openSUSE (11.3 and above)
-* Ubuntu (10.04 and above)
-* Debian (5.0 and above)
+* openSUSE (12.1
+* Ubuntu (11.10 and 12.04)
 
 Installation
 ============
 gbs is recommended to install from official repository, but if your system have
-not been supported by official repo, you can try to install gbs from source 
-code, before that, you should install gbs's dependencies such as git, osc. 
+not been supported by official repo, you can try to install gbs from source
+code, before that, you should install gbs's dependencies such as git, osc, rpm,
+build.
 
 Repositories
 ------------
 So far we support `gbs` binary rpms/debs for many popular Linux distributions,
 please see the following list:
 
-* Debian 6.0
-* Fedora 14
-* Fedora 15
-* Fedora 16
-* openSUSE 11.3
-* openSUSE 11.4
 * openSUSE 12.1
-* Ubuntu 10.04
-* Ubuntu 10.10
-* Ubuntu 11.04
 * Ubuntu 11.10
+* Ubuntu 12.04
 
 And you can get the corresponding repository on
 
- `<http://download.tizen.org/live/Tools:/Building:/Devel>`_
+ `<http://download.tizen.org/tools/>`_
 
 If there is no the distribution you want in the list, please install it from
 source code.
@@ -57,35 +49,12 @@ source code.
 Binary Installation
 -------------------
 
-Fedora Installation
-~~~~~~~~~~~~~~~~~~~
-1. Add Tools Building repo:
-::
-
-  $ sudo cat <<REPO > /etc/yum.repos.d/tools-building.repo
-  > [tools-building]
-  > name=Tools for Fedora
-  > baseurl=http://download.tizen.org/live/Tools:/Building:/Devel/Fedora_<VERSION>
-  > enabled=1
-  > gpgcheck=0
-  > REPO
-
-2. Update repolist:
-::
-
-  $ sudo yum makecache
-
-3. Install gbs:
-::
-
-  $ sudo yum install gbs
-
 openSUSE Installation
 ~~~~~~~~~~~~~~~~~~~~~
 1. Add Tools Building repo:
 ::
 
-  $ sudo zypper addrepo http://download.tizen.org/live/Tools:/Building:/Devel/openSUSE_<VERSION>/ tools-building
+  $ sudo zypper addrepo http://download.tizen.org/tools/openSUSE12.1/ tools-building
 
 2. Update repolist:
 ::
@@ -97,14 +66,16 @@ openSUSE Installation
 
   $ sudo zypper install gbs
 
-Ubuntu/Debian Installation
+Ubuntu Installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 1. Append repo source:
 ::
 
-  $ sudo cat <<REPO >> /etc/apt-sources.list
-  > deb http://download.tizen.org/live/Tools:/Building:/Devel/<Ubuntu/Debian>_<VERSION>/ /
-  > REPO
+  Append the following line to /etc/apt/source.list:
+  #for ubuntu 11.10:
+  deb  http://download.tizen.org/tools/xUbuntu_11.10/ /
+  #for ubuntu 12.04
+  deb  http://download.tizen.org/tools/xUbuntu_12.04/ /
 
 2. Update repolist:
 ::
@@ -123,15 +94,15 @@ first, required packages as follows:
 
 * git-core
 * osc >= 0.131
-* rpm (None Fedora)
-* rpm-build (Fedora)
+* rpm
+* build
 
 Official osc are maintained at:
 
  `<http://download.opensuse.org/repositories/openSUSE:/Tools/>`_
 
 which can be added to you system, then using general package manager tools
-to install osc. 
+to install osc.
 
 Gbs source code is managed by Gerrit in tizen staging zone(temporarily), you
 need an account to access it.
@@ -154,7 +125,7 @@ Then using the following commands to install gbs:
 Configuration file
 ==================
 gbs read gbs configure file from ~/.gbs.conf. At the first time to run the gbs,
-it will prompt you to input your user_name and password. Or edit the 
+it will prompt you to input your user_name and password. Or edit the
 configuration file by yourself.  Just make sure it looks like as below:
 ::
 
@@ -175,14 +146,9 @@ configuration file by yourself.  Just make sure it looks like as below:
   repo1.url=
   repo1.user=
   repo1.passwd=
-  repo1.passwdx=
   repo2.url=
   repo2.user=
   repo2.passwd=
-  repo2.passwdx=
-  [import]
-  commit_name= <Author Name>
-  commit_email= <Author Email>
 
 In this configuration file, there are three sections: [common] is for general
 setting, [remotebuild] section is for the options of gbs remotebuild, and [build]
@@ -192,7 +158,7 @@ In the [remotebuild] section, the following values can be specified:
 
 build_server
     OBS API url, which point to remote OBS. Available value can be:
-    https://api.stg.tizen.org
+    https://build.tizen.org
 user
     OBS account user name
 passwd
@@ -208,13 +174,12 @@ build_root
     patch for chroot environment
 distconf
     Specify distribution configure file
-
-In [import] section, the following values can be specified:
-
-commit_name
-    Commit author name while executing git commit
-commit_email
-    Commit author email adress while executing git commit
+repox.url
+    Specify the repo url used for gbs build
+repox.user
+    Specify the user name for repox
+repox.passwd
+    Specify the passwd for repox
 
 Usages
 ======
@@ -325,7 +290,7 @@ Examples to run gbs build:
 
   $ gbs build -R /path/to/repo/dir/ -A i586
 
-'''BKM''': to have quick test with local repo, you can run 'gbs build' 
+'''BKM''': to have quick test with local repo, you can run 'gbs build'
 with remote repo. rpm packages will be downloaded to localdir /var/cache/\
 build/md5-value/, then you can use the following command to create it as local
 repo
@@ -339,51 +304,6 @@ repo
 If gbs build fails with dependencies, you should download it manually and
 put it to /var/cache/build/localrepo, then createrepo again.
 
-
-Running 'gbs import-orig'
--------------------------
-
-Subcommand `import-orig` is used to import original upstream tar ball to current
-git repository. This subcommand is mostly used for upgrading packages. Upstream
-tar ball format can be *.tar.gz,*.tar.bz2,*.tar.xz,*.tar.lzma,*.zip.
-
-Usage of subcommand `import-orig` can be available from `gbs import-orig --help`
-::
-
-  root@test-virtual-machine:~/gbs# gbs import-orig -h
-  import_orig (import-orig): Import tar ball to upstream branch
-
-  Usage:
-      gbs import-orig [options] original-tar-ball
-
-
-  Examples:
-    $ gbs import-orig original-tar-ball
-  Options:
-      -h, --help          show this help message and exit
-      --tag               Create tag while importing new version of upstream
-                          tar ball
-      --no-merge          Don't merge new upstream branch to master branch,
-                          please merge it manually
-      --upstream_branch=UPSTREAM_BRANCH
-                          specify upstream branch for new version of package
-      --author-email=AUTHOR_EMAIL
-                          author's email of git commit
-      --author-name=AUTHOR_NAME
-                          author's name of git commit
-
-gbs import-orig must run under the top directory of package git repository,the
-following command can be used:
-::
-
-  $ gbs import-orig example-0.1.tar.gz
-  $ gbs import-orig example-0.2-tizen.tar.bz2
-  Info: unpack upstream tar ball ...
-  Info: submit the upstream data
-  Info: merge imported upstream branch to master branch
-  Info: done.
-  $
-
 Running 'gbs import'
 --------------------
 
@@ -396,12 +316,13 @@ or upgrading packages. Usage of subcommand `import` can be available using
   import (im): Import spec file or source rpm to git repository
 
   Usage:
-      gbs import [options] specfile | source rpm
+      gbs import [options] specfile | source rpm | tarball
 
 
   Examples:
     $ gbs import /path/to/specfile/
     $ gbs import /path/to/*.src.rpm
+    $ gbs import /path/to/tarball
   Options:
       -h, --help          show this help message and exit
       --tag               Create tag while importing new version of upstream tar
@@ -419,7 +340,7 @@ Examples to run gbs import:
 1) import from source rpm, and package git repository would be generated
 ::
 
-  $test@test/gbs-demo# gbs import expect-5.43.0-18.13.src.rpm 
+  $test@test/gbs-demo# gbs import expect-5.43.0-18.13.src.rpm
    Info: unpack source rpm package: expect-5.43.0-18.13.src.rpm
    Info: No git repository found, creating one.
    Info: unpack upstream tar ball ...
@@ -452,3 +373,76 @@ Examples to run gbs import:
 
         Upstream version 5.43.0
 
+3) gbs import tarball must run under the top dir of package git repository, the
+following command can be used:
+::
+
+  $ cd example/
+  $ gbs import example-0.1.tar.gz
+  $ gbs import example-0.2-tizen.tar.bz2
+
+Running 'gbs changelog'
+-----------------------
+
+Subcommand `changelog` is used to generate changelog file in ./packaging dir.
+This subcommand is mostly used for create changelog before submit code.
+Usage of subcommand `changelog` can be available using
+`gbs changelog --help`
+::
+
+  changelog (ch): update the changelog file with the git commit messages
+
+  Usage:
+      gbs changelog [--since]
+
+  Examples:
+    $ gbs changelog
+    $ gbs changelog --since=COMMIT_ID
+  Options:
+      -h, --help          show this help message and exit
+      -s SINCE, --since=SINCE
+                          commit to start from
+
+Running 'gbs export'
+--------------------
+
+Subcommand `export` is used to export current working git tree as a tar ball.
+Usage of subcommand `export` can be available using `gbs changelog --help`
+::
+
+  test@test-desktop:~/$ gbs export -h
+  export (ex): export files and prepare for build
+
+  Usage:
+      gbs export
+
+  Note:
+
+  Options:
+      -h, --help          show this help message and exit
+      --spec=SPEC         Specify a spec file to use
+      -o OUTDIR, --outdir=OUTDIR
+                          Output directory
+
+Running 'gbs submit'
+--------------------
+
+Subcommand `submit` is used to submit local commits to gerrit for code review.
+Usage of subcommand `submit` can be available using `gbs changelog --help`
+::
+
+  test@test-desktop:~/$ gbs submit -h
+  submit (sr): submit commit request to gerrit for review
+
+  Usage:
+      gbs submit -m "msg for commit" [--changelog] [--tag]
+
+  Note:
+
+  Options:
+      -h, --help          show this help message and exit
+      --branch=TARGET_BRANCH
+                          specify the target branch for submit
+      --tag               make a tag before submit
+      -m MSG, --msg=MSG   specify commit message info
+      --changelog         invoke gbs changelog to create changelog
