@@ -171,7 +171,7 @@ class Gbs(cmdln.Cmdln):
 
         if -D not specified, distconf key in ~/.gbs.conf would be used.
         If distconf key is None, dist conf file would be got  from  OBS
-        project (Trunk by default).
+        project (Tizen:Main by default).
 
         ${cmd_option_list}
         """
@@ -188,7 +188,7 @@ class Gbs(cmdln.Cmdln):
                   type='string',
                   callback=handle_project,
                   help='OBS target project being used to build package, ' \
-                       'use "home:<userid>:gbs:Trunk" if not specified')
+                       'use "home:<userid>:gbs:Tizen:Main" if not specified')
     @cmdln.option('-B', '--base-obsprj',
                   action='callback',
                   default=None,
@@ -196,7 +196,7 @@ class Gbs(cmdln.Cmdln):
                   type='string',
                   callback=handle_project,
                   help='Base OBS project being used to branch from, ' \
-                       'use "Trunk" if not specified')
+                       'use "Tizen:Main" if not specified')
     @cmdln.option('--spec',
                   default=None,
                   dest='spec',

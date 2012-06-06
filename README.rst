@@ -237,10 +237,10 @@ to build. The usage of subcommand `remotebuild` can be available using `gbs remo
       -h, --help          show this help message and exit
       -B BASE_OBSPRJ, --base-obsprj=BASE_OBSPRJ
                           Base OBS project being used to branch from, use
-                          "Trunk" if not specified
+                          "Tizen:Main" by default if not specified
       -T TARGET_OBSPRJ, --target-obsprj=TARGET_OBSPRJ
                           OBS target project being used to build package, use
-                          "home:<userid>:gbs:Trunk" if not specified
+                          "home:<userid>:gbs:Tizen:Main" if not specified
 
 Before running gbs remotebuild, you need to prepare a package git repository
 first, and packaging directory must be exist and have spec file in it. The spec

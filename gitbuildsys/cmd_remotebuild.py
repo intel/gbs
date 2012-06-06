@@ -96,7 +96,7 @@ def do(opts, args):
 
     if opts.base_obsprj is None:
         # TODO, get current branch of git to determine it
-        base_prj = 'Trunk'
+        base_prj = 'Tizen:Main'
     else:
         base_prj = opts.base_obsprj
 
