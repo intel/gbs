@@ -67,6 +67,9 @@ def do(opts, args):
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
 
+    if not os.access(tmpdir, os.W_OK|os.R_OK|os.X_OK):
+        msger.error('No access permission to %s, please check' % tmpdir)
+
     oscrc = OSCRC_TEMPLATE % {
                 "http_debug": 1 if msger.get_loglevel() == 'debug' else 0,
                 "debug": 1 if msger.get_loglevel() == 'verbose' else 0,
@@ -118,6 +121,11 @@ def do(opts, args):
         msger.error('%s' % exc)
 
     msger.info('checking out %s/%s to %s ...' % (target_prj, spec.name, tmpdir))
+
+    target_prj_path = os.path.join(tmpdir, target_prj)
+    if not os.access(target_prj_path, os.W_OK|os.R_OK|os.X_OK):
+        msger.error('No access permission to %s, please check' % target_prj_path)
+
     localpkg = obspkg.ObsPackage(tmpdir, target_prj, spec.name,
                                  APISERVER, oscrcpath)
     oscworkdir = localpkg.get_workdir()
