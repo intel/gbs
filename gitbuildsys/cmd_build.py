@@ -24,6 +24,7 @@ import glob
 import subprocess
 import urlparse
 import re
+import tempfile
 
 import msger
 import utils
