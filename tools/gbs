@@ -75,6 +75,39 @@ class Gbs(cmdln.Cmdln):
         if self.options.debug:
             msger.set_loglevel('debug')
 
+    @cmdln.alias('sr')
+    @cmdln.option('--changelog',
+                  action='store_true',
+                  default=False,
+                  dest='changelog',
+                  help='invoke gbs changelog to create changelog')
+    @cmdln.option('-m', '--msg',
+                  default=None,
+                  dest='msg',
+                  help='specify commit message info')
+    @cmdln.option('--tag',
+                  action='store_true',
+                  default=False,
+                  help='make a tag before submit')
+    @cmdln.option('--branch',
+                  default='master',
+                  dest='target_branch',
+                  help='specify the target branch for submit')
+
+    def do_submit(self, _subcmd, opts, *args):
+        """${cmd_name}: submit commit request to gerrit for review
+
+        Usage:
+            gbs submit [-m] [--changelog] [--tag] [--branch]
+
+        Note:
+
+        ${cmd_option_list}
+        """
+
+        from gitbuildsys import cmd_submit as cmd
+        cmd.do(opts, args)
+
     @cmdln.alias('ex')
     @cmdln.option('-o', '--outdir',
                   default=None,
