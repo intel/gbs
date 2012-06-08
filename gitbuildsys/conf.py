@@ -231,10 +231,6 @@ class ConfigMgr(object):
                 'build_root':   '/var/tmp/build-root-gbs',
                 'distconf':     '/usr/share/gbs/tizen-1.0.conf',
             },
-            'import': {
-                'commit_name':    '',
-                'commit_email':   '',
-            },
     }
 
     DEFAULT_CONF_TEMPLATE="""[general]
@@ -261,11 +257,6 @@ distconf = $build__distconf
 #repo2.url=
 #repo2.user=
 #repo2.passwd=
-
-[import]
-; optional, for git author information
-commit_name = $import__commit_name
-commit_email = $import__commit_email
 """
 
     # make the manager class as singleton
