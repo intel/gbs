@@ -123,7 +123,8 @@ def do(opts, args):
     msger.info('checking out %s/%s to %s ...' % (target_prj, spec.name, tmpdir))
 
     target_prj_path = os.path.join(tmpdir, target_prj)
-    if not os.access(target_prj_path, os.W_OK|os.R_OK|os.X_OK):
+    if os.path.exists(target_prj_path) and \
+       not os.access(target_prj_path, os.W_OK|os.R_OK|os.X_OK):
         msger.error('No access permission to %s, please check' % target_prj_path)
 
     localpkg = obspkg.ObsPackage(tmpdir, target_prj, spec.name,
