@@ -217,7 +217,8 @@ class BrainConfigParser(SafeConfigParser):
 class ConfigMgr(object):
     DEFAULTS = {
             'general': {
-                'tmpdir': '/var/tmp'
+                'tmpdir': '/var/tmp',
+                'editor': '',
             },
             'remotebuild': {
                 'build_server': 'https://api.tizen.org',
@@ -234,13 +235,13 @@ class ConfigMgr(object):
                 'commit_name':    '',
                 'commit_email':   '',
             },
-
     }
 
     DEFAULT_CONF_TEMPLATE="""[general]
 ; general settings
 tmpdir = $general__tmpdir
-editor = 
+editor = $general__editor
+
 [remotebuild]
 ; settings for build subcommand
 build_server = $remotebuild__build_server
@@ -260,6 +261,7 @@ distconf = $build__distconf
 #repo2.url=
 #repo2.user=
 #repo2.passwd=
+
 [import]
 ; optional, for git author information
 commit_name = $import__commit_name
@@ -377,8 +379,7 @@ commit_email = $import__commit_email
                opt in self.DEFAULTS[section]:
                 return self.DEFAULTS[section][opt]
             else:
-                raise errors.ConfigError('no opt: %s or no section %s' \
-                                         % (opt, section))
+                raise errors.ConfigError('no section %s' % section)
 
         except NoOptionError:
             if opt in self.DEFAULTS[section]:
@@ -386,6 +387,7 @@ commit_email = $import__commit_email
             else:
                 raise errors.ConfigError('no opt: %s in section %s' \
                                          % (opt, section))
+
     def check_opt(self, opt, section='general'):
         if section in self.DEFAULTS and \
            opt in self.DEFAULTS[section]:
