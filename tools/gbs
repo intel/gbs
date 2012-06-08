@@ -21,6 +21,7 @@ import re
 
 from gitbuildsys.__version__ import VERSION
 from gitbuildsys import msger, cmdln, errors
+from gitbuildsys.conf import configmgr
 
 def handle_repository(option, opt_str, value, parser):
     if not value:
