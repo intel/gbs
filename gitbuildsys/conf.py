@@ -292,10 +292,11 @@ commit_email = $import__commit_email
                 if not self._new_conf():
                     msger.error('No config file available')
 
-        self.cfgparser.read(fpaths)
-
         self.replaced_keys = defaultdict(list)
-        self._check_passwd()
+
+        if fpaths:
+            self.cfgparser.read(fpaths)
+            self._check_passwd()
 
     def _lookfor_confs(self):
         """Look for available config files following the order:
@@ -357,10 +358,9 @@ commit_email = $import__commit_email
             for key in self.options(sec):
                 if key.endswith('passwd'):
                     plainpass = self._get(key, sec)
-                    if not plainpass:
-                        # None or ''
+                    if plainpass is None:
                         continue
-
+                    # empty string password is acceptable here
                     self.replaced_keys[sec].append(key)
                     self.set(key,
                              base64.b64encode(plainpass.encode('bz2')),
