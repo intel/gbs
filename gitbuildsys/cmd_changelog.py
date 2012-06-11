@@ -134,7 +134,9 @@ def do(opts, _args):
                 msger.error("Can't find last commit ID in the log, "\
                             "please specify it by '--since'")
 
-    commits = repo.get_commits(commitid_since, 'HEAD')
+    commits = [info.split()[1] for info in sorted(repo.get_commits(\
+                  commitid_since, 'HEAD', options=['--pretty=format:%at %H']),
+                  reverse=True)]
     if not commits:
         msger.error("Nothing found between %s and HEAD" % commitid_since)
 
