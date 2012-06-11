@@ -240,6 +240,8 @@ class BuildService(object):
                     raise RuntimeError, 'Current user has no write permission for specified oscrc: %s' % oscrc
 
                 raise # else
+            except urllib2.URLError:
+                raise errors.ObsError("invalid service apiurl: %s" % apiurl)
         else:
             conf.get_config()
 
