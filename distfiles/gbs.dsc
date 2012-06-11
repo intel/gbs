@@ -1,6 +1,6 @@
 Format: 1.0
 Source: gbs
-Version: 0.6
+Version: 0.7
 Binary: gbs
 Maintainer: Jian-feng Ding <jian-feng.ding@intel.com>
 Architecture: all
