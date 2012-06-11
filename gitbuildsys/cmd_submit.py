@@ -26,7 +26,6 @@ from gitbuildsys.cmd_changelog import do as gbs_changelog
 
 import gbp.rpm as rpm
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
-from gbp.command_wrappers import CommandExecFailed
 import msger
 import utils
 
@@ -67,9 +66,7 @@ def do(opts, args):
     try:
         file_list = repo.list_files(types=['modified'])
     except GitRepositoryError, err:
-        msger.error('%s' % err)
-    except CommandExecFailed:
-        msger.error('failed to list package files using git ls-files')
+        msger.error('failed to list package files using git ls-files: %s' % err)
 
     chlogfile = changesfile.replace('%s/' % workdir, '')
     if chlogfile not in file_list:
@@ -83,9 +80,7 @@ def do(opts, args):
                 msger.error('changelog file must be updated, use --changelog '\
                             'opts or update manually')
         except GitRepositoryError, err:
-            msger.error('%s' % err)
-        except CommandExecFailed:
-            msger.error('failed to get latest commit info')
+            msger.error('failed to get latest commit info: %s' % err)
     else:
         # Changelog file have been modified, so commit at local first
         try:
@@ -93,7 +88,7 @@ def do(opts, args):
                 msger.error('commit message must be specified using -m')
             repo.add_files([changesfile])
             repo.commit_files([changesfile], opts.msg)
-        except CommandExecFailed: # FIXME: wait gbp export more exception and error
+        except GitRepositoryError:
             msger.error('git commit changelog error, please check manually '\
                         'maybe not changed or not exist')
 
@@ -104,7 +99,7 @@ def do(opts, args):
             tagmsg = 'build/%s' % time.strftime('%Y%m%d.%H%M%S', time.gmtime())
             repo.create_tag(tagmsg)
             repo.push_tag('origin',tagmsg)
-    except CommandExecFailed:
+    except GitRepositoryError:
         msger.error('failed to submit local changes to server')
 
     msger.info('done.')
