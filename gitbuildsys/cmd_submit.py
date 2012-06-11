@@ -40,8 +40,8 @@ def do(opts, args):
     specfile = utils.guess_spec(workdir, None)
     try:
         spec = rpm.parse_spec(specfile)
-    except GbpError, err:
-         msger.error('%s' % err)
+    except rpm.GbpError, err:
+        msger.error('%s' % err)
 
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
@@ -98,7 +98,7 @@ def do(opts, args):
         if opts.tag:
             tagmsg = 'build/%s' % time.strftime('%Y%m%d.%H%M%S', time.gmtime())
             repo.create_tag(tagmsg)
-            repo.push_tag('origin',tagmsg)
+            repo.push_tag('origin', tagmsg)
     except GitRepositoryError:
         msger.error('failed to submit local changes to server')
 
