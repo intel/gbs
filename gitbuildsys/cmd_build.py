@@ -197,7 +197,10 @@ def get_reops_conf():
         try:
             repo_server = re.match('(https?://.*?)/.*', repo_url).groups()[0]
         except AttributeError:
-            raise Exception("Invalid repo url: %s" % opt)
+            if repo_url.startswith('/') and os.path.exists(repo_url):
+                repo_server = repo_url
+            else:
+                raise Exception("Invalid repo url: %s" % opt)
         repo_auth = 'url' + ':' + repo_server + ';'
 
         valid = True
