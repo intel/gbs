@@ -200,7 +200,7 @@ def get_reops_conf():
             if repo_url.startswith('/') and os.path.exists(repo_url):
                 repo_server = repo_url
             else:
-                raise Exception("Invalid repo url: %s" % opt)
+                raise errors.ConfigError("Invalid repo url: %s" % repo_url)
         repo_auth = 'url' + ':' + repo_server + ';'
 
         valid = True
