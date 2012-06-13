@@ -25,6 +25,7 @@ from collections import namedtuple
 from gitbuildsys.cmd_changelog import do as gbs_changelog
 
 import gbp.rpm as rpm
+from gbp.errors import GbpError
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 import msger
 import utils
@@ -60,28 +61,21 @@ def do(opts, args):
 
     changesfile = os.path.join(workdir, 'packaging', '%s.changes' % spec.name)
     if not os.path.exists(changesfile):
-        msger.info('No changelog file, so not be allowed to submit')
+        msger.error('No changelog file, so not be allowed to submit')
 
     file_list = []
+    changelog_file = changesfile.replace('%s/' % workdir, '')
     try:
-        file_list = repo.list_files(types=['modified'])
-    except GitRepositoryError, err:
-        msger.error('failed to list package files using git ls-files: %s' % err)
+        changelog_status= repo.status([changelog_file])
+    except GbpError, err:
+        msger.error('failed to get the status of change log file: %s' % err)
 
-    chlogfile = changesfile.replace('%s/' % workdir, '')
-    if chlogfile not in file_list:
-        # changelog file has not been modified, then
-        # Check if the latest commit contains changelog file's update
-        try:
-            commit_info = repo.get_commit_info('HEAD')
-            changed_files = commit_info['files']
-            if not ('M' in changed_files and chlogfile in changed_files['M'] or \
-                    'A' in changed_files and chlogfile in changed_files['A']):
-                msger.error('changelog file must be updated, use --changelog '\
-                            'opts or update manually')
-        except GitRepositoryError, err:
-            msger.error('failed to get latest commit info: %s' % err)
+    if changelog_status:
+        status = changelog_status.keys()[0]
     else:
+        status = None
+
+    if status and status in ['A ', 'AM', ' M']:
         # Changelog file have been modified, so commit at local first
         try:
             if not opts.msg:
@@ -91,6 +85,18 @@ def do(opts, args):
         except GitRepositoryError:
             msger.error('git commit changelog error, please check manually '\
                         'maybe not changed or not exist')
+    else:
+        # changelog file has not been modified, then
+        # Check if the latest commit contains changelog file's update
+        try:
+            commit_info = repo.get_commit_info('HEAD')
+            changed_files = commit_info['files']
+            if not (changelog_file in changed_files['M'] or \
+                    changelog_file in changed_files['A']):
+                msger.error('changelog file must be updated, use --changelog '\
+                            'opts or update manually')
+        except GitRepositoryError, err:
+            msger.error('failed to get latest commit info: %s' % err)
 
     try:
         repo.push('origin', 'HEAD', 'refs/for/%s' % opts.target_branch)
