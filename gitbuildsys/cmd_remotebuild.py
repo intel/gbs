@@ -130,10 +130,12 @@ def do(opts, args):
     localpkg.remove_all()
 
     with utils.Workdir(workdir):
+        relative_spec = specfile.replace('%s/' % workdir, '')
         if gbp_build(["argv[0] placeholder", "--git-export-only",
                       "--git-ignore-new", "--git-builder=osc",
                       "--git-export-dir=%s" % oscworkdir,
-                      "--git-packaging-dir=packaging"]):
+                      "--git-packaging-dir=packaging",
+                      "--git-specfile=%s" % relative_spec]):
             msger.error("Failed to get packaging info from git tree")
 
     localpkg.update_local()
