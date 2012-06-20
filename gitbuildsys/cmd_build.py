@@ -53,13 +53,14 @@ obsarchmap = {
           }
 
 buildarchmap = {
+            'ia32':     'i686',
             'i686':     'i686',
             'i586':     'i686',
             'i386':     'i686',
           }
 
 supportedarchs = [
-            'x86_64',
+            'ia32',
             'i686',
             'i586',
             'armv7hl',
@@ -231,12 +232,16 @@ def do(opts, args):
         workdir = os.path.abspath(args[0])
 
     hostarch = get_hostarch()
-    buildarch = hostarch
     if opts.arch:
-        if opts.arch in buildarchmap:
-            buildarch = buildarchmap[opts.arch]
-        else:
-            buildarch = opts.arch
+        buildarch = opts.arch
+    else:
+        buildarch = hostarch
+        msger.info('No arch specified, using system arch: %s' % hostarch)
+    if buildarch in buildarchmap:
+        buildarch = buildarchmap[buildarch]
+    else:
+        buildarch = opts.arch
+
     if not buildarch in supportedarchs:
         msger.error('arch %s not supported, supported archs are: %s ' % \
                    (buildarch, ','.join(supportedarchs)))
