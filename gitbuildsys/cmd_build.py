@@ -239,8 +239,6 @@ def do(opts, args):
         msger.info('No arch specified, using system arch: %s' % hostarch)
     if buildarch in buildarchmap:
         buildarch = buildarchmap[buildarch]
-    else:
-        buildarch = opts.arch
 
     if not buildarch in supportedarchs:
         msger.error('arch %s not supported, supported archs are: %s ' % \
