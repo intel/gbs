@@ -17,7 +17,7 @@
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 import os
-from subprocess import *
+import subprocess
 
 import msger
 
@@ -53,22 +53,23 @@ def runtool(cmdln_or_args, catch=1):
         sout = dev_null
         serr = dev_null
     elif catch == 1:
-        sout = PIPE
+        sout = subprocess.PIPE
         serr = dev_null
     elif catch == 2:
         sout = dev_null
-        serr = PIPE
+        serr = subprocess.PIPE
     elif catch == 3:
-        sout = PIPE
-        serr = STDOUT
+        sout = subprocess.PIPE
+        serr = subprocess.STDOUT
 
     try:
-        p = Popen(cmdln_or_args, stdout=sout, stderr=serr, shell=shell)
-        out = p.communicate()[0]
+        process = subprocess.Popen(cmdln_or_args, stdout=sout,
+                             stderr=serr, shell=shell)
+        out = process.communicate()[0]
         if out is None:
             out = ''
-    except OSError, e:
-        if e.errno == 2:
+    except OSError, exc:
+        if exc.errno == 2:
             # [Errno 2] No such file or directory
             msger.error('Cannot run command: %s, lost dependency?' % cmd)
         else:
@@ -77,12 +78,12 @@ def runtool(cmdln_or_args, catch=1):
         if catch != 3:
             os.close(dev_null)
 
-    return (p.returncode, out)
+    return (process.returncode, out)
 
 def show(cmdln_or_args):
     # show all the message using msger.verbose
 
-    rc, out = runtool(cmdln_or_args, catch=3)
+    rcode, out = runtool(cmdln_or_args, catch=3)
 
     if isinstance(cmdln_or_args, list):
         cmd = ' '.join(cmdln_or_args)
@@ -99,7 +100,7 @@ def show(cmdln_or_args):
         msg += '\n  +----------------'
 
     msger.verbose(msg)
-    return rc
+    return rcode
 
 def outs(cmdln_or_args, catch=1):
     # get the outputs of tools
@@ -118,9 +119,9 @@ def embed(cmdln_or_args):
         args = shlex.split(cmdln_or_args)
 
     try:
-        sts = call(args)
-    except OSError, e:
-        if e.errno == 2:
+        sts = subprocess.call(args)
+    except OSError, exc:
+        if exc.errno == 2:
             # [Errno 2] No such file or directory
             msger.error('Cannot run command: %s, lost dependency?' % args[0])
         else:

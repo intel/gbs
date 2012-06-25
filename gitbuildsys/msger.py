@@ -180,7 +180,7 @@ class PrintBufWrapper(object):
             return orig_attr
 
 def _general_print(head, color, msg = None, stream = None, level = 'normal'):
-    global LOG_CONTENT, STDOUT
+    global LOG_CONTENT
 
     if LOG_LEVELS[level] > LOG_LEVEL:
         # skip
@@ -201,7 +201,6 @@ def _general_print(head, color, msg = None, stream = None, level = 'normal'):
             LOG_CONTENT += errormsg
 
         if msg and msg.strip():
-            global HOST_TIMEZONE
             timestr = time.strftime("[%m/%d %H:%M:%S] ",
                                     time.gmtime(time.time() - HOST_TIMEZONE))
             LOG_CONTENT += timestr + msg.strip() + '\n'
@@ -211,7 +210,7 @@ def _general_print(head, color, msg = None, stream = None, level = 'normal'):
 
     _color_print(head, color, msg, stream, level)
 
-def _color_print(head, color, msg, stream, level):
+def _color_print(head, color, msg, stream, _level):
     colored = True
     if color == NO_COLOR or \
        not stream.isatty() or \
@@ -225,7 +224,7 @@ def _color_print(head, color, msg, stream, level):
         newline = True
 
     if colored:
-        head = '\033[%dm%s:\033[0m ' %(color, head)
+        head = '\033[%dm%s:\033[0m ' % (color, head)
         if not newline:
             # ESC cmd to clear line
             head = '\033[2K' + head
@@ -244,8 +243,6 @@ def _color_print(head, color, msg, stream, level):
     stream.flush()
 
 def _color_perror(head, color, msg, level = 'normal'):
-    global STDOUT, STDERR
-
     if CATCHERR_BUFFILE_FD > 0:
         _general_print(head, color, msg, STDOUT, level)
     else:
@@ -265,15 +262,15 @@ def _split_msg(head, msg):
         msg = msg.lstrip()
         head = '\r' + head
 
-    m = PREFIX_RE.match(msg)
-    if m:
-        head += ' <%s>' % m.group(1)
-        msg = m.group(2)
+    match = PREFIX_RE.match(msg)
+    if match:
+        head += ' <%s>' % match.group(1)
+        msg = match.group(2)
 
     return head, msg
 
 def get_loglevel():
-    return (k for k,v in LOG_LEVELS.items() if v==LOG_LEVEL).next()
+    return (k for k, v in LOG_LEVELS.items() if v==LOG_LEVEL).next()
 
 def set_loglevel(level):
     global LOG_LEVEL
@@ -317,14 +314,15 @@ def error(msg):
     _color_perror(head, ERR_COLOR, msg)
     sys.exit(1)
 
-def waiting(f):
-    """Function decorator to show simple waiting message for
+def waiting(func):
+    """
+    Function decorator to show simple waiting message for
     long time operations.
     """
 
     import functools
 
-    @functools.wraps(f)
+    @functools.wraps(func)
     def _wait_with_print(*args, **kwargs):
         import threading
 
@@ -357,7 +355,7 @@ def waiting(f):
         timer.start()
 
         try:
-            out = f(*args, **kwargs)
+            out = func(*args, **kwargs)
         except:
             raise
         finally:
@@ -412,9 +410,9 @@ def set_logfile(fpath):
         if LOG_FILE_FP:
             if not os.path.exists(os.path.dirname(LOG_FILE_FP)):
                 os.makedirs(os.path.dirname(LOG_FILE_FP))
-            fp = open(LOG_FILE_FP, 'w')
-            fp.write(LOG_CONTENT)
-            fp.close()
+            fhandle = open(LOG_FILE_FP, 'w')
+            fhandle.write(LOG_CONTENT)
+            fhandle.close()
 
     if LOG_FILE_FP is not None:
         warning('duplicate log file configuration')
