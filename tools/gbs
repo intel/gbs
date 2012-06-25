@@ -299,15 +299,20 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='since',
                   help='commit to start from')
+    @cmdln.option('-m', '--message',
+                  default=None,
+                  dest='message',
+                  help='use given message as the changelog entry')
     def do_changelog(self, _subcmd, opts, *args):
         """${cmd_name}: update the changelog file with the git commit messages
 
         Usage:
-            gbs changelog [--since]
+            gbs changelog [options]
 
         Examples:
           $ gbs changelog
           $ gbs changelog --since=COMMIT_ID
+          $ gbs changelog -m 'new upstream release 0.0.1'
         ${cmd_option_list}
         """
 

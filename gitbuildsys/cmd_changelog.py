@@ -53,6 +53,18 @@ def get_latest_rev(changesfile):
             return line.strip().split(" ")[-1].split("@")[-1]
     return ''
 
+def get_version(git_repo, commit):
+    """
+    Construct version from commit using rev-parse.
+    Set version to <tag>@<sha1> or <sha1> if tag is not found.
+    """
+    version = git_repo.rev_parse(commit, ['--short'])
+    try:
+        version = "%s@%s" % (git_repo.find_tag('HEAD'), version)
+    except GitRepositoryError:
+        pass
+
+    return version
 
 def make_log_entries(commits, git_repo):
     """Make changelog entries from the set of git commits."""
@@ -63,13 +75,6 @@ def make_log_entries(commits, git_repo):
     for commit in commits:
         commit_info =  git_repo.get_commit_info(commit)
 
-        # set version to <tag>@<sha1> or <sha1> if tag is not found
-        version = git_repo.rev_parse(commit, ['--short'])
-        try:
-            version = "%s@%s" % (git_repo.find_tag('HEAD'), version)
-        except GitRepositoryError:
-            pass
-
         # Add new entry header if date is changed
         date = datetime.datetime.fromtimestamp(int(commit_info["timestamp"]))
         if not prevdate or (date.year, date.month, date.day) != \
@@ -78,7 +83,7 @@ def make_log_entries(commits, git_repo):
                                                 date.strftime("%a %b %d %Y"),
                                                 commit_info["author"],
                                                 commit_info["email"],
-                                                version))
+                                                get_version(git_repo, commit)))
             cret = "\n"
         # Track authors
         elif not prevauthor or prevauthor != commit_info["author"]:
@@ -140,7 +145,17 @@ def do(opts, _args):
     if not commits:
         msger.error("Nothing found between %s and HEAD" % commitid_since)
 
-    new_entries = make_log_entries(commits, repo)
+    if opts.message:
+        author = repo.get_author_info()
+        lines = os.linesep.join([" -%s" % line for line in \
+                                     opts.message.split(os.linesep) \
+                                         if line.strip()])
+        new_entries = ["* %s %s <%s> %s\n%s\n" % \
+                           (datetime.datetime.now().strftime("%a %b %d %Y"),
+                            author.name, author.email,
+                            get_version(repo, commits[0]), lines)]
+    else:
+        new_entries = make_log_entries(commits, repo)
 
     # create temporary copy and update it with new entries
     temp = utils.TempCopy(fn_changes)
