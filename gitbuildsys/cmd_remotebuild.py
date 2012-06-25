@@ -31,7 +31,7 @@ import utils
 
 import gbp.rpm
 from gbp.scripts.buildpackage_rpm import main as gbp_build
-from gbp.git import repository
+from gbp.git import repository, GitRepositoryError
 from gbp.errors import GbpError
 
 OSCRC_TEMPLATE = """[general]
@@ -132,13 +132,18 @@ def do(opts, args):
     localpkg.remove_all()
 
     with utils.Workdir(workdir):
+        commit = opts.commit or 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
-        if gbp_build(["argv[0] placeholder", "--git-export-only",
-                      "--git-ignore-new", "--git-builder=osc",
-                      "--git-export-dir=%s" % oscworkdir,
-                      "--git-packaging-dir=packaging",
-                      "--git-specfile=%s" % relative_spec]):
-            msger.error("Failed to get packaging info from git tree")
+        try:
+            if gbp_build(["argv[0] placeholder", "--git-export-only",
+                          "--git-ignore-new", "--git-builder=osc",
+                          "--git-export-dir=%s" % oscworkdir,
+                          "--git-packaging-dir=packaging",
+                          "--git-specfile=%s" % relative_spec,
+                          "--git-export=%s" % commit]):
+                msger.error("Failed to get packaging info from git tree")
+        except GitRepositoryError, excobj:
+            msger.error("Repository error: %s" % excobj)
 
     localpkg.update_local()
 

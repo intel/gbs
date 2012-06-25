@@ -237,6 +237,10 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='spec',
                   help='Specify a spec file to use')
+    @cmdln.option('-c', '--commit',
+                  default=None,
+                  dest='commit',
+                  help='Specify a commit to build')
     def do_remotebuild(self, subcmd, opts, *args):
         """${cmd_name}: remote build package
 
