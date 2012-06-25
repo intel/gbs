@@ -37,8 +37,8 @@ EDITOR = configmgr.get('editor') or os.getenv('EDITOR') or 'vi'
 
 def add_entries(changesfile, new_entries):
     """Add new entries to the top of changelog."""
-    lines = new_entries[:]
-    lines.append("\n")
+    lines = ["%s%s" % (line, os.linesep) for line in new_entries]
+    lines.append(os.linesep)
     with open(changesfile) as chlog:
         lines.extend(chlog.readlines())
     with open(changesfile, "w") as chlog:
@@ -69,28 +69,21 @@ def get_version(git_repo, commit):
 def make_log_entries(commits, git_repo):
     """Make changelog entries from the set of git commits."""
     entries = []
-    prevdate = None
     prevauthor = None
-    cret = ""
+    # Add header
+    author = git_repo.get_author_info()
+    entries.append("* %s %s <%s> %s" % \
+                   (datetime.datetime.now().strftime("%a %b %d %Y"),
+                    author.name, author.email, get_version(git_repo,
+                                                           commits[0])))
     for commit in commits:
         commit_info =  git_repo.get_commit_info(commit)
 
-        # Add new entry header if date is changed
-        date = datetime.datetime.fromtimestamp(int(commit_info["timestamp"]))
-        if not prevdate or (date.year, date.month, date.day) != \
-               (prevdate.year, prevdate.month, prevdate.day):
-            entries.append("%s* %s %s <%s> %s\n" % (cret,
-                                                date.strftime("%a %b %d %Y"),
-                                                commit_info["author"],
-                                                commit_info["email"],
-                                                get_version(git_repo, commit)))
-            cret = "\n"
         # Track authors
-        elif not prevauthor or prevauthor != commit_info["author"]:
-            entries.append("[ %s ]\n" % commit_info["author"])
+        if not prevauthor or prevauthor != commit_info["author"]:
+            entries.append("[ %s ]" % commit_info["author"])
 
-        entries.append("- %s\n" % commit_info["subject"])
-        prevdate = date
+        entries.append("- %s" % commit_info["subject"])
         prevauthor = commit_info["author"]
     return entries
 
@@ -147,13 +140,13 @@ def do(opts, _args):
 
     if opts.message:
         author = repo.get_author_info()
-        lines = os.linesep.join([" -%s" % line for line in \
-                                     opts.message.split(os.linesep) \
-                                         if line.strip()])
-        new_entries = ["* %s %s <%s> %s\n%s\n" % \
+        lines = [" -%s" % line for line in opts.message.split(os.linesep) \
+                                            if line.strip()]
+        new_entries = ["* %s %s <%s> %s" % \
                            (datetime.datetime.now().strftime("%a %b %d %Y"),
                             author.name, author.email,
-                            get_version(repo, commits[0]), lines)]
+                            get_version(repo, commits[0]))]
+        new_entries.extend(lines)
     else:
         new_entries = make_log_entries(commits, repo)
 
