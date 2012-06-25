@@ -57,6 +57,13 @@ def do(opts, args):
     if len(args) == 1:
         workdir = os.path.abspath(args[0])
 
+    try:
+        repo = RpmGitRepository(workdir)
+    except GitRepositoryError:
+        msger.error("%s is not a git repository" % (workdir))
+
+    workdir = repo.path
+
     if not os.path.exists("%s/packaging" % workdir):
         msger.error('No packaging directory, so there is nothing to export.')
 
@@ -89,10 +96,6 @@ def do(opts, args):
     urlres = urlparse.urlparse(spec.orig_file)
     tarball = '%s/%s' % (outdir, os.path.basename(urlres.path))
     msger.info('generate tar ball: %s' % tarball)
-    try:
-        repo = RpmGitRepository(workdir)
-    except GitRepositoryError:
-        msger.error("%s is not a git repository" % (os.path.curdir))
 
     try:
         comp_type = guess_comp_type(spec)

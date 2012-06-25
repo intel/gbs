@@ -92,12 +92,12 @@ def make_log_entries(commits, git_repo):
 
 def do(opts, _args):
 
-    project_root_dir = '.'
-
     try:
-        repo = RpmGitRepository(project_root_dir)
+        repo = RpmGitRepository('.')
     except GitRepositoryError:
         msger.error("No git repository found.")
+
+    project_root_dir = repo.path
 
     if not repo.is_clean():
         msger.error("Git tree is not clean")

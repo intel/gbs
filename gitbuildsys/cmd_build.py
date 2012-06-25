@@ -231,6 +231,13 @@ def do(opts, args):
     if len(args) == 1:
         workdir = os.path.abspath(args[0])
 
+    try:
+        repo = RpmGitRepository(workdir)
+    except GitRepositoryError:
+        msger.error("%s is not a git repository" % (os.path.curdir))
+
+    workdir = repo.path
+
     hostarch = get_hostarch()
     if opts.arch:
         buildarch = opts.arch
@@ -306,10 +313,6 @@ def do(opts, args):
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
 
-    try:
-        repo = RpmGitRepository(workdir)
-    except GitRepositoryError:
-        msger.error("%s is not a git repository" % (os.path.curdir))
 
     tarball = None
     if spec.orig_file:
@@ -323,7 +326,7 @@ def do(opts, args):
                 msger.error("Cannot create source tarball %s" % tarball)
         except GbpError, exc:
             msger.error(str(exc))
- 
+
     if opts.incremental:
         cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
         cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % \

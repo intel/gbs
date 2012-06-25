@@ -63,6 +63,8 @@ def do(opts, args):
     except repository.GitRepositoryError:
         msger.error('%s is not a git dir' % workdir)
 
+    workdir = repo.path
+
     tmpdir = '%s/%s' % (TMPDIR, USER)
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
