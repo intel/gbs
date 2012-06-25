@@ -60,7 +60,7 @@ def get_version(git_repo, commit):
     """
     version = git_repo.rev_parse(commit, ['--short'])
     try:
-        version = "%s@%s" % (git_repo.find_tag('HEAD'), version)
+        version = "%s@%s" % (git_repo.find_tag(commit), version)
     except GitRepositoryError:
         pass
 
