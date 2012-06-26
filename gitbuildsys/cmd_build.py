@@ -25,6 +25,7 @@ import subprocess
 import urlparse
 import re
 import tempfile
+import base64
 
 import msger
 import utils
@@ -168,6 +169,7 @@ def get_env_proxies():
             proxies.append('%s=%s' % (name, value))
     return proxies
 
+
 def get_reops_conf():
 
     repos = set()
@@ -256,9 +258,6 @@ def do(opts, args):
         msger.error('no spec file found under /packaging sub-directory')
 
     specfile = utils.guess_spec(workdir, opts.spec)
-    distconf = configmgr.get('distconf', 'build')
-    if opts.dist:
-        distconf = opts.dist
 
     build_cmd  = configmgr.get('build_cmd', 'build')
     build_root = configmgr.get('build_root', 'build')
@@ -266,7 +265,6 @@ def do(opts, args):
         build_root = opts.buildroot
     cmd = [ build_cmd,
             '--root='+build_root,
-            '--dist='+distconf,
             '--arch='+buildarch ]
 
     build_jobs = get_processors()
@@ -279,15 +277,76 @@ def do(opts, args):
 
     repos_urls_conf, repo_auth_conf = get_reops_conf()
 
+    repos = {}
     if opts.repositories:
         for repo in opts.repositories:
-            cmd += ['--repository='+repo]
+            (scheme, host, path, parm, query, frag) = \
+                                    urlparse.urlparse(repo.rstrip('/') + '/')
+            repos[repo] = {}
+            if '@' in host:
+                try:
+                    user_pass, host = host.split('@', 1)
+                except ValueError, e:
+                    raise errors.ConfigError('Bad URL: %s' % repo)
+                userpwd = user_pass.split(':', 1)
+                repos[repo]['user'] = userpwd[0]
+                if len(userpwd) == 2:
+                    repos[repo]['passwd'] = userpwd[1]
+                else:
+                    repos[repo]['passwd'] = None
+            else:
+                repos[repo]['user'] = None
+                repos[repo]['passwd'] = None
+
     elif repos_urls_conf:
         for url in repos_urls_conf:
-            cmd += ['--repository=' + url ]
+            repos[url] = {}
+            if repo_auth_conf:
+                repo_auth = {}
+                for item in repo_auth_conf.split(';'):
+                    key, val = item.split(':', 1)
+                    if key == 'passwdx':
+                        key = 'passwd'
+                        val = base64.b64decode(val).decode('bz2')
+                    repo_auth[key] = val
+                if 'user' in repo_auth:
+                    repos[url]['user'] = repo_auth['user']
+                if 'passwd' in repo_auth:
+                    repos[url]['passwd'] = repo_auth['passwd']
+            else:
+                    repos[url]['passwd'] = None
+                    repos[url]['user'] = None
     else:
         msger.error('No package repository specified.')
 
+    cachedir = os.path.join(configmgr.get('tmpdir'), 'gbscache')
+    if not os.path.exists(cachedir):
+        os.makedirs(cachedir)
+    msger.info('generate repositories ...')
+    repoparser = utils.RepoParser(repos, cachedir)
+    repourls = repoparser.get_repos_by_arch(buildarch)
+    if not repourls:
+        msger.error('no repositories found for arch: %s under the following '\
+                    'repos:\n     %s' % (buildarch, '\n'.join(repos.keys())))
+    for url in repourls:
+        cmd += ['--repository=%s' % url]
+
+    if opts.dist:
+        distconf = opts.dist
+    else:
+        distconf = repoparser.buildconf
+        if distconf is None:
+            msger.info('failed to get build conf, use default build conf')
+            distconf = configmgr.get('distconf', 'build')
+        else:
+            msger.info('build conf has been downloaded at:\n      %s\n      '\
+                       'you can save it and use -D to specify it, which can '\
+                       'prevent downloading it everytime ' % distconf)
+
+    if distconf is None:
+        msger.error('No build config file specified, please specify in '\
+                    '~/.gbs.conf or command line using -D')
+    cmd += ['--dist=%s' % distconf]
     if opts.noinit:
         cmd += ['--no-init']
     if opts.ccache:

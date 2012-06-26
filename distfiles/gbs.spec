@@ -9,6 +9,7 @@ BuildArch:  noarch
 URL:        http://www.tizen.org
 Source0:    %{name}-%{version}.tar.bz2
 Requires:   python >= 2.5
+Requires:   python-pycurl
 Requires:   git-core
 Requires:   osc >= 0.131
 Requires:   build >= 2011.10.10

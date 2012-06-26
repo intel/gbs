@@ -65,3 +65,5 @@ class GBSError(Exception):
     
     def __str__(self):
         return self.msg
+class UrlError(CmdError):
+    keyword = '<urlgrab>'
