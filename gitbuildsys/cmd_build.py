@@ -383,7 +383,7 @@ def do(opts, args):
             if not git_archive(repo, spec, "%s/packaging" % workdir, 'HEAD',
                                comp_type, comp_level=9, with_submodules=True):
                 msger.error("Cannot create source tarball %s" % tarball)
-        except GbpError, exc:
+        except (GbpError, GitRepositoryError), exc:
             msger.error(str(exc))
 
     if opts.incremental:
