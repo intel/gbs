@@ -180,10 +180,10 @@ def get_reops_conf():
             try:
                 (name, key) = opt.split('.')
             except ValueError:
-                raise Exception("Invalid repo option: %s" % opt)
+                raise errors.ConfigError("invalid repo option: %s" % opt)
             else:
                 if key not in ('url', 'user', 'passwdx'):
-                    raise Exception("Invalid repo option: %s" % opt)
+                    raise errors.ConfigError("invalid repo option: %s" % opt)
                 repos.add(name)
 
     # get repo settings form build section

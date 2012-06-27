@@ -147,7 +147,7 @@ class BrainConfigParser(SafeConfigParser):
 
         # if any parsing errors occurred, raise an exception
         if exc:
-            raise exc
+            raise errors.ConfigError(str(exc))
 
     def set(self, section, option, value, replace_opt=None):
         """When set new value, need to update the readin file lines,
@@ -171,7 +171,10 @@ class BrainConfigParser(SafeConfigParser):
             # if reach here, sec is the last one
             return -1
 
-        SafeConfigParser.set(self, section, option, value)
+        try:
+            SafeConfigParser.set(self, section, option, value)
+        except NoSectionError, err:
+            raise errors.ConfigError(str(err))
 
         # If the code reach here, it means the section and key are ok
         if replace_opt is None:
