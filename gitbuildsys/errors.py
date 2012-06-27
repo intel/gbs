@@ -20,28 +20,18 @@ class CmdError(Exception):
     """An exception base class for all command calling errors."""
     keyword = ''
 
-    def __init__(self, msg):
-        self.msg = msg
-
     def __str__(self):
-        return self.keyword + str(self.msg)
+        return self.keyword + str(self.args[0])
 
 class Usage(CmdError):
     keyword = '<usage>'
 
     def __str__(self):
-        return self.keyword + str(self.msg) + \
+        return self.keyword + str(self.args[0]) + \
                 ', please use "--help" for more info'
 
 class ConfigError(CmdError):
     keyword = '<config>'
-
-class GitError(CmdError):
-    keyword = '<git>'
-
-class GitInvalid(GitError):
-    def __str__(self):
-        return '<git>dir %s is not a valid git tree' % str(self.msg)
 
 class ObsError(CmdError):
     keyword = '<obs>'
@@ -58,12 +48,5 @@ class QemuError(CmdError):
 class Abort(CmdError):
     keyword = ''
 
-class GBSError(Exception):
-
-    def __init__(self, msg):
-        self.msg = msg
-    
-    def __str__(self):
-        return self.msg
 class UrlError(CmdError):
     keyword = '<urlgrab>'

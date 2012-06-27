@@ -124,7 +124,8 @@ def do(opts, args):
     target_prj_path = os.path.join(tmpdir, target_prj)
     if os.path.exists(target_prj_path) and \
        not os.access(target_prj_path, os.W_OK|os.R_OK|os.X_OK):
-        msger.error('No access permission to %s, please check' % target_prj_path)
+        msger.error('No access permission to %s, please check' \
+                        % target_prj_path)
 
     localpkg = obspkg.ObsPackage(tmpdir, target_prj, spec.name,
                                  APISERVER, oscrcpath)
@@ -150,9 +151,9 @@ def do(opts, args):
     try:
         msger.info('commit packaging files to build server ...')
         localpkg.commit ('submit packaging files to obs for OBS building')
-    except errors.ObsError, e:
+    except errors.ObsError, exc:
         msger.error('commit packages fail: %s, please check the permission '\
-                    'of target project:%s' % (e,target_prj))
+                    'of target project:%s' % (exc,target_prj))
 
     os.unlink(oscrcpath)
     msger.info('local changes submitted to build server successfully')

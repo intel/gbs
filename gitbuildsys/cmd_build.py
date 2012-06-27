@@ -148,7 +148,8 @@ def setup_qemu_emulator():
         qemu_arm_string = ":arm:M::\\x7fELF\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\x28\\x00:\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\x00\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfa\\xff\\xff\\xff:%s:" % qemu_emulator
         try:
             (tmpfd, tmppth) = tempfile.mkstemp()
-            os.write(tmpfd, "echo '%s' > /proc/sys/fs/binfmt_misc/register" % qemu_arm_string)
+            os.write(tmpfd, "echo '%s' > /proc/sys/fs/binfmt_misc/register" \
+                                % qemu_arm_string)
             os.close(tmpfd)
             # on this way can work to use sudo register qemu emulator
             ret = os.system('sudo sh %s' % tmppth)
@@ -365,9 +366,9 @@ def do(opts, args):
             msger.error('%s' % exc)
 
     try:
-         spec = rpm.parse_spec(specfile)
+        spec = rpm.parse_spec(specfile)
     except GbpError, err:
-         msger.error('%s' % err)
+        msger.error('%s' % err)
 
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
@@ -401,15 +402,14 @@ def do(opts, args):
     # runner.show() can't support interactive mode, so use subprocess insterad.
     msger.debug("running command %s" % cmd)
     try:
-        rc = subprocess.call(cmd)
-        if rc:
+        if subprocess.call(cmd):
             msger.error('rpmbuild fails')
         else:
             msger.info('The buildroot was: %s' % build_root)
             msger.info('Binaries RPM packges can be found here:\n     %s/%s' % \
                        (build_root, 'home/abuild/rpmbuild/RPMS/'))
             msger.info('Done')
-    except KeyboardInterrupt, i:
+    except KeyboardInterrupt:
         msger.info('keyboard interrupt, killing build ...')
         subprocess.call(cmd + ["--kill"])
         msger.error('interrrupt from keyboard')

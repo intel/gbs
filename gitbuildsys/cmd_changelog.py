@@ -162,7 +162,7 @@ def do(opts, _args):
             shutil.copy2(temp.name, fn_changes)
         except (IOError, shutil.Error), excobj:
             msger.error("Can't update %s: %s" % (fn_changes, str(excobj)))
-	msger.info("Change log has been updated.")
+        msger.info("Change log has been updated.")
     else:
         msger.info("Change log has not been updated")
 

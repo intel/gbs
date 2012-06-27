@@ -17,10 +17,13 @@
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 from __future__ import with_statement
-import os, sys
+import os
 import base64
 from collections import defaultdict
-from ConfigParser import *
+from ConfigParser import SafeConfigParser, DEFAULTSECT, ParsingError, \
+                         NoSectionError, NoOptionError, \
+                         MissingSectionHeaderError
+
 import msger
 import errors
 
@@ -42,7 +45,7 @@ class BrainConfigParser(SafeConfigParser):
 
         return SafeConfigParser.read(self, filenames)
 
-    def _read(self, fp, fname):
+    def _read(self, fptr, fname):
         """Parse a sectioned setup file.
 
         Override the same method of parent class. Some code snip were
@@ -57,8 +60,8 @@ class BrainConfigParser(SafeConfigParser):
 
         # save the original filepath and contents
         self._fpname = fname
-        self._flines = fp.readlines()
-        fp.seek(0)
+        self._flines = fptr.readlines()
+        fptr.seek(0)
 
         # init dict DS to store lineno
         self._sec_linenos = {}
@@ -67,9 +70,9 @@ class BrainConfigParser(SafeConfigParser):
         cursect = None
         optname = None
         lineno = 0
-        e = None
+        exc = ''
         while True:
-            line = fp.readline()
+            line = fptr.readline()
             if not line:
                 break
             lineno = lineno + 1
@@ -89,9 +92,9 @@ class BrainConfigParser(SafeConfigParser):
             # a section header or option header?
             else:
                 # is it a section header?
-                mo = self.SECTCRE.match(line)
-                if mo:
-                    sectname = mo.group('header')
+                match = self.SECTCRE.match(line)
+                if match:
+                    sectname = match.group('header')
                     if sectname in self._sec_linenos:
                         self._sec_linenos[sectname].append(lineno)
                     else:
@@ -114,10 +117,11 @@ class BrainConfigParser(SafeConfigParser):
 
                 else:
                     # an option line?
-                    mo = self.OPTCRE.match(line)
-                    if mo:
-                        optname, vi, optval = mo.group('option', 'vi', 'value')
-                        if vi in ('=', ':') and ';' in optval:
+                    match = self.OPTCRE.match(line)
+                    if match:
+                        optname, sign, optval = match.group('option',
+                                                            'vi', 'value')
+                        if sign in ('=', ':') and ';' in optval:
                             # ';' is a comment delimiter only if it follows
                             # a spacing character
                             pos = optval.find(';')
@@ -137,13 +141,13 @@ class BrainConfigParser(SafeConfigParser):
                         # exception but keep going. the exception will be
                         # raised at the end of the file and will contain a
                         # list of all bogus lines
-                        if not e:
-                            e = ParsingError(fname)
-                        e.append(lineno, repr(line))
+                        if not exc:
+                            exc = ParsingError(fname)
+                        exc.append(lineno, repr(line))
 
         # if any parsing errors occurred, raise an exception
-        if e:
-            raise e
+        if exc:
+            raise exc
 
     def set(self, section, option, value, replace_opt=None):
         """When set new value, need to update the readin file lines,
@@ -168,7 +172,7 @@ class BrainConfigParser(SafeConfigParser):
             return -1
 
         SafeConfigParser.set(self, section, option, value)
-        
+
         # If the code reach here, it means the section and key are ok
         if replace_opt is None:
             o_kname = "%s.%s" % (section, option)
@@ -177,15 +181,15 @@ class BrainConfigParser(SafeConfigParser):
             o_kname = "%s.%s" % (section, option)
             n_kname = "%s.%s" % (section, replace_opt)
 
-        line = '%s = %s\n' %(option, value)
+        line = '%s = %s\n' % (option, value)
         if n_kname in self._opt_linenos:
             # update an old key
             self._flines[self._opt_linenos[n_kname][0]-1] = line
             if len(self._opt_linenos[n_kname]) > 1:
                 # multiple lines value, remote the rest
-                for ln in range(self._opt_linenos[n_kname][1]-1,
-                                self._opt_linenos[n_kname][-1]):
-                    self._flines[ln] = None
+                for lno in range(self._opt_linenos[n_kname][1]-1,
+                                 self._opt_linenos[n_kname][-1]):
+                    self._flines[lno] = None
         else:
             # new key
             line += '\n' # one more blank line
@@ -198,9 +202,9 @@ class BrainConfigParser(SafeConfigParser):
 
         # remove old opt if need
         if o_kname != n_kname and o_kname in self._opt_linenos:
-            for ln in range(self._opt_linenos[o_kname][0]-1,
-                            self._opt_linenos[o_kname][-1]):
-                self._flines[ln] = None
+            for lno in range(self._opt_linenos[o_kname][0]-1,
+                             self._opt_linenos[o_kname][-1]):
+                self._flines[lno] = None
 
     def update(self):
         """Update the original config file using updated values"""
@@ -208,11 +212,11 @@ class BrainConfigParser(SafeConfigParser):
         if self._fpname == '<???>':
             return
 
-        fp = open(self._fpname, 'w')
+        fptr = open(self._fpname, 'w')
         for line in self._flines:
             if line is not None:
-                fp.write(line)
-        fp.close()
+                fptr.write(line)
+        fptr.close()
 
 class ConfigMgr(object):
     DEFAULTS = {
@@ -233,7 +237,7 @@ class ConfigMgr(object):
             },
     }
 
-    DEFAULT_CONF_TEMPLATE="""[general]
+    DEFAULT_CONF_TEMPLATE = """[general]
 ; general settings
 tmpdir = $general__tmpdir
 editor = $general__editor
@@ -298,12 +302,12 @@ distconf = $build__distconf
         """
 
         paths = []
-        for p in  ('/etc/gbs.conf',
-                   os.path.expanduser('~/.gbs.conf'),
-                   os.path.abspath('.gbs.conf'),
-                   os.path.abspath('.git/gbs.conf')):
-            if os.path.exists(p) and p not in paths:
-                paths.append(p)
+        for path in ('/etc/gbs.conf',
+                     os.path.expanduser('~/.gbs.conf'),
+                     os.path.abspath('.gbs.conf'),
+                     os.path.abspath('.git/gbs.conf')):
+            if os.path.exists(path) and path not in paths:
+                paths.append(path)
 
         return paths
 
@@ -328,14 +332,15 @@ distconf = $build__distconf
 
             # user and passwd in [build] section need user input
             defaults = self.DEFAULTS.copy()
-            defaults['remotebuild']['user'] = raw_input('Username for remote build server: ')
+            defaults['remotebuild']['user'] = \
+                              raw_input('Username for remote build server: ')
             msger.info('Your password will be encoded before saving ...')
             defaults['remotebuild']['passwd'] = ''
             defaults['remotebuild']['passwdx'] = \
                         base64.b64encode(getpass.getpass().encode('bz2'))
 
-            with open(fpath, 'w') as wf:
-                wf.write(self.get_default_conf(defaults))
+            with open(fpath, 'w') as wfile:
+                wfile.write(self.get_default_conf(defaults))
             os.chmod(fpath, 0600)
 
             msger.info('Done. Your gbs config is now located at %s' % fpath)

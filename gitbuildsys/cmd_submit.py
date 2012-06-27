@@ -63,10 +63,9 @@ def do(opts, args):
     if not os.path.exists(changesfile):
         msger.error('No changelog file, so not be allowed to submit')
 
-    file_list = []
     changelog_file = changesfile.replace('%s/' % workdir, '')
     try:
-        changelog_status= repo.status([changelog_file])
+        changelog_status = repo.status([changelog_file])
     except GbpError, err:
         msger.error('failed to get the status of change log file: %s' % err)
 
