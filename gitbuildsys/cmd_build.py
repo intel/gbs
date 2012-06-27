@@ -280,24 +280,24 @@ def do(opts, args):
 
     repos = {}
     if opts.repositories:
-        for repo in opts.repositories:
+        for repourl in opts.repositories:
             (scheme, host, path, parm, query, frag) = \
-                                    urlparse.urlparse(repo.rstrip('/') + '/')
-            repos[repo] = {}
+                                    urlparse.urlparse(repourl.rstrip('/') + '/')
+            repos[repourl] = {}
             if '@' in host:
                 try:
                     user_pass, host = host.rsplit('@', 1)
                 except ValueError, e:
-                    raise errors.ConfigError('Bad URL: %s' % repo)
+                    raise errors.ConfigError('Bad URL: %s' % repourl)
                 userpwd = user_pass.split(':', 1)
-                repos[repo]['user'] = userpwd[0]
+                repos[repourl]['user'] = userpwd[0]
                 if len(userpwd) == 2:
-                    repos[repo]['passwd'] = userpwd[1]
+                    repos[repourl]['passwd'] = userpwd[1]
                 else:
-                    repos[repo]['passwd'] = None
+                    repos[repourl]['passwd'] = None
             else:
-                repos[repo]['user'] = None
-                repos[repo]['passwd'] = None
+                repos[repourl]['user'] = None
+                repos[repourl]['passwd'] = None
 
     elif repos_urls_conf:
         for url in repos_urls_conf:
