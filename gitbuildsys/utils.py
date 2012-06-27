@@ -102,6 +102,7 @@ def urlgrab(url, filename, user = None, passwd = None):
     curl.setopt(pycurl.FOLLOWLOCATION, True)
     curl.setopt(pycurl.SSL_VERIFYPEER, False)
     curl.setopt(pycurl.SSL_VERIFYHOST, False)
+    curl.setopt(pycurl.CONNECTTIMEOUT, 30)
     if user:
         userpwd = user
         if passwd:
