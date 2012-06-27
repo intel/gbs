@@ -285,7 +285,7 @@ def do(opts, args):
             repos[repo] = {}
             if '@' in host:
                 try:
-                    user_pass, host = host.split('@', 1)
+                    user_pass, host = host.rsplit('@', 1)
                 except ValueError, e:
                     raise errors.ConfigError('Bad URL: %s' % repo)
                 userpwd = user_pass.split(':', 1)
