@@ -320,36 +320,38 @@ def do(opts, args):
     else:
         msger.error('No package repository specified.')
 
-    cachedir = os.path.join(configmgr.get('tmpdir'), 'gbscache')
-    if not os.path.exists(cachedir):
-        os.makedirs(cachedir)
-    msger.info('generate repositories ...')
-    repoparser = utils.RepoParser(repos, cachedir)
-    repourls = repoparser.get_repos_by_arch(buildarch)
-    if not repourls:
-        msger.error('no repositories found for arch: %s under the following '\
-                    'repos:\n     %s' % (buildarch, '\n'.join(repos.keys())))
-    for url in repourls:
-        cmd += ['--repository=%s' % url]
-
-    if opts.dist:
-        distconf = opts.dist
-    else:
-        distconf = repoparser.buildconf
-        if distconf is None:
-            msger.info('failed to get build conf, use default build conf')
-            distconf = configmgr.get('distconf', 'build')
-        else:
-            msger.info('build conf has been downloaded at:\n      %s\n      '\
-                       'you can save it and use -D to specify it, which can '\
-                       'prevent downloading it everytime ' % distconf)
-
-    if distconf is None:
-        msger.error('No build config file specified, please specify in '\
-                    '~/.gbs.conf or command line using -D')
-    cmd += ['--dist=%s' % distconf]
     if opts.noinit:
         cmd += ['--no-init']
+    else:
+        # check & prepare repos and build conf if no noinit option
+        cachedir = os.path.join(configmgr.get('tmpdir'), 'gbscache')
+        if not os.path.exists(cachedir):
+            os.makedirs(cachedir)
+        msger.info('generate repositories ...')
+        repoparser = utils.RepoParser(repos, cachedir)
+        repourls = repoparser.get_repos_by_arch(buildarch)
+        if not repourls:
+            msger.error('no repositories found for arch: %s under the ' \
+                        'following repos:\n      %s' % (buildarch,      \
+                        '\n'.join(repos.keys())))
+        for url in repourls:
+            cmd += ['--repository=%s' % url]
+
+        if opts.dist:
+            distconf = opts.dist
+        else:
+            distconf = repoparser.buildconf
+            if distconf is None:
+                msger.info('failed to get build conf, use default build conf')
+                distconf = configmgr.get('distconf', 'build')
+            else:
+                msger.info('build conf has been downloaded at:\n      %s'
+                            % distconf)
+        if distconf is None:
+            msger.error('No build config file specified, please specify in '\
+                        '~/.gbs.conf or command line using -D')
+        cmd += ['--dist=%s' % distconf]
+
     if opts.ccache:
         cmd += ['--ccache']
     cmd += [specfile]
