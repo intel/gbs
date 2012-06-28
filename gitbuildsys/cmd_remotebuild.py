@@ -49,7 +49,6 @@ passx=%(passwdx)s
 APISERVER   = configmgr.get('build_server', 'remotebuild')
 USER        = configmgr.get('user', 'remotebuild')
 PASSWDX     = configmgr.get('passwdx', 'remotebuild')
-TMPDIR      = configmgr.get('tmpdir')
 
 def do(opts, args):
 
@@ -65,7 +64,7 @@ def do(opts, args):
 
     workdir = repo.path
 
-    tmpdir = '%s/%s' % (TMPDIR, USER)
+    tmpdir = os.path.join(workdir, 'packaging')
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
 
