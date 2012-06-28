@@ -308,7 +308,10 @@ def do(opts, args):
                     key, val = item.split(':', 1)
                     if key == 'passwdx':
                         key = 'passwd'
-                        val = base64.b64decode(val).decode('bz2')
+                        try:
+                            val = base64.b64decode(val).decode('bz2')
+                        except (TypeError, IOError), err:
+                            raise errors.ConfigError('passwdx: %s' % err)
                     repo_auth[key] = val
                 if 'user' in repo_auth:
                     repos[url]['user'] = repo_auth['user']
