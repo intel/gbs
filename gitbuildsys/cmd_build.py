@@ -258,12 +258,6 @@ def do(opts, args):
         msger.error('arch %s not supported, supported archs are: %s ' % \
                    (buildarch, ','.join(supportedarchs)))
 
-    specs = glob.glob('%s/packaging/*.spec' % workdir)
-    if not specs:
-        msger.error('no spec file found under /packaging sub-directory')
-
-    specfile = utils.guess_spec(workdir, opts.spec)
-
     build_cmd  = configmgr.get('build_cmd', 'build')
     userid     = configmgr.get('user', 'remotebuild')
     tmpdir     = configmgr.get('tmpdir', 'general')
@@ -379,14 +373,9 @@ def do(opts, args):
         except errors.QemuError, exc:
             msger.error('%s' % exc)
 
-    try:
-        spec = rpm.parse_spec(specfile)
-    except GbpError, err:
-        msger.error('%s' % err)
-
-    if not spec.name or not spec.version:
-        msger.error('can\'t get correct name or version from spec file.')
-
+    # Only guess spec filename here, parse later when we have the correct
+    # spec file at hand
+    specfile = utils.guess_spec(workdir, opts.spec)
     packaging_dir = os.path.join(workdir, 'packaging/')
     export_dir = tempfile.mkdtemp(prefix=packaging_dir + 'build_')
     with utils.Workdir(workdir):
@@ -403,6 +392,17 @@ def do(opts, args):
                 msger.error("Failed to get packaging info from git tree")
         except GitRepositoryError, excobj:
             msger.error("Repository error: %s" % excobj)
+
+    # Parse spec file
+    try:
+        spec = rpm.parse_spec(os.path.join(export_dir, os.path.basename(specfile)))
+    except GbpError, err:
+        msger.error('%s' % err)
+
+    if not spec.name or not spec.version:
+        msger.error('can\'t get correct name or version from spec file.')
+
+    cmd += [spec.specfile]
 
     if opts.incremental:
         cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
