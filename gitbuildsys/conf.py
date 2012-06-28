@@ -413,7 +413,10 @@ distconf = $build__distconf
             opt = 'passwdx'
             val = self._get(opt, section)
             if val:
-                return base64.b64decode(val).decode('bz2')
+                try:
+                    return base64.b64decode(val).decode('bz2')
+                except (TypeError, IOError), err:
+                    raise errors.ConfigError('passwdx:%s' % err)
             else:
                 return val
         else:
