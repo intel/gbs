@@ -30,8 +30,8 @@ import errors
 import utils
 
 import gbp.rpm
-from gbp.scripts.buildpackage_rpm import main as gbp_build
-from gbp.git import repository, GitRepositoryError
+from gbp.scripts.buildpackage_rpm import git_archive, guess_comp_type
+from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 from gbp.errors import GbpError
 
 OSCRC_TEMPLATE = """[general]
@@ -58,8 +58,8 @@ def do(opts, args):
     if len(args) == 1:
         workdir = os.path.abspath(args[0])
     try:
-        repo = repository.GitRepository(workdir)
-    except repository.GitRepositoryError:
+        repo = RpmGitRepository(workdir)
+    except GitRepositoryError:
         msger.error('%s is not a git dir' % workdir)
 
     workdir = repo.path
@@ -135,14 +135,11 @@ def do(opts, args):
         commit = opts.commit or 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
         try:
-            if gbp_build(["argv[0] placeholder", "--git-export-only",
-                          "--git-ignore-new", "--git-builder=osc",
-                          "--git-export-dir=%s" % oscworkdir,
-                          "--git-packaging-dir=packaging",
-                          "--git-specfile=%s" % relative_spec,
-                          "--git-export=%s" % commit]):
-                msger.error("Failed to get packaging info from git tree")
-        except GitRepositoryError, excobj:
+            comp_type = guess_comp_type(spec)
+            if not git_archive(repo, spec, oscworkdir, commit,
+                               comp_type, comp_level=9, with_submodules=True):
+                msger.error("Cannot create source tarball %s" % tarball)
+        except (GbpError, GitRepositoryError), excobj:
             msger.error("Repository error: %s" % excobj)
 
     localpkg.update_local()
