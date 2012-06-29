@@ -261,7 +261,9 @@ def do(opts, args):
     specfile = utils.guess_spec(workdir, opts.spec)
 
     build_cmd  = configmgr.get('build_cmd', 'build')
-    build_root = configmgr.get('build_root', 'build')
+    userid     = configmgr.get('user', 'remotebuild')
+    tmpdir     = configmgr.get('tmpdir', 'general')
+    build_root = os.path.join(tmpdir, userid, 'gbs-builroot.%s' % buildarch)
     if opts.buildroot:
         build_root = opts.buildroot
     cmd = [ build_cmd,
