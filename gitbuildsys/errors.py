@@ -49,4 +49,4 @@ class Abort(CmdError):
     keyword = ''
 
 class UrlError(CmdError):
-    keyword = '<urlgrab>'
+    keyword = '<url>'
