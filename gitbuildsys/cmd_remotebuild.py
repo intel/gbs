@@ -112,11 +112,9 @@ def do(opts, args):
     prj = obspkg.ObsProject(target_prj, apiurl = APISERVER, oscrc = oscrcpath)
     msger.info('checking status of obs project: %s ...' % target_prj)
     if prj.is_new():
-        # FIXME: How do you know that a certain user does not have permission to
-        # create any project, anywhewre?
         if opts.target_obsprj and not target_prj.startswith('home:%s:' % USER):
-            msger.error('no permission to create project %s, only sub projects'\
-                    'of home:%s are allowed ' % (target_prj, USER))
+            msger.error('no permission to create project %s, only subpackage '\
+                    'of home:%s is allowed ' % (target_prj, USER))
         msger.info('creating %s for package build ...' % target_prj)
         prj.branch_from(base_prj)
 
