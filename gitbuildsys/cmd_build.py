@@ -237,7 +237,7 @@ def do(opts, args):
     try:
         repo = RpmGitRepository(workdir)
     except GitRepositoryError:
-        msger.error("%s is not a git repository" % (os.path.curdir))
+        msger.error("%s is not a git repository" % (workdir))
 
     workdir = repo.path
 
