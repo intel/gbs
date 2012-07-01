@@ -39,7 +39,7 @@ def handle_project(option, opt_str, value, parser):
                            "start with '-'" % (opt_str, value))
     if not re.match(r'^(\w|:|\.|-)+$', value):
         raise errors.Usage("option %s: invalid project name %s, only word " \
-                           "character, ':', '.' and '-' supportted" \
+                           "character, ':', '.' and '-' are supportted" \
                            % (opt_str, value))
     setattr(parser.values, option.dest, value)
 
@@ -137,20 +137,20 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('-D', '--dist',
                   default=None,
                   dest='dist',
-                  help='Specify distribution configure file, which should' \
-                       'be full path')
+                  help='Specify distribution configuration file, which should' \
+                       'be a full path')
     @cmdln.option('-R', '--repository',
                   action="callback",
                   default=None,
                   type='string',
                   dest='repositories',
                   callback=handle_repository,
-                  help='Specify package repositories, Supported format ' \
-                       'is rpm-md')
+                  help='Specify package repositories, Only rpm-md format' \
+                       'is supported')
     @cmdln.option('-B', '--buildroot',
                   default=None,
                   dest='buildroot',
-                  help='Specify build rootdir to setup chroot environment')
+                  help='Specify build root to setup chroot environment')
     @cmdln.option('-A', '--arch',
                   default=None,
                   dest='arch',
@@ -159,7 +159,7 @@ class Gbs(cmdln.Cmdln):
                   action='store_true',
                   default=False,
                   dest='clean',
-                  help='Delete old build root before initializing it')
+                  help='Delete old build root before initialization')
     @cmdln.option('--noinit',
                   action='store_true',
                   default=False,
@@ -175,7 +175,7 @@ class Gbs(cmdln.Cmdln):
                   action="store_true",
                   default=False,
                   dest='incremental',
-                  help='Do incremental build, which need support of spec file,'
+                  help='Do incremental build, which needs support of spec file,'
                        ' and tar ball unpack stage should be enabled with the '
                        'condition of RPM macro RSYNCDONE')
     @cmdln.option('--spec',
@@ -222,16 +222,15 @@ class Gbs(cmdln.Cmdln):
                   dest='target_obsprj',
                   type='string',
                   callback=handle_project,
-                  help='OBS target project being used to build package, ' \
-                       'use "home:<userid>:gbs:Tizen:Main" if not specified')
+                  help='OBS project where package will be checked in' \
+                       '(default: home:<userid>:gbs:Tizen:Main)')
     @cmdln.option('-B', '--base-obsprj',
                   action='callback',
                   default=None,
                   dest='base_obsprj',
                   type='string',
                   callback=handle_project,
-                  help='Base OBS project being used to branch from, ' \
-                       'use "Tizen:Main" if not specified')
+                  help='OBS project to branch from (default: Tizen:Main)')
     @cmdln.option('--spec',
                   default=None,
                   dest='spec',
@@ -239,7 +238,7 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('-c', '--commit',
                   default=None,
                   dest='commit',
-                  help='Specify a commit to build')
+                  help='Specify a commit ID to build')
     def do_remotebuild(self, subcmd, opts, *args):
         """${cmd_name}: remote build package
 
