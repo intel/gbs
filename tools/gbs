@@ -239,6 +239,17 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='commit',
                   help='Specify a commit ID to build')
+    @cmdln.option('--buildlog',
+                  action='store_true',
+                  default=False,
+                  dest='buildlog',
+                  help='Get buildlog from build sever')
+    @cmdln.option('--status',
+                  action='store_true',
+                  default=False,
+                  dest='status',
+                  help='Get build status from build server')
+
     def do_remotebuild(self, subcmd, opts, *args):
         """${cmd_name}: remote build package
 

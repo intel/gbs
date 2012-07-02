@@ -20,12 +20,17 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 import os
+import string
+import sys
 import shutil
 import tempfile
 import time
 import urlparse
 import urllib2
+import M2Crypto
 import xml.etree.cElementTree as ElementTree
+from collections import defaultdict
+
 import errors
 from osc import conf, core
 
@@ -298,7 +303,8 @@ class BuildService(object):
                 new_prj = True
             else:
                 raise errors.ObsError("%s" % e)
-        except urllib2.URLError, e:
+        except (urllib2.URLError, M2Crypto.m2urllib2.URLError, \
+                                  M2Crypto.SSL.SSLError), e:
             raise errors.ObsError("%s" % e)
         return new_prj
 
@@ -1171,12 +1177,6 @@ class BuildService(object):
     def get_buildconfig(self, prj, repository):
         return core.get_buildconfig(self.apiurl, prj, repository)
 
-    def get_repos(self, prj):
-        repos = []
-        for repo in core.get_repos_of_project(self.apiurl, prj):
-            repos.append(repo)
-        return repos
-
     def get_ArchitectureList(self, prj, target):
         """
         return the list of Archictecture of the target of the projectObsName for a OBS server.
@@ -1194,3 +1194,23 @@ class BuildService(object):
 
         return result
 
+    def get_results(self, prj, package):
+        try:
+            results = defaultdict(dict)
+            build_status = core.get_results(self.apiurl, prj, package)
+            for res in build_status:
+                repo, arch, status = res.split()
+                results[repo][arch] = status
+            return results
+        except (M2Crypto.m2urllib2.URLError, M2Crypto.SSL.SSLError), err:
+            raise errors.ObsError(str(err))
+
+    def get_buildlog(self, prj, package, repository, arch, offset = 0):
+        """prints out the buildlog on stdout"""
+        all_bytes = string.maketrans('', '')
+        remove_bytes = all_bytes[:10] + all_bytes[11:32]
+        try:
+            log = self.getBuildLog(prj, '%s/%s' % (repository, arch), package)
+            sys.stdout.write(log.translate(all_bytes, remove_bytes))
+        except (M2Crypto.m2urllib2.URLError, M2Crypto.SSL.SSLError), err:
+            raise errors.ObsError(str(err))

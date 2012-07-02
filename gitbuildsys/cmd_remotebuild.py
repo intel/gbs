@@ -26,6 +26,7 @@ import shutil
 
 import msger
 from conf import configmgr
+import buildservice
 import obspkg
 import errors
 import utils
@@ -53,11 +54,24 @@ PASSWDX     = configmgr.get('passwdx', 'remotebuild')
 
 def do(opts, args):
 
-    workdir = os.getcwd()
-    if len(args) > 1:
-        msger.error('only one work directory can be specified in args.')
-    if len(args) == 1:
+    obs_repo = None
+    obs_arch = None
+
+    if len(args) == 0:
+        workdir = os.getcwd()
+    elif len(args) == 1:
         workdir = os.path.abspath(args[0])
+    elif len(args) == 2 and opts.buildlog:
+        workdir = os.getcwd()
+        obs_repo = args[0]
+        obs_arch = args[1]
+    elif len(args) == 3 and opts.buildlog:
+        workdir = os.path.abspath(args[0])
+        obs_repo = args[1]
+        obs_arch = args[2]
+    else:
+        msger.error('Invalid arguments, see gbs remotebuild -h for more info')
+
     try:
         repo = RpmGitRepository(workdir)
     except GitRepositoryError:
@@ -109,6 +123,37 @@ def do(opts, args):
         target_prj = "home:%s:gbs:%s" % (USER, base_prj)
     else:
         target_prj = opts.target_obsprj
+
+    if opts.buildlog:
+        bs = buildservice.BuildService(apiurl=APISERVER, oscrc=oscrcpath)
+        archlist = []
+        status = bs.get_results(target_prj, spec.name)
+        for repository in status.keys():
+            for arch in status[repository]:
+                archlist.append('%-15s%-15s' % (repository, arch))
+        if not obs_repo or not obs_arch or obs_repo not in status.keys() or \
+           obs_arch not in status[obs_repo].keys():
+            msger.info('please specify correct repo / arch for buildlog')
+            msger.info('valid arguments of repo and arch are:\n%s' % \
+                       '\n'.join(archlist))
+            return 1
+        if status[obs_repo][obs_arch] not in ['failed', 'succeeded', \
+                                                                   'building']:
+            msger.error('build status of %s for %s/%s is %s, no build log.' % \
+                  (spec.name, obs_repo, obs_arch, status[obs_repo][obs_arch]))
+        bs.get_buildlog(target_prj, spec.name, obs_repo, obs_arch)
+        return 0
+
+    if opts.status:
+        bs = buildservice.BuildService(apiurl=APISERVER, oscrc=oscrcpath)
+        results = []
+        status = bs.get_results(target_prj, spec.name)
+        for repository in status.keys():
+            for arch in status[repository]:
+                stat = status[repository][arch]
+                results.append('%-15s%-15s%-15s' % (repository, arch, stat))
+        msger.info('build results from build server:\n%s' % '\n'.join(results))
+        return 0
 
     prj = obspkg.ObsProject(target_prj, apiurl = APISERVER, oscrc = oscrcpath)
     msger.info('checking status of obs project: %s ...' % target_prj)
