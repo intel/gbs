@@ -22,6 +22,7 @@
 import os
 import tempfile
 import glob
+import shutil
 
 import msger
 from conf import configmgr
@@ -141,6 +142,10 @@ def do(opts, args):
             if not git_archive(repo, spec, oscworkdir, commit,
                                comp_type, comp_level=9, with_submodules=True):
                 msger.error("Cannot create source tarball %s" % tarball)
+            git_files = repo.list_files()
+            for f in git_files:
+                if f.startswith('packaging/'):
+                    shutil.copy(f, oscworkdir)
         except (GbpError, GitRepositoryError), excobj:
             msger.error("Repository error: %s" % excobj)
 
