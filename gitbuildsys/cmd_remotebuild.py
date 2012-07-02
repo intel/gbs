@@ -74,8 +74,10 @@ def do(opts, args):
 
     try:
         repo = RpmGitRepository(workdir)
-    except GitRepositoryError:
-        msger.error('%s is not a git dir' % workdir)
+        if repo.get_branch() is None:
+            msger.error('currently not on a branch')
+    except GitRepositoryError, err:
+        msger.error(str(err))
 
     workdir = repo.path
 

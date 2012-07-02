@@ -92,8 +92,10 @@ def do(opts, _args):
 
     try:
         repo = RpmGitRepository('.')
-    except GitRepositoryError:
-        msger.error("No git repository found.")
+        if repo.get_branch() is None:
+            msger.error('currently not on a branch')
+    except GitRepositoryError, err:
+        msger.error(str(err))
 
     project_root_dir = repo.path
 
