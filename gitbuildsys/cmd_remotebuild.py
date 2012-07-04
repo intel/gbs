@@ -197,11 +197,14 @@ def do(opts, args):
     localpkg.update_local()
 
     try:
+        commit_msg = repo.get_commit_info('HEAD')['subject']
         msger.info('commit packaging files to build server ...')
-        localpkg.commit ('submit packaging files to obs for OBS building')
+        localpkg.commit (commit_msg)
     except errors.ObsError, exc:
         msger.error('commit packages fail: %s, please check the permission '\
                     'of target project:%s' % (exc,target_prj))
+    except GitRepositoryError, exc:
+        msger.error('failed to get commit info: %s' % exc)
 
     os.unlink(oscrcpath)
     msger.info('local changes submitted to build server successfully')
