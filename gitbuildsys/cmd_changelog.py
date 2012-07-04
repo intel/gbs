@@ -58,7 +58,7 @@ def get_version(git_repo, commit):
     Construct version from commit using rev-parse.
     Set version to <tag>@<sha1> or <sha1> if tag is not found.
     """
-    version = git_repo.rev_parse(commit, ['--short'])
+    version = git_repo.rev_parse(commit, short=7)
     try:
         version = "%s@%s" % (git_repo.find_tag(commit), version)
     except GitRepositoryError:
@@ -79,7 +79,7 @@ def make_log_entries(commits, git_repo):
     for commit in commits:
         commit_info =  git_repo.get_commit_info(commit)
         entries.append("- %s" % commit_info["subject"])
-        prevauthor = commit_info["author"]
+        prevauthor = commit_info["author"].name
     return entries
 
 
