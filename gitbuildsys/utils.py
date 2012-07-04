@@ -169,7 +169,19 @@ class RepoParser(object):
         for arch in archs:
             repourls = [os.path.join(baseurl, 'repos', repo, arch, 'packages') \
                         for repo in repos]
-            self.repourls[arch] = repourls
+            validrepos = []
+            for repo in repourls:
+                # Check if repo is valid standard repo
+                repomd_url = os.path.join(repo, 'repodata/repomd.xml')
+                repomd_file = os.path.join(self.cachedir, 'repomd.xml')
+                try:
+                    urlgrab(repomd_url, repomd_file,
+                                            self.repos[baseurl]['user'],\
+                                            self.repos[baseurl]['passwd'])
+                    validrepos.append(repo)
+                except errors.UrlError:
+                    pass
+            self.repourls[arch] = validrepos
         self.archs = archs
 
     def parse(self):
