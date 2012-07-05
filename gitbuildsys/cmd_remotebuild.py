@@ -32,8 +32,8 @@ import errors
 import utils
 
 import gbp.rpm
-from gbp.scripts.buildpackage_rpm import git_archive, guess_comp_type
-from gbp.rpm.git import GitRepositoryError, RpmGitRepository
+from gbp.scripts.buildpackage_rpm import main as gbp_build
+from gbp.git import repository, GitRepositoryError
 from gbp.errors import GbpError
 
 OSCRC_TEMPLATE = """[general]
@@ -73,10 +73,10 @@ def do(opts, args):
         msger.error('Invalid arguments, see gbs remotebuild -h for more info')
 
     try:
-        repo = RpmGitRepository(workdir)
+        repo = repository.GitRepository(workdir)
         if repo.get_branch() is None:
             msger.error('currently not on a branch')
-    except GitRepositoryError, err:
+    except repository.GitRepositoryError, err:
         msger.error(str(err))
 
     workdir = repo.path
@@ -130,9 +130,9 @@ def do(opts, args):
         bs = buildservice.BuildService(apiurl=APISERVER, oscrc=oscrcpath)
         archlist = []
         status = bs.get_results(target_prj, spec.name)
-        for repository in status.keys():
-            for arch in status[repository]:
-                archlist.append('%-15s%-15s' % (repository, arch))
+        for build_repo in status.keys():
+            for arch in status[build_repo]:
+                archlist.append('%-15s%-15s' % (build_repo, arch))
         if not obs_repo or not obs_arch or obs_repo not in status.keys() or \
            obs_arch not in status[obs_repo].keys():
             msger.info('please specify correct repo / arch for buildlog')
@@ -150,10 +150,10 @@ def do(opts, args):
         bs = buildservice.BuildService(apiurl=APISERVER, oscrc=oscrcpath)
         results = []
         status = bs.get_results(target_prj, spec.name)
-        for repository in status.keys():
-            for arch in status[repository]:
-                stat = status[repository][arch]
-                results.append('%-15s%-15s%-15s' % (repository, arch, stat))
+        for build_repo in status.keys():
+            for arch in status[build_repo]:
+                stat = status[build_repo][arch]
+                results.append('%-15s%-15s%-15s' % (build_repo, arch, stat))
         msger.info('build results from build server:\n%s' % '\n'.join(results))
         return 0
 
@@ -185,15 +185,14 @@ def do(opts, args):
         commit = opts.commit or 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
         try:
-            comp_type = guess_comp_type(spec)
-            if not git_archive(repo, spec, oscworkdir, commit,
-                               comp_type, comp_level=9, with_submodules=True):
-                msger.error("Cannot create source tarball %s" % tarball)
-            git_files = repo.list_files()
-            for f in git_files:
-                if f.startswith('packaging/'):
-                    shutil.copy(f, oscworkdir)
-        except (GbpError, GitRepositoryError), excobj:
+            if gbp_build(["argv[0] placeholder", "--git-export-only",
+                          "--git-ignore-new", "--git-builder=osc",
+                          "--git-export-dir=%s" % oscworkdir,
+                          "--git-packaging-dir=packaging",
+                          "--git-specfile=%s" % relative_spec,
+                          "--git-export=%s" % commit]):
+                msger.error("Failed to get packaging info from git tree")
+        except GitRepositoryError, excobj:
             msger.error("Repository error: %s" % excobj)
 
     localpkg.update_local()
