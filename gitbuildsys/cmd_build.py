@@ -33,7 +33,7 @@ import runner
 import errors
 from conf import configmgr
 
-from gbp.scripts.buildpackage_rpm import git_archive, guess_comp_type
+from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 import gbp.rpm as rpm
 from gbp.errors import GbpError
@@ -361,7 +361,6 @@ def do(opts, args):
 
     if opts.ccache:
         cmd += ['--ccache']
-    cmd += [specfile]
 
     if hostarch != buildarch and buildarch in change_personality:
         cmd = [ change_personality[buildarch] ] + cmd
@@ -382,19 +381,22 @@ def do(opts, args):
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
 
-
-    tarball = None
+    packaging_dir = os.path.join(workdir, 'packaging/')
+    export_dir = tempfile.mkdtemp(prefix=packaging_dir + 'build_')
     if spec.orig_file:
-        urlres = urlparse.urlparse(spec.orig_file)
-        tarball = 'packaging/%s' % os.path.basename(urlres.path)
-        msger.info('generate tar ball: %s' % tarball)
-        try:
-            comp_type = guess_comp_type(spec)
-            if not git_archive(repo, spec, "%s/packaging" % workdir, 'HEAD',
-                               comp_type, comp_level=9, with_submodules=True):
-                msger.error("Cannot create source tarball %s" % tarball)
-        except (GbpError, GitRepositoryError), exc:
-            msger.error(str(exc))
+        with utils.Workdir(workdir):
+            relative_spec = specfile.replace('%s/' % workdir, '')
+            msger.info('export tar ball and packaging files ... ')
+            try:
+                if gbp_build(["argv[0] placeholder", "--git-export-only",
+                              "--git-ignore-new", "--git-builder=osc",
+                              "--git-export-dir=%s" % export_dir,
+                              "--git-packaging-dir=packaging",
+                              "--git-specfile=%s" % relative_spec,
+                              "--git-export=%s" % 'HEAD']):
+                    msger.error("Failed to get packaging info from git tree")
+            except GitRepositoryError, excobj:
+                msger.error("Repository error: %s" % excobj)
 
     if opts.incremental:
         cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
@@ -408,6 +410,7 @@ def do(opts, args):
         cmd = ['sudo'] + proxies + ['GBS_BUILD_REPOAUTH=%s' % \
               repo_auth_conf ] + cmd
 
+    cmd += [os.path.join(export_dir, os.path.basename(specfile))]
     # runner.show() can't support interactive mode, so use subprocess insterad.
     msger.debug("running command %s" % cmd)
     try:
@@ -423,5 +426,5 @@ def do(opts, args):
         subprocess.call(cmd + ["--kill"])
         msger.error('interrrupt from keyboard')
     finally:
-        if spec.orig_file and os.path.exists(os.path.join(workdir, tarball)):
-            os.unlink(os.path.join(workdir, tarball))
+        import shutil
+        shutil.rmtree(export_dir, ignore_errors=True)

@@ -28,7 +28,7 @@ import errno
 import msger
 import utils
 
-from gbp.scripts.buildpackage_rpm import git_archive, guess_comp_type
+from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 import gbp.rpm as rpm
 from gbp.errors import GbpError
@@ -85,24 +85,24 @@ def do(opts, args):
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
     else:
-        if opts.outdir:
-            outdir = "%s/%s-%s-%s" % (outdir, spec.name,
-                    spec.version, spec.release)
+        outdir = "%s/%s-%s-%s" % (outdir, spec.name, spec.version, spec.release)
         mkdir_p(outdir)
-
-    if outdir and outdir != workdir and outdir != "%s/packaging" % workdir:
-        for name in glob.glob('%s/packaging/*' % workdir):
-            if (os.path.isfile(name)):
-                shutil.copy(name, outdir)
 
     urlres = urlparse.urlparse(spec.orig_file)
     tarball = '%s/%s' % (outdir, os.path.basename(urlres.path))
     msger.info('generate tar ball: %s' % tarball)
 
-    try:
-        comp_type = guess_comp_type(spec)
-        if not git_archive(repo, spec, outdir, 'HEAD',
-                           comp_type, comp_level=9, with_submodules=True):
-            msger.error("Cannot create source tarball %s" % tarball)
-    except (GbpError, GitRepositoryError), exc:
-        msger.error(str(exc))
+    with utils.Workdir(workdir):
+        relative_spec = specfile.replace('%s/' % workdir, '')
+        try:
+            if gbp_build(["argv[0] placeholder", "--git-export-only",
+                          "--git-ignore-new", "--git-builder=osc",
+                          "--git-export-dir=%s" % outdir,
+                          "--git-packaging-dir=packaging",
+                          "--git-specfile=%s" % relative_spec,
+                          "--git-export=%s" % 'HEAD']):
+                msger.error("Failed to get packaging info from git tree")
+        except GitRepositoryError, excobj:
+            msger.error("Repository error: %s" % excobj)
+
+    msger.info('package files have been exported to:\n     %s' % outdir)
