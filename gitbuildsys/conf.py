@@ -276,12 +276,12 @@ distconf = $build__distconf
 
     def __init__(self, fpath=None):
         self.cfgparser = BrainConfigParser()
+        self.reset_from_conf(fpath)
 
+    def reset_from_conf(self, fpath):
         if fpath:
             if not os.path.exists(fpath):
-                if not self._new_conf(fpath):
-                    msger.error('No config file available')
-
+                raise errors.ConfigError('Configuration file %s does not exist' % fpath)
             fpaths = [fpath]
         else:
             # use the default path

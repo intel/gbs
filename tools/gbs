@@ -66,15 +66,20 @@ class Gbs(cmdln.Cmdln):
         optparser.add_option('-v', '--verbose', action='store_true',
                                                 dest='verbose',
                                                 help='verbose information')
+        optparser.add_option('-c', '--conf', dest='conf',
+                                             help='specify config file for gbs')
         return optparser
 
     def postoptparse(self):
+        from gitbuildsys.conf import configmgr
         if self.options.verbose:
             msger.set_loglevel('verbose')
 
         if self.options.debug:
             msger.set_loglevel('debug')
 
+        if self.options.conf:
+            configmgr.reset_from_conf(self.options.conf)
     '''
     @cmdln.alias('sr')
     @cmdln.option('--changelog',
@@ -335,7 +340,6 @@ class Gbs(cmdln.Cmdln):
 
 if __name__ == '__main__':
     try:
-        from gitbuildsys.conf import configmgr
         sys.exit(Gbs().main())
 
     except KeyboardInterrupt:
