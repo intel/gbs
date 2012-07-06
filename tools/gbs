@@ -195,6 +195,11 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='spec',
                   help='Specify a spec file to use')
+    @cmdln.option('--extra-packs',
+                  default=None,
+                  dest='extra_packs',
+                  help='Specify extra packages to install to build root '\
+                       'multiple packages can be separated by comma')
     @cmdln.option('--debuginfo',
                   action='store_true',
                   default=False,

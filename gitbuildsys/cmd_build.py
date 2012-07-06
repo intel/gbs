@@ -364,6 +364,10 @@ def do(opts, args):
     if opts.ccache:
         cmd += ['--ccache']
 
+    if opts.extra_packs:
+        extrapkgs = opts.extra_packs.split(',')
+        cmd += ['--extra-packs=%s' % ' '.join(extrapkgs)]
+
     if hostarch != buildarch and buildarch in change_personality:
         cmd = [ change_personality[buildarch] ] + cmd
 
