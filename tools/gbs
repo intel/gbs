@@ -227,6 +227,27 @@ class Gbs(cmdln.Cmdln):
         from gitbuildsys import cmd_build as cmd
         cmd.do(opts, args)
 
+    @cmdln.alias('ch')
+    @cmdln.option('-r', '--root',
+                  action='store_true',
+                  default=False,
+                  dest='root',
+                  help='chroot as root instead of abuild by default')
+    @cmdln.option('-A', '--arch',
+                  default='i586',
+                  dest='arch',
+                  help='specify the build root arch')
+    def do_chroot(self, subcmd, opts, *args):
+        """${cmd_name}: chroot to build root
+
+        Usage:
+            gbs chroot [options]
+
+        ${cmd_option_list}
+        """
+
+        from gitbuildsys import cmd_chroot as cmd
+        cmd.do(opts, args)
 
     @cmdln.alias('rb')
     @cmdln.option('-T', '--target-obsprj',
