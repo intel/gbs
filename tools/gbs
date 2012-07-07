@@ -124,6 +124,10 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='spec',
                   help='Specify a spec file to use')
+    @cmdln.option('-c', '--commit',
+                  default=None,
+                  dest='commit',
+                  help='Specify a commit ID to export')
     def do_export(self, _subcmd, opts, *args):
         """${cmd_name}: export files and prepare for build
 
@@ -183,6 +187,10 @@ class Gbs(cmdln.Cmdln):
                   help='Do incremental build, which needs support of spec file,'
                        ' and tar ball unpack stage should be enabled with the '
                        'condition of RPM macro RSYNCDONE')
+    @cmdln.option('-c', '--commit',
+                  default=None,
+                  dest='commit',
+                  help='Specify a commit ID to build')
     @cmdln.option('--spec',
                   default=None,
                   dest='spec',

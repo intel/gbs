@@ -76,6 +76,8 @@ def do(opts, args):
         repo = repository.GitRepository(workdir)
         if repo.get_branch() is None:
             msger.error('currently not on a branch')
+        if opts.commit:
+            repo.rev_parse(opts.commit)
     except repository.GitRepositoryError, err:
         msger.error(str(err))
 

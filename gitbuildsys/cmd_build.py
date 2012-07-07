@@ -238,6 +238,8 @@ def do(opts, args):
         repo = RpmGitRepository(workdir)
         if repo.get_branch() is None:
             msger.error('currently not on a branch')
+        if opts.commit:
+            repo.rev_parse(opts.commit)
     except GitRepositoryError, err:
         msger.error(str(err))
 
@@ -386,6 +388,7 @@ def do(opts, args):
     if spec.orig_file:
         with utils.Workdir(workdir):
             relative_spec = specfile.replace('%s/' % workdir, '')
+            commit = opts.commit or 'HEAD'
             msger.info('export tar ball and packaging files ... ')
             try:
                 if gbp_build(["argv[0] placeholder", "--git-export-only",
@@ -393,7 +396,7 @@ def do(opts, args):
                               "--git-export-dir=%s" % export_dir,
                               "--git-packaging-dir=packaging",
                               "--git-specfile=%s" % relative_spec,
-                              "--git-export=%s" % 'HEAD']):
+                              "--git-export=%s" % commit]):
                     msger.error("Failed to get packaging info from git tree")
             except GitRepositoryError, excobj:
                 msger.error("Repository error: %s" % excobj)
