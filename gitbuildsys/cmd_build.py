@@ -389,21 +389,20 @@ def do(opts, args):
 
     packaging_dir = os.path.join(workdir, 'packaging/')
     export_dir = tempfile.mkdtemp(prefix=packaging_dir + 'build_')
-    if spec.orig_file:
-        with utils.Workdir(workdir):
-            relative_spec = specfile.replace('%s/' % workdir, '')
-            commit = opts.commit or 'HEAD'
-            msger.info('export tar ball and packaging files ... ')
-            try:
-                if gbp_build(["argv[0] placeholder", "--git-export-only",
-                              "--git-ignore-new", "--git-builder=osc",
-                              "--git-export-dir=%s" % export_dir,
-                              "--git-packaging-dir=packaging",
-                              "--git-specfile=%s" % relative_spec,
-                              "--git-export=%s" % commit]):
-                    msger.error("Failed to get packaging info from git tree")
-            except GitRepositoryError, excobj:
-                msger.error("Repository error: %s" % excobj)
+    with utils.Workdir(workdir):
+        relative_spec = specfile.replace('%s/' % workdir, '')
+        commit = opts.commit or 'HEAD'
+        msger.info('export tar ball and packaging files ... ')
+        try:
+            if gbp_build(["argv[0] placeholder", "--git-export-only",
+                          "--git-ignore-new", "--git-builder=osc",
+                          "--git-export-dir=%s" % export_dir,
+                          "--git-packaging-dir=packaging",
+                          "--git-specfile=%s" % relative_spec,
+                          "--git-export=%s" % commit]):
+                msger.error("Failed to get packaging info from git tree")
+        except GitRepositoryError, excobj:
+            msger.error("Repository error: %s" % excobj)
 
     if opts.incremental:
         cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
