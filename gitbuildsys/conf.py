@@ -330,27 +330,28 @@ distconf = $build__distconf
         if not fpath:
             fpath = os.path.expanduser('~/.gbs.conf')
 
-        if msger.ask('Create config file %s using default values?' % fpath):
-            import getpass
+        import getpass
+        msger.info('Creating config file %s ... ' % fpath)
+        # user and passwd in [build] section need user input
+        defaults = self.DEFAULTS.copy()
+        build_server = raw_input('Remote build server url (use %s by default):'\
+                                 % defaults['remotebuild']['build_server'])
+        if build_server:
+            defaults['remotebuild']['build_server'] = build_server
+        defaults['remotebuild']['user'] = \
+                          raw_input('Username for remote build server: ')
+        msger.info('Your password will be encoded before saving ...')
+        defaults['remotebuild']['passwd'] = ''
+        defaults['remotebuild']['passwdx'] = \
+                    base64.b64encode(getpass.getpass().encode('bz2'))
 
-            # user and passwd in [build] section need user input
-            defaults = self.DEFAULTS.copy()
-            defaults['remotebuild']['user'] = \
-                              raw_input('Username for remote build server: ')
-            msger.info('Your password will be encoded before saving ...')
-            defaults['remotebuild']['passwd'] = ''
-            defaults['remotebuild']['passwdx'] = \
-                        base64.b64encode(getpass.getpass().encode('bz2'))
+        with open(fpath, 'w') as wfile:
+            wfile.write(self.get_default_conf(defaults))
+        os.chmod(fpath, 0600)
 
-            with open(fpath, 'w') as wfile:
-                wfile.write(self.get_default_conf(defaults))
-            os.chmod(fpath, 0600)
-
-            msger.info('Done. Your gbs config is now located at %s' % fpath)
-            msger.warning("Don't forget to double-check the config manually.")
-            return True
-
-        return False
+        msger.info('Done. Your gbs config is now located at %s' % fpath)
+        msger.warning("Don't forget to double-check the config manually.")
+        return True
 
     def _check_passwd(self):
         for sec in self.DEFAULTS.keys():
