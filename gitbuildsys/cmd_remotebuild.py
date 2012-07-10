@@ -72,6 +72,10 @@ def do(opts, args):
     else:
         msger.error('Invalid arguments, see gbs remotebuild -h for more info')
 
+    if not USER:
+        msger.error('empty user is not allowed for remotebuild, '\
+                    'please add user/passwd to gbs conf, and try again')
+
     try:
         repo = repository.GitRepository(workdir)
         if opts.commit:
