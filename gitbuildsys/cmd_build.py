@@ -236,8 +236,6 @@ def do(opts, args):
 
     try:
         repo = RpmGitRepository(workdir)
-        if repo.get_branch() is None:
-            msger.error('currently not on a branch')
         if opts.commit:
             repo.rev_parse(opts.commit)
     except GitRepositoryError, err:
