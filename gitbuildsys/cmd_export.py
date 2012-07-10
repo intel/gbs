@@ -24,6 +24,7 @@ import glob
 import urlparse
 import shutil
 import errno
+import tempfile
 
 import msger
 import utils
@@ -77,10 +78,28 @@ def do(opts, args):
     outdir = "%s/packaging" % workdir
     if opts.outdir:
         outdir = opts.outdir
+    mkdir_p(outdir)
 
+    # Only guess spec filename here, parse later when we have the correct
+    # spec file at hand
     specfile = utils.guess_spec(workdir, opts.spec)
+    export_dir = tempfile.mkdtemp(prefix='gbs_export_', dir=outdir)
+    with utils.Workdir(workdir):
+        commit = opts.commit or 'HEAD'
+        relative_spec = specfile.replace('%s/' % workdir, '')
+        try:
+            if gbp_build(["argv[0] placeholder", "--git-export-only",
+                          "--git-ignore-new", "--git-builder=osc",
+                          "--git-export-dir=%s" % export_dir,
+                          "--git-packaging-dir=packaging",
+                          "--git-specfile=%s" % relative_spec,
+                          "--git-export=%s" % commit]):
+                msger.error("Failed to get packaging info from git tree")
+        except GitRepositoryError, excobj:
+            msger.error("Repository error: %s" % excobj)
+
     try:
-        spec = rpm.parse_spec(specfile)
+        spec = rpm.parse_spec(os.path.join(export_dir, os.path.basename(specfile)))
     except GbpError, err:
         msger.error('%s' % err)
 
@@ -88,24 +107,7 @@ def do(opts, args):
         msger.error('can\'t get correct name or version from spec file.')
     else:
         outdir = "%s/%s-%s-%s" % (outdir, spec.name, spec.version, spec.release)
-        mkdir_p(outdir)
-
-    urlres = urlparse.urlparse(spec.orig_file)
-    tarball = '%s/%s' % (outdir, os.path.basename(urlres.path))
-    msger.info('generate tar ball: %s' % tarball)
-
-    with utils.Workdir(workdir):
-        commit = opts.commit or 'HEAD'
-        relative_spec = specfile.replace('%s/' % workdir, '')
-        try:
-            if gbp_build(["argv[0] placeholder", "--git-export-only",
-                          "--git-ignore-new", "--git-builder=osc",
-                          "--git-export-dir=%s" % outdir,
-                          "--git-packaging-dir=packaging",
-                          "--git-specfile=%s" % relative_spec,
-                          "--git-export=%s" % commit]):
-                msger.error("Failed to get packaging info from git tree")
-        except GitRepositoryError, excobj:
-            msger.error("Repository error: %s" % excobj)
+        shutil.rmtree(outdir, ignore_errors=True)
+        shutil.move(export_dir, outdir)
 
     msger.info('package files have been exported to:\n     %s' % outdir)
