@@ -114,8 +114,8 @@ def do(opts, args):
     except GbpError, err:
         msger.error('%s' % err)
 
-    if not spec.name or not spec.version:
-        msger.error('can\'t get correct name or version from spec file.')
+    if not spec.name:
+        msger.error('can\'t get correct name.')
 
     if opts.base_obsprj is None:
         # TODO, get current branch of git to determine it
