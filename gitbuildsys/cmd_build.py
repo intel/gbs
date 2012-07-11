@@ -377,8 +377,15 @@ def do(opts, args):
     packaging_dir = os.path.join(workdir, 'packaging/')
     export_dir = tempfile.mkdtemp(prefix=packaging_dir + 'build_')
     with utils.Workdir(workdir):
+        if opts.commit:
+            commit = opts.commit
+        elif opts.include_uncommited:
+            commit = 'WC.TRACKED'
+        elif opts.include_untracked:
+            commit = 'WC.UNTRACKED'
+        else:
+            commit = 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
-        commit = opts.commit or 'HEAD'
         msger.info('export tar ball and packaging files ... ')
         try:
             if gbp_build(["argv[0] placeholder", "--git-export-only",

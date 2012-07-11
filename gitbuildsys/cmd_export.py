@@ -83,7 +83,14 @@ def do(opts, args):
     specfile = utils.guess_spec(workdir, opts.spec)
     export_dir = tempfile.mkdtemp(prefix='gbs_export_', dir=outdir)
     with utils.Workdir(workdir):
-        commit = opts.commit or 'HEAD'
+        if opts.commit:
+            commit = opts.commit
+        elif opts.include_uncommited:
+            commit = 'WC.TRACKED'
+        elif opts.include_untracked:
+            commit = 'WC.UNTRACKED'
+        else:
+            commit = 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
         try:
             if gbp_build(["argv[0] placeholder", "--git-export-only",
