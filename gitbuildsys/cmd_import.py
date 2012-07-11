@@ -42,11 +42,8 @@ def do(opts, args):
     params = ["argv[0] placeholder", "--packaging-dir=packaging",
               "--upstream-branch=%s" % opts.upstream_branch, args[0]]
 
-    if args[0].endswith('.src.rpm'):
-        if gbp_import_srpm(params):
-            msger.error("Failed to import %s" % args[0])
-    elif args[0].endswith('.spec'):
-        params.insert(1, "--unpacked")
+    if args[0].endswith('.src.rpm') or args[0].endswith('.spec'):
+        params.append("--no-patch-import")
         if gbp_import_srpm(params):
             msger.error("Failed to import %s" % args[0])
     else:
