@@ -25,7 +25,6 @@ import sys
 import shutil
 import tempfile
 import time
-import urlparse
 import urllib2
 import M2Crypto
 import xml.etree.cElementTree as ElementTree

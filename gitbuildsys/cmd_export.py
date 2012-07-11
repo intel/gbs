@@ -20,8 +20,6 @@
 """
 
 import os
-import glob
-import urlparse
 import shutil
 import errno
 import tempfile

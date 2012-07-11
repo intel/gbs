@@ -20,7 +20,6 @@
 """
 
 import os
-import glob
 import subprocess
 import urlparse
 import re
@@ -285,7 +284,7 @@ def do(opts, args):
             if '@' in host:
                 try:
                     user_pass, host = host.rsplit('@', 1)
-                except ValueError, e:
+                except ValueError:
                     raise errors.ConfigError('Bad URL: %s' % repourl)
                 userpwd = user_pass.split(':', 1)
                 repos[repourl]['user'] = userpwd[0]

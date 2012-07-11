@@ -117,7 +117,7 @@ def urlgrab(url, filename, user = None, passwd = None):
             raise errors.UrlError('timeout on %s: %s' % (url, e))
         elif errcode == pycurl.E_FILESIZE_EXCEEDED:
             raise errors.UrlError('max download size exceeded on %s'\
-                                       % self.url)
+                                       % url)
         else:
             errmsg = 'pycurl error %s - "%s"' % (errcode, str(e.args[1]))
             raise errors.UrlError(errmsg)

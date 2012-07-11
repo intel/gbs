@@ -22,7 +22,6 @@
 import os
 import tempfile
 import glob
-import shutil
 
 import msger
 from conf import configmgr
