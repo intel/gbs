@@ -434,7 +434,7 @@ def do(opts, args):
     except KeyboardInterrupt:
         msger.info('keyboard interrupt, killing build ...')
         subprocess.call(cmd + ["--kill"])
-        msger.error('interrrupt from keyboard')
+        msger.error('interrupt from keyboard')
     finally:
         import shutil
         shutil.rmtree(export_dir, ignore_errors=True)

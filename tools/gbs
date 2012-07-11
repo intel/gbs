@@ -235,7 +235,7 @@ class Gbs(cmdln.Cmdln):
         Usage:
             gbs build -R repository -A ARCH [options] [package git dir]
 
-            [package git dir] is optional, if not specified, current dir wuold
+            [package git dir] is optional, if not specified, current dir would
             be used.
 
         Examples:
@@ -330,7 +330,7 @@ class Gbs(cmdln.Cmdln):
         Usage:
             gbs remotebuild [options] [package git dir]
 
-            [package git dir] is optional, if not specified, current dir wuold
+            [package git dir] is optional, if not specified, current dir would
             be used.
 
         Examples:
