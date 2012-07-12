@@ -99,7 +99,7 @@ def do(opts, args):
                           "--git-upstream-tree=%s" % commit,
                           "--git-export-dir=%s" % export_dir,
                           "--git-packaging-dir=packaging",
-                          "--git-specfile=%s" % relative_spec,
+                          "--git-spec-file=%s" % relative_spec,
                           "--git-export=%s" % commit]):
                 msger.error("Failed to get packaging info from git tree")
         except GitRepositoryError, excobj:
@@ -113,7 +113,7 @@ def do(opts, args):
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
     else:
-        outdir = "%s/%s-%s-%s" % (outdir, spec.name, spec.version, spec.release)
+        outdir = "%s/%s-%s-%s" % (outdir, spec.name, spec.upstreamversion, spec.release)
         shutil.rmtree(outdir, ignore_errors=True)
         shutil.move(export_dir, outdir)
 

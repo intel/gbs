@@ -209,7 +209,7 @@ def do(opts, args):
                           "--git-upstream-tree=%s" % commit,
                           "--git-export-dir=%s" % tmpdir,
                           "--git-packaging-dir=packaging",
-                          "--git-specfile=%s" % relative_spec,
+                          "--git-spec-file=%s" % relative_spec,
                           "--git-export=%s" % commit]):
                 msger.error("Failed to get packaging info from git tree")
         except GitRepositoryError, excobj:
