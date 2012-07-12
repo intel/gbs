@@ -229,7 +229,7 @@ class ConfigMgr(object):
             },
             'remotebuild': {
                 'build_server': 'https://api.tizen.org',
-                'user':         'my_user_id',
+                'user':         '',
                 'passwd':       '',
             },
             'build': {
@@ -248,7 +248,8 @@ editor = $general__editor
 ; settings for build subcommand
 build_server = $remotebuild__build_server
 user = $remotebuild__user
-passwd = $remotebuild__passwd
+; CAUTION: please use the key name "passwd" to reset plaintext password
+passwdx = $remotebuild__passwdx
 
 [build]
 build_cmd = $build__build_cmd
@@ -337,13 +338,19 @@ distconf = $build__distconf
                                  % defaults['remotebuild']['build_server'])
         if build_server:
             defaults['remotebuild']['build_server'] = build_server
+
         defaults['remotebuild']['user'] = \
                           raw_input('Username for remote build server '\
                     '(type <enter> to skip): ')
+
         if defaults['remotebuild']['user']:
             msger.info('Your password will be encoded before saving ...')
             defaults['remotebuild']['passwdx'] = \
                         base64.b64encode(getpass.getpass().encode('bz2'))
+        else:
+            defaults['remotebuild']['passwdx'] = \
+                        base64.b64encode(
+                            defaults['remotebuild']['passwd'].encode('bz2'))
 
         with open(fpath, 'w') as wfile:
             wfile.write(self.get_default_conf(defaults))
