@@ -310,7 +310,8 @@ class Gbs(cmdln.Cmdln):
         """${cmd_name}: remote build package
 
         Usage:
-            gbs remotebuild [options] [package git dir]
+            gbs remotebuild [options] [package git dir] \
+    [--buildlog repo arch] [--status]
 
             [package git dir] is optional, if not specified, current dir would
             be used.

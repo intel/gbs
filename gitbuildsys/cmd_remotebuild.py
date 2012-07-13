@@ -167,10 +167,9 @@ def do(opts, args):
                 archlist.append('%-15s%-15s' % (build_repo, arch))
         if not obs_repo or not obs_arch or obs_repo not in status.keys() or \
            obs_arch not in status[obs_repo].keys():
-            msger.info('please specify correct repo / arch for buildlog')
-            msger.info('valid arguments of repo and arch are:\n%s' % \
-                       '\n'.join(archlist))
-            return 1
+            msger.error('no valid repo / arch specified for buildlog, '\
+                        'valid arguments of repo and arch are:\n%s' % \
+                        '\n'.join(archlist))
         if status[obs_repo][obs_arch] not in ['failed', 'succeeded', \
                                                                    'building']:
             msger.error('build status of %s for %s/%s is %s, no build log.' % \
