@@ -134,12 +134,6 @@ class Gbs(cmdln.Cmdln):
                   dest='include_uncommited',
                   help='uncommited changes would be included while '\
                        'generating tar ball')
-    @cmdln.option('--include-untracked',
-                  action='store_true',
-                  default=False,
-                  dest='include_untracked',
-                  help='untracked files would be included while '\
-                       'generating tar ball')
     def do_export(self, _subcmd, opts, *args):
         """${cmd_name}: export files and prepare for build
 
@@ -217,12 +211,6 @@ class Gbs(cmdln.Cmdln):
                   default=False,
                   dest='include_uncommited',
                   help='uncommited changes would be included while '\
-                       'generating tar ball')
-    @cmdln.option('--include-untracked',
-                  action='store_true',
-                  default=False,
-                  dest='include_untracked',
-                  help='untracked files would be included while '\
                        'generating tar ball')
     @cmdln.option('--debuginfo',
                   action='store_true',
@@ -317,12 +305,6 @@ class Gbs(cmdln.Cmdln):
                   default=False,
                   dest='include_uncommited',
                   help='uncommited changes would be included while '\
-                       'generating tar ball')
-    @cmdln.option('--include-untracked',
-                  action='store_true',
-                  default=False,
-                  dest='include_untracked',
-                  help='untracked files would be included while '\
                        'generating tar ball')
     def do_remotebuild(self, subcmd, opts, *args):
         """${cmd_name}: remote build package

@@ -56,10 +56,38 @@ def do(opts, args):
     if len(args) == 1:
         workdir = os.path.abspath(args[0])
 
+    if opts.commit and opts.include_uncommited:
+        raise errors.Usage('--commit can\'t be specified together with '\
+                           '--include-uncommited')
+
     try:
         repo = RpmGitRepository(workdir)
         if opts.commit:
             repo.rev_parse(opts.commit)
+        is_clean, out = repo.is_clean()
+        status = repo.status()
+        untracked_files = status['??']
+        uncommitted_files = []
+        for stat in status:
+            if stat == '??':
+                continue
+            uncommitted_files.extend(status[stat])
+        if not is_clean and not opts.include_uncommited:
+            if untracked_files:
+                msger.warning('the following untracked files would be not be '\
+                           'included:\n   %s' % '\n   '.join(untracked_files))
+            if uncommitted_files:
+                msger.warning('the following uncommited changes would not be '\
+                           'included:\n   %s' % '\n   '.join(uncommitted_files))
+            msger.warning('you can specify \'--include-uncommited\' option to '\
+                          'include these uncommited and untracked files.')
+        if opts.include_uncommited:
+            if untracked_files:
+                msger.info('the following untracked files would be included'  \
+                           ':\n   %s' % '\n   '.join(untracked_files))
+            if uncommitted_files:
+                msger.info('the following uncommited changes would be included'\
+                           ':\n   %s' % '\n   '.join(uncommitted_files))
     except GitRepositoryError, err:
         msger.error(str(err))
 
@@ -84,8 +112,6 @@ def do(opts, args):
         if opts.commit:
             commit = opts.commit
         elif opts.include_uncommited:
-            commit = 'WC.TRACKED'
-        elif opts.include_untracked:
             commit = 'WC.UNTRACKED'
         else:
             commit = 'HEAD'
