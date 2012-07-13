@@ -44,6 +44,12 @@ def do(opts, args):
         user = 'root'
     cmd = ['sudo', 'chroot', build_root, 'su', user]
     try:
+        subprocess.call(['sudo', 'cp', '/etc/resolv.conf', build_root + \
+                         '/etc/resolv.conf'])
+    except:
+        msger.warning('failed to setup /etc/resolv.conf')
+
+    try:
         build_env = os.environ
         build_env['PS1']="(tizen-build-env)@\h \W]\$ "
         subprocess.call(cmd, env=build_env)
