@@ -56,9 +56,9 @@ def do(opts, args):
     if len(args) == 1:
         workdir = os.path.abspath(args[0])
 
-    if opts.commit and opts.include_uncommited:
+    if opts.commit and opts.include_all:
         raise errors.Usage('--commit can\'t be specified together with '\
-                           '--include-uncommited')
+                           '--include-all')
 
     try:
         repo = RpmGitRepository(workdir)
@@ -72,16 +72,16 @@ def do(opts, args):
             if stat == '??':
                 continue
             uncommitted_files.extend(status[stat])
-        if not is_clean and not opts.include_uncommited:
+        if not is_clean and not opts.include_all:
             if untracked_files:
                 msger.warning('the following untracked files would be not be '\
                            'included:\n   %s' % '\n   '.join(untracked_files))
             if uncommitted_files:
                 msger.warning('the following uncommited changes would not be '\
                            'included:\n   %s' % '\n   '.join(uncommitted_files))
-            msger.warning('you can specify \'--include-uncommited\' option to '\
+            msger.warning('you can specify \'--include-all\' option to '\
                           'include these uncommited and untracked files.')
-        if opts.include_uncommited:
+        if opts.include_all:
             if untracked_files:
                 msger.info('the following untracked files would be included'  \
                            ':\n   %s' % '\n   '.join(untracked_files))
@@ -111,7 +111,7 @@ def do(opts, args):
     with utils.Workdir(workdir):
         if opts.commit:
             commit = opts.commit
-        elif opts.include_uncommited:
+        elif opts.include_all:
             commit = 'WC.UNTRACKED'
         else:
             commit = 'HEAD'

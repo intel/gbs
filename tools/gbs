@@ -128,12 +128,12 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='commit',
                   help='Specify a commit ID to export')
-    @cmdln.option('--include-uncommited',
+    @cmdln.option('--include-all',
                   action='store_true',
                   default=False,
-                  dest='include_uncommited',
-                  help='uncommited changes would be included while '\
-                       'generating tar ball')
+                  dest='include_all',
+                  help='uncommited changes and untracked files would be '\
+                       'included while generating tar ball')
     def do_export(self, _subcmd, opts, *args):
         """${cmd_name}: export files and prepare for build
 
@@ -206,12 +206,12 @@ class Gbs(cmdln.Cmdln):
                   dest='extra_packs',
                   help='Specify extra packages to install to build root '\
                        'multiple packages can be separated by comma')
-    @cmdln.option('--include-uncommited',
+    @cmdln.option('--include-all',
                   action='store_true',
                   default=False,
-                  dest='include_uncommited',
-                  help='uncommited changes would be included while '\
-                       'generating tar ball')
+                  dest='include_all',
+                  help='uncommited changes and untracked files would be '\
+                       'included while generating tar ball')
     @cmdln.option('--debuginfo',
                   action='store_true',
                   default=False,
@@ -300,12 +300,12 @@ class Gbs(cmdln.Cmdln):
                   default=False,
                   dest='status',
                   help='Get build status from build server')
-    @cmdln.option('--include-uncommited',
+    @cmdln.option('--include-all',
                   action='store_true',
                   default=False,
-                  dest='include_uncommited',
-                  help='uncommited changes would be included while '\
-                       'generating tar ball')
+                  dest='include_all',
+                  help='uncommited changes and untracked files would be '\
+                       'included while generating tar ball')
     def do_remotebuild(self, subcmd, opts, *args):
         """${cmd_name}: remote build package
 
