@@ -26,6 +26,7 @@ import tempfile
 
 import msger
 import utils
+import errors
 
 from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
