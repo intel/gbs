@@ -210,9 +210,7 @@ class RepoParser(object):
                 repomd_url = os.path.join(repo, 'repodata/repomd.xml')
                 repomd_file = os.path.join(self.cachedir, 'repomd.xml')
                 try:
-                    urlgrab(repomd_url, repomd_file,
-                                            self.repos[baseurl]['user'],\
-                                            self.repos[baseurl]['passwd'])
+                    urlgrab(repomd_url, repomd_file)
                     validrepos.append(repo)
                 except errors.UrlError:
                     pass
@@ -221,20 +219,20 @@ class RepoParser(object):
 
     def parse(self):
         for repo in self.repos:
+
             # Check if repo is standard repo with repodata/repomd.xml exist
             repomd_url = os.path.join(repo, 'repodata/repomd.xml')
             repomd_file = os.path.join(self.cachedir, 'repomd.xml')
+
             try:
-                urlgrab(repomd_url, repomd_file, self.repos[repo]['user'],   \
-                                                 self.repos[repo]['passwd'])
+                urlgrab(repomd_url, repomd_file)
                 # Try to download build.xml
                 buildxml_url = urlparse.urljoin(repo.rstrip('/') + '/',      \
                                           '../../../../builddata/build.xml')
                 self.buildmeta = os.path.join(self.cachedir,                 \
                                             os.path.basename(buildxml_url))
-                urlgrab(buildxml_url, self.buildmeta,                        \
-                                                    self.repos[repo]['user'], \
-                                                    self.repos[repo]['passwd'])
+                urlgrab(buildxml_url, self.buildmeta)
+
                 # Try to download build conf
                 if self.buildconf is None:
                     build_conf = self.get_buildconf()
@@ -242,9 +240,7 @@ class RepoParser(object):
                                                     (buildxml_url), build_conf)
                     self.buildconf = os.path.join(self.cachedir,        \
                                           os.path.basename(buildconf_url))
-                    urlgrab(buildconf_url, self.buildconf,              \
-                                                    self.repos[repo]['user'],\
-                                                    self.repos[repo]['passwd'])
+                    urlgrab(buildconf_url, self.buildconf)
                     # buildconf downloaded succeed, break!
                     break
             except errors.UrlError:
@@ -259,8 +255,7 @@ class RepoParser(object):
             buildxml_url = os.path.join(repo, 'builddata/build.xml')
             self.buildmeta = os.path.join(self.cachedir, 'build.xml')
             try:
-                urlgrab(buildxml_url, self.buildmeta, self.repos[repo]['user'],\
-                                                     self.repos[repo]['passwd'])
+                urlgrab(buildxml_url, self.buildmeta)
             except errors.UrlError:
                 self.buildmeta = None
                 continue
@@ -275,9 +270,8 @@ class RepoParser(object):
                                                 'builddata/%s' % build_conf)
                 self.buildconf = os.path.join(self.cachedir,                \
                                              os.path.basename(buildconf_url))
-                urlgrab(buildconf_url, self.buildconf,                      \
-                                                self.repos[repo]['user'],   \
-                                                self.repos[repo]['passwd'])
+                urlgrab(buildconf_url, self.buildconf)
+
             except errors.UrlError:
                 self.buildconf = None
 
@@ -289,7 +283,7 @@ class RepoParser(object):
     def get_repos_by_arch(self, arch):
         #  return directly for standard repos
         if not self.repourls:
-            return self.repos.keys() + self.localrepos
+            return self.repos + self.localrepos
 
         if arch in ['ia32', 'i686', 'i586']:
             arch = 'ia32'

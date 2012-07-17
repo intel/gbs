@@ -20,11 +20,11 @@
 """
 
 import os
-import subprocess
-import urlparse
 import re
+import subprocess
 import tempfile
-import base64
+import urllib2
+from urlparse import urlsplit, urlunsplit
 
 import msger
 import utils
@@ -170,60 +170,67 @@ def get_env_proxies():
     return proxies
 
 
-def get_reops_conf():
+def get_repos_conf():
+    """
+    Make list of urls using repox.url, repox.user and repox.passwd
+    configuration file parameters from 'build' section.
+    Validate configuration parameters.
+    """
 
-    repos = set()
+    repos = {}
     # get repo settings form build section
     for opt in configmgr.options('build'):
         if opt.startswith('repo'):
             try:
-                (name, key) = opt.split('.')
+                key, name = opt.split('.')
             except ValueError:
                 raise errors.ConfigError("invalid repo option: %s" % opt)
+
+            if name not in ('url', 'user', 'passwdx'):
+                raise errors.ConfigError("invalid repo option: %s" % opt)
+
+            if key not in repos:
+                repos[key] = {}
+
+            if name in repos[key]:
+                raise errors.ConfigError('Duplicate entry %s' % opt)
+
+            value = configmgr.get(opt, 'build')
+            if name == 'passwdx':
+                try:
+                    value = value.decode('base64').decode('bz2')
+                except (TypeError, IOError), err:
+                    raise errors.ConfigError('Error decoding %s: %s' % \
+                                             (opt, err))
+                repos[key]['passwd'] = urllib2.quote(value, safe='')
             else:
-                if key not in ('url', 'user', 'passwdx'):
-                    raise errors.ConfigError("invalid repo option: %s" % opt)
-                repos.add(name)
+                repos[key][name] = value
 
-    # get repo settings form build section
-    repo_urls = []
-    repo_auths = set()
-    for repo in repos:
-        repo_auth = ''
-        # get repo url
-        try:
-            repo_url = configmgr.get(repo + '.url', 'build')
-            repo_urls.append(repo_url)
-        except:
-            continue
+    result = []
+    for key, item in repos.iteritems():
+        if 'url' not in item:
+            raise errors.ConfigError("Url is not specified for %s" % key)
 
-        try:
-            repo_server = re.match('(https?://.*?)/.*', repo_url).groups()[0]
-        except AttributeError:
-            if repo_url.startswith('/') and os.path.exists(repo_url):
-                repo_server = repo_url
-            else:
-                raise errors.ConfigError("Invalid repo url: %s" % repo_url)
-        repo_auth = 'url' + ':' + repo_server + ';'
+        splitted = urlsplit(item['url'])
+        if splitted.username and item['user'] or \
+           splitted.password and item['passwd']:
+            raise errors.ConfigError("Auth info specified twice for %s" % key)
 
-        valid = True
-        for key in ['user', 'passwdx']:
-            try:
-                value = configmgr.get(repo+'.'+ key, 'build').strip()
-            except:
-                valid = False
-                break
-            if not value:
-                valid = False
-                break
-            repo_auth = repo_auth + key + ':' + value + ';'
+        # Get auth info from the url or urlx.user and urlx.pass
+        user = item.get('user') or splitted.username
+        passwd = item.get('passwd') or splitted.password
 
-        if not valid:
-            continue
-        repo_auth = repo_auth[:-1]
-        repo_auths.add(repo_auth)
+        if (user and not passwd) or (passwd and not user):
+            raise errors.ConfigError("Both user and password "
+                                     "has to be specified for %s" % key)
 
-    return repo_urls, ' '.join(repo_auths)
+        splitted_list = list(splitted)
+        splitted_list[1] = "%s:%s@%s" % (urllib2.quote(user, safe=''), passwd,
+			                 splitted.hostname)
+
+        result.append(urlunsplit(splitted_list))
+
+    return result
 
 def do(opts, args):
 
@@ -301,53 +308,6 @@ def do(opts, args):
     if opts.debuginfo:
         cmd += ['--debug']
 
-    repos_urls_conf, repo_auth_conf = get_reops_conf()
-
-    repos = {}
-    if opts.repositories:
-        for repourl in opts.repositories:
-            (scheme, host, path, parm, query, frag) = \
-                                    urlparse.urlparse(repourl.rstrip('/') + '/')
-            repos[repourl] = {}
-            if '@' in host:
-                try:
-                    user_pass, host = host.rsplit('@', 1)
-                except ValueError:
-                    raise errors.ConfigError('Bad URL: %s' % repourl)
-                userpwd = user_pass.split(':', 1)
-                repos[repourl]['user'] = userpwd[0]
-                if len(userpwd) == 2:
-                    repos[repourl]['passwd'] = userpwd[1]
-                else:
-                    repos[repourl]['passwd'] = None
-            else:
-                repos[repourl]['user'] = None
-                repos[repourl]['passwd'] = None
-
-    elif repos_urls_conf:
-        for url in repos_urls_conf:
-            repos[url] = {}
-            if repo_auth_conf:
-                repo_auth = {}
-                for item in repo_auth_conf.split(';'):
-                    key, val = item.split(':', 1)
-                    if key == 'passwdx':
-                        key = 'passwd'
-                        try:
-                            val = base64.b64decode(val).decode('bz2')
-                        except (TypeError, IOError), err:
-                            raise errors.ConfigError('passwdx: %s' % err)
-                    repo_auth[key] = val
-                if 'user' in repo_auth:
-                    repos[url]['user'] = repo_auth['user']
-                if 'passwd' in repo_auth:
-                    repos[url]['passwd'] = repo_auth['passwd']
-            else:
-                    repos[url]['passwd'] = None
-                    repos[url]['user'] = None
-    else:
-        msger.error('No package repository specified.')
-
     if opts.noinit:
         cmd += ['--no-init']
     else:
@@ -356,13 +316,26 @@ def do(opts, args):
         if not os.path.exists(cachedir):
             os.makedirs(cachedir)
         msger.info('generate repositories ...')
+
+        repos_urls_conf = get_repos_conf()
+        if opts.repositories:
+            repos = opts.repositories
+        elif repos_urls_conf:
+            repos = repos_urls_conf
+        else:
+            msger.error('No package repository specified.')
+
         repoparser = utils.RepoParser(repos, cachedir)
         repourls = repoparser.get_repos_by_arch(buildarch)
         if not repourls:
-            msger.error('no repositories found for arch: %s under the ' \
-                        'following repos:\n      %s' % (buildarch,      \
-                        '\n'.join(repos.keys())))
+            msger.error('no repositories found for arch: %s under the '\
+                        'following repos:\n      %s' % \
+                        (buildarch, '\n'.join(repos)))
         for url in repourls:
+		if not  re.match('https?://.*?/.*', url) and \
+                       not (url.startswith('/') and os.path.exists(url)):
+                    msger.error("Invalid repo url: %s" % url)
+
             cmd += ['--repository=%s' % url]
 
         if opts.dist:
@@ -373,8 +346,9 @@ def do(opts, args):
                 msger.info('failed to get build conf, use default build conf')
                 distconf = configmgr.get('distconf', 'build')
             else:
-                msger.info('build conf has been downloaded at:\n      %s'
-                            % distconf)
+                msger.info('build conf has been downloaded at:\n      %s' \
+                           % distconf)
+
         if distconf is None:
             msger.error('No build config file specified, please specify in '\
                         '~/.gbs.conf or command line using -D')
@@ -443,11 +417,8 @@ def do(opts, args):
                 (spec.name, spec.version)]
 
     # if current user is root, don't run with sucmd
-    if os.getuid() == 0:
-        os.environ['GBS_BUILD_REPOAUTH'] = repo_auth_conf
-    else:
-        cmd = ['sudo'] + proxies + ['GBS_BUILD_REPOAUTH=%s' % \
-              repo_auth_conf ] + cmd
+    if os.getuid() != 0:
+        cmd = ['sudo'] + proxies + cmd
 
     # runner.show() can't support interactive mode, so use subprocess insterad.
     msger.debug("running command %s" % cmd)
