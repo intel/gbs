@@ -94,19 +94,19 @@ def do(opts, args):
         if not is_clean and not opts.include_all and not \
            (opts.buildlog or opts.status):
             if untracked_files:
-                msger.warning('the following untracked files would be not be '\
+                msger.warning('the following untracked files would NOT be '\
                            'included:\n   %s' % '\n   '.join(untracked_files))
             if uncommitted_files:
-                msger.warning('the following uncommited changes would not be '\
+                msger.warning('the following uncommitted changes would NOT be '\
                            'included:\n   %s' % '\n   '.join(uncommitted_files))
             msger.warning('you can specify \'--include-all\' option to '\
-                          'include these uncommited and untracked files.')
+                          'include these uncommitted and untracked files.')
         if opts.include_all and not (opts.buildlog or opts.status):
             if untracked_files:
                 msger.info('the following untracked files would be included'  \
                            ':\n   %s' % '\n   '.join(untracked_files))
             if uncommitted_files:
-                msger.info('the following uncommited changes would be included'\
+                msger.info('the following uncommitted changes would be included'\
                            ':\n   %s' % '\n   '.join(uncommitted_files))
     except repository.GitRepositoryError, err:
         msger.error(str(err))
