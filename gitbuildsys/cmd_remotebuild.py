@@ -20,15 +20,15 @@
 """
 
 import os
-import tempfile
 import glob
+import shutil
 
 import msger
-from conf import configmgr
-import buildservice
-import obspkg
 import errors
 import utils
+
+from conf import configmgr
+from oscapi import OSC, OSCError
 
 import gbp.rpm
 from gbp.scripts.buildpackage_rpm import main as gbp_build
@@ -88,7 +88,7 @@ def do(opts, args):
         utils.gitStatusChecker(repo, opts)
     workdir = repo.path
 
-    tmpdir = os.path.join(workdir, 'packaging')
+    tmpdir = os.path.join(workdir, 'packaging', '.export')
     if not os.path.exists(tmpdir):
         os.makedirs(tmpdir)
 
@@ -109,6 +109,7 @@ def do(opts, args):
 
     if not spec.name:
         msger.error('can\'t get correct name.')
+    package = spec.name
 
     if opts.base_obsprj is None:
         # TODO, get current branch of git to determine it
@@ -133,59 +134,65 @@ def do(opts, args):
     tmpf = utils.Temp(dirn=tmpdir, prefix='.oscrc', content=oscrc)
     oscrcpath = tmpf.path
 
-    if opts.buildlog:
-        bs = buildservice.BuildService(apiurl=APISERVER, oscrc=oscrcpath)
-        archlist = []
-        status = bs.get_results(target_prj, spec.name)
-        for build_repo in status.keys():
-            for arch in status[build_repo]:
-                archlist.append('%-15s%-15s' % (build_repo, arch))
-        if not obs_repo or not obs_arch or obs_repo not in status.keys() or \
-           obs_arch not in status[obs_repo].keys():
-            msger.error('no valid repo / arch specified for buildlog, '\
-                        'valid arguments of repo and arch are:\n%s' % \
-                        '\n'.join(archlist))
-        if status[obs_repo][obs_arch] not in ['failed', 'succeeded', \
-                                                                   'building']:
-            msger.error('build status of %s for %s/%s is %s, no build log.' % \
-                  (spec.name, obs_repo, obs_arch, status[obs_repo][obs_arch]))
-        bs.get_buildlog(target_prj, spec.name, obs_repo, obs_arch)
-        return 0
+    api = OSC(APISERVER, oscrc=oscrcpath)
 
-    if opts.status:
-        bs = buildservice.BuildService(apiurl=APISERVER, oscrc=oscrcpath)
-        results = []
-        status = bs.get_results(target_prj, spec.name)
-        for build_repo in status.keys():
-            for arch in status[build_repo]:
-                stat = status[build_repo][arch]
-                results.append('%-15s%-15s%-15s' % (build_repo, arch, stat))
-        msger.info('build results from build server:\n%s' % '\n'.join(results))
-        return 0
+    try:
+        if opts.buildlog:
+            archlist = []
+            status = api.get_results(target_prj, package)
 
-    prj = obspkg.ObsProject(target_prj, apiurl = APISERVER, oscrc = oscrcpath)
-    msger.info('checking status of obs project: %s ...' % target_prj)
-    if prj.is_new():
-        # FIXME: How do you know that a certain user does not have permission to
-        # create any project, anywhewre?
-        if opts.target_obsprj and not target_prj.startswith('home:%s:' % USER):
-            msger.error('no permission to create project %s, only sub projects'\
-                    'of home:%s are allowed ' % (target_prj, USER))
-        msger.info('creating %s for package build ...' % target_prj)
-        prj.branch_from(base_prj)
+            for build_repo in status.keys():
+                for arch in status[build_repo]:
+                    archlist.append('%-15s%-15s' % (build_repo, arch))
+            if not obs_repo or not obs_arch or obs_repo not in status.keys() \
+                   or obs_arch not in status[obs_repo].keys():
+                msger.error('no valid repo / arch specified for buildlog, '\
+                            'valid arguments of repo and arch are:\n%s' % \
+                            '\n'.join(archlist))
+            if status[obs_repo][obs_arch] not in ['failed', 'succeeded',
+                                                  'building', 'finishing']:
+                msger.error('build status of %s for %s/%s is %s, no build log.'\
+                            % (package, obs_repo, obs_arch,
+                               status[obs_repo][obs_arch]))
+            msger.info('build log for %s/%s/%s/%s' % (target_prj, package,
+                                                      obs_repo, obs_arch))
+            print api.get_buildlog(target_prj, package, obs_repo, obs_arch)
 
-    msger.info('checking out %s/%s to %s ...' % (target_prj, spec.name, tmpdir))
+            return 0
 
-    target_prj_path = os.path.join(tmpdir, target_prj)
-    if os.path.exists(target_prj_path) and \
-       not os.access(target_prj_path, os.W_OK|os.R_OK|os.X_OK):
-        msger.error('No access permission to %s, please check' \
-                        % target_prj_path)
+        if opts.status:
+            results = []
 
-    localpkg = obspkg.ObsPackage(tmpdir, target_prj, spec.name,
-                                 APISERVER, oscrcpath)
-    oscworkdir = localpkg.get_workdir()
-    localpkg.remove_all()
+            status = api.get_results(target_prj, package)
+
+            for build_repo in status.keys():
+                for arch in status[build_repo]:
+                    stat = status[build_repo][arch]
+                    results.append('%-15s%-15s%-15s' % (build_repo, arch, stat))
+            msger.info('build results from build server:\n%s' \
+                       % '\n'.join(results))
+            return 0
+
+        msger.info('checking status of obs project: %s ...' % target_prj)
+        if not api.exists(target_prj):
+            # FIXME: How do you know that a certain user does not have
+            # permissions to create any project, anywhewre?
+            if opts.target_obsprj and \
+                   not target_prj.startswith('home:%s:' % USER):
+                msger.error('no permission to create project %s, only sub '\
+                        'projects of home:%s are allowed ' % (target_prj, USER))
+
+            msger.info('copying settings of %s to %s' % (base_prj, target_prj))
+            api.copy_project(base_prj, target_prj)
+
+        if api.exists(target_prj, package):
+            msger.info('cleaning existing package')
+            api.remove_files(target_prj, package)
+        else:
+            msger.info('creating new package %s/%s' % (target_prj, package))
+            api.create_package(target_prj, package)
+    except OSCError, err:
+        msger.error(str(err))
 
     with utils.Workdir(workdir):
         if opts.commit:
@@ -198,7 +205,7 @@ def do(opts, args):
         try:
             if gbp_build(["argv[0] placeholder", "--git-export-only",
                           "--git-ignore-new", "--git-builder=osc",
-                          "--git-export-dir=%s" % oscworkdir,
+                          "--git-export-dir=%s" % tmpdir,
                           "--git-packaging-dir=packaging",
                           "--git-specfile=%s" % relative_spec,
                           "--git-export=%s" % commit]):
@@ -206,19 +213,22 @@ def do(opts, args):
         except GitRepositoryError, excobj:
             msger.error("Repository error: %s" % excobj)
 
-    localpkg.update_local()
-
     try:
         commit_msg = repo.get_commit_info('HEAD')['subject']
-        msger.info('commit packaging files to build server ...')
-        localpkg.commit (commit_msg)
-    except errors.ObsError, exc:
-        msger.error('commit packages fail: %s, please check the permission '\
-                    'of target project:%s' % (exc,target_prj))
     except GitRepositoryError, exc:
         msger.error('failed to get commit info: %s' % exc)
+
+    msger.info('commit packaging files to build server ...')
+    try:
+        api.commit_files(target_prj, package,
+                         glob.glob("%s/*" % tmpdir), commit_msg)
+    except errors.ObsError, exc:
+        msger.error('commit packages fail: %s, please check the permission '\
+                    'of target project:%s' % (exc, target_prj))
+
+    shutil.rmtree(tmpdir)
 
     msger.info('local changes submitted to build server successfully')
     msger.info('follow the link to monitor the build progress:\n'
                '  %s/package/show?package=%s&project=%s' \
-               % (APISERVER.replace('api', 'build'), spec.name, target_prj))
+               % (APISERVER.replace('api', 'build'), package, target_prj))
