@@ -54,7 +54,7 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root,-)
 %doc README.rst
-%{_mandir}/man1/*
+#%{_mandir}/man1/*
 %{python_sitelib}/*
 %dir %{_datadir}/%{name}
 %{_datadir}/%{name}/*
