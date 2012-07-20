@@ -7,7 +7,7 @@ Group:      Development/Tools
 License:    GPLv2
 BuildArch:  noarch
 URL:        http://www.tizen.org
-Source0:    %{name}-%{version}.tar.bz2
+Source0:    %{name}_%{version}.tar.gz
 Requires:   python >= 2.5
 Requires:   python-pycurl
 Requires:   git-core

@@ -1,0 +1,85 @@
+gbs (0.7) unstable; urgency=high
+
+  * Add binfmt-support depend for arm build support
+  * print the detail path of binaries RPM packages
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Wed, 6 Jun  2012 10:56:15 +0800
+
+gbs (0.6.3) unstable; urgency=high
+
+  * Add binfmt-support depend for arm build support
+  * print the detail path of binaries RPM packages
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Mon, 4 Jun  2012 10:56:15 +0800
+
+gbs (0.6.2) unstable; urgency=high
+
+  * remove extra output information for gbs build
+  * dont need sudo before gbs build
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Fri, 1 Jun  2012 10:56:15 +0800
+
+gbs (0.6) unstable; urgency=high
+
+  * Upgrade to gbs v0.6, which contains the following features:
+    * subcommand renamed:
+      * build => remotebuild
+      * localbuild => build
+    * Update tizen*1.0.conf to fix build issue for tizen.org repo
+    * Code clean up:
+      * remove useless data/build.sh
+      * remove _fall_to_shell related code
+    * Add --ccache and --incremental options for gbs 'build'
+    * fix default build server api issue.
+    * fix git archive issue for zip format
+    * more error handling support
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Sat, 12 May 2012 10:56:15 +0800
+
+gbs (0.5) unstable; urgency=high
+
+  * Upgrade to gbs v0.5, which contains the following features:
+    * arm local build supported on ubuntu 10.04/10.10
+    * use sudo to run localbuild to fix proxy issue while using
+      tsocks. examples: $ sudo tsocks gbs localbuild
+    * fix permission issue while parsing specfile.
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Fri, 13 Apr 2012 10:56:15 +0800
+
+gbs (0.4) unstable; urgency=high
+
+  * Upgrade to gbs v0.4, which contains the following features:
+    * gbs localbuild/build: more archive tar ball format support
+    * unittest added:
+      * gbs help unit test
+      * utils/guess_version for tar ball unit test
+      * spec file parser module unit test
+    * Add arch check for gbs local build
+    * Raise obs error if Base project is empty
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Thu, 5 Apr 2012 10:56:15 +0800
+
+gbs (0.3) unstable; urgency=high
+
+  * Upgrade to gbs v0.3, which contains the following features:
+    * gbs localbuild support
+    * gbs import support, which support importing src.rpm and spec
+    * gbs import-orig support, which can used to update packages
+    * More information can be avaliable from 'man gbs'
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Fri, 2 Feb 2012 10:56:15 +0800
+
+gbs (0.2) unstable; urgency=high
+
+  * Update to latest stable release version 2.0.
+    * New gbs build: build rpm package from git repository on OBS
+    * New build service module to interact with OBS
+    * New git module to wrap local git command
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Fri, 2 Feb 2012 10:56:15 +0800
+
+gbs (0.1) unstable; urgency=high
+
+  * Initial release
+
+ -- Jian-feng Ding <jian-feng.ding@intel.com>  Fri, 2 Dec 2011 10:56:15 +0800

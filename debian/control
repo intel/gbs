@@ -1,0 +1,22 @@
+Source: gbs
+Section: devel
+Priority: extra
+Maintainer: Jian-feng Ding <jian-feng.ding@intel.com>
+Build-Depends: debhelper (>= 7.0.15), python-dev, dpatch, cdbs,
+Standards-Version: 3.8.0
+Homepage: http://www.tizen.org
+
+Package: gbs
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends},
+ git-core,
+ osc (>= 0.131),
+ build (>= 2012.07.20),
+ rpm,
+ qemu-arm-static (>= 0.14.1) | qemu-user-static,
+ binfmt-support,
+ sudo,
+ git-buildpackage-rpm
+Description: The command line tools for Tizen package developers
+  The command line tools for Tizen package developers will
+  be used to do packaging related tasks.
