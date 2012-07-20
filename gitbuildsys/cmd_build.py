@@ -446,7 +446,6 @@ def do(opts, args):
         cmd = ['sudo'] + proxies + ['GBS_BUILD_REPOAUTH=%s' % \
               repo_auth_conf ] + cmd
 
-    cmd += [os.path.join(export_dir, os.path.basename(specfile))]
     # runner.show() can't support interactive mode, so use subprocess insterad.
     msger.debug("running command %s" % cmd)
     try:
