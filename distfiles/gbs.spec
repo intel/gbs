@@ -11,12 +11,12 @@ Source0:    %{name}_%{version}.tar.gz
 Requires:   python >= 2.5
 Requires:   python-pycurl
 Requires:   git-core
-Requires:   osc >= 0.131
-Requires:   build >= 2011.10.10
+Requires:   osc = 0.134.0
+Requires:   build = 2012.07.21
 Requires:   qemu >= 0.14.1
 Requires:   qemu-arm-static >= 0.14.1
 Requires:   sudo
-Requires:   git-buildpackage-rpm
+Requires:   git-buildpackage-rpm >= 0.6.0git20120628
 %if 0%{?fedora_version}
 Requires:   rpm-build
 %else
