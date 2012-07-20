@@ -9,7 +9,7 @@ class TestHelp(unittest.TestCase):
     """Test help output of gbs commands"""
 
     def testSubCommandHelp(self):
-        for prog in [ "build", "localbuild", "getconfig"]:
+        for prog in [ "build", "remotebuild"]:
             ret = os.system("gbs help %s > /dev/null"  % prog)
             self.assertEqual(ret, 0)
 
