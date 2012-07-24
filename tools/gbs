@@ -193,6 +193,11 @@ class Gbs(cmdln.Cmdln):
                   help='Do incremental build, which needs support of spec file,'
                        ' and tar ball unpack stage should be enabled with the '
                        'condition of RPM macro RSYNCDONE')
+    @cmdln.option('--skip-conf-repos',
+                  action="store_true",
+                  default=False,
+                  dest='skip_conf_repos',
+                  help='Skip repositories mentioned in config file')
     @cmdln.option('-c', '--commit',
                   default=None,
                   dest='commit',

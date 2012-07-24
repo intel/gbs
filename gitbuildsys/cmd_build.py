@@ -317,12 +317,14 @@ def do(opts, args):
             os.makedirs(cachedir)
         msger.info('generate repositories ...')
 
-        repos_urls_conf = get_repos_conf()
-        if opts.repositories:
-            repos = opts.repositories
-        elif repos_urls_conf:
-            repos = repos_urls_conf
+        if opts.skip_conf_repos:
+            repos = []
         else:
+            repos = get_repos_conf()
+
+        if opts.repositories:
+            repos.extend(opts.repositories)
+        if not repos:
             msger.error('No package repository specified.')
 
         repoparser = utils.RepoParser(repos, cachedir)
