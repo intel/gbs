@@ -1,3 +1,38 @@
+gbs (0.8) unstable; urgency=high
+
+  * Upgrade to gbs v0.8, which contains the following features:
+    * moving remotebuild temp build files to packaging dir
+    * moving build root to $tmpdir/$user/gbs-buildroot.$arch
+    * support building un-commit changes with --including-all opt
+    * support building special commit id or tag
+    * gbs chroot support, user can chroot to the buildroot, and make
+      yuild, it is useful for the big packages
+    * support custom location of configuration file, user can specify
+      different conf besides using ~/.gbs.conf using -c global option
+    * developer to be able to view 'gbs remotebuild' log and build
+      status using gbs with --buildlog and status options
+    * --extra-packs supported for developer installing extra packages
+      to build root, for example: --extra-packs=zypper,vim , this is
+      very usefull for developer to make buildroot as a full development
+      envionment
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Fri, 13 Jul  2012 10:56:15 +0800
+
+gbs (0.7.1) unstable; urgency=high
+
+  * Upgrade to gbs v0.7.1, which contains the following features:
+    * download build conf from repos
+    * support new format of repo url, for example:
+      http://download.tizen.org/snapshots/trunk/latest/, which contains
+      builddata/build.xml metadata, and using this file different
+      archs repos can be built out, so user dont need update conf
+      if transfer build archs
+    * more error handling for conf module
+    * new -m option for gbs changelog to add new entry
+    * create one entry in gbs changelog
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Wed, 27 Jun  2012 10:56:15 +0800
+
 gbs (0.7) unstable; urgency=high
 
   * Add binfmt-support depend for arm build support
