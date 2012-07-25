@@ -35,11 +35,11 @@ def handle_project(option, opt_str, value, parser):
     if not value:
         raise errors.Usage("option %s: need value" % opt_str)
     if value[0] == '-':
-        raise errors.Usage("option %s: invalid project name %s, can not " \
+        raise errors.Usage("option %s: invalid project name %s, cannot " \
                            "start with '-'" % (opt_str, value))
     if not re.match(r'^(\w|:|\.|-)+$', value):
         raise errors.Usage("option %s: invalid project name %s, only word " \
-                           "character, ':', '.' and '-' are supportted" \
+                           "character, ':', '.' and '-' are supported" \
                            % (opt_str, value))
     setattr(parser.values, option.dest, value)
 
@@ -62,12 +62,12 @@ class Gbs(cmdln.Cmdln):
         optparser = cmdln.CmdlnOptionParser(self, version=self.version)
         optparser.add_option('-d', '--debug', action='store_true',
                                               dest='debug',
-                                              help='print debug message')
+                                              help='Print debug message')
         optparser.add_option('-v', '--verbose', action='store_true',
                                                 dest='verbose',
-                                                help='verbose information')
+                                                help='Verbose information')
         optparser.add_option('-c', '--conf', dest='conf',
-                                             help='specify config file for gbs')
+                                             help='Specify config file for gbs')
         return optparser
 
     def postoptparse(self):
@@ -86,19 +86,19 @@ class Gbs(cmdln.Cmdln):
                   action='store_true',
                   default=False,
                   dest='changelog',
-                  help='invoke gbs changelog to create changelog')
+                  help='Invoke gbs changelog to create changelog')
     @cmdln.option('-m', '--msg',
                   default=None,
                   dest='msg',
-                  help='specify commit message info')
+                  help='Specify commit message info')
     @cmdln.option('--tag',
                   action='store_true',
                   default=False,
-                  help='make a tag before submit')
+                  help='Make a tag before submit')
     @cmdln.option('--branch',
                   default='master',
                   dest='target_branch',
-                  help='specify the target branch for submit')
+                  help='Specify the target branch for submit')
 
     def do_submit(self, _subcmd, opts, *args):
         """${cmd_name}: submit commit request to gerrit for review
@@ -132,7 +132,7 @@ class Gbs(cmdln.Cmdln):
                   action='store_true',
                   default=False,
                   dest='include_all',
-                  help='uncommited changes and untracked files would be '\
+                  help='Uncommitted changes and untracked files would be '\
                        'included while generating tar ball')
     def do_export(self, _subcmd, opts, *args):
         """${cmd_name}: export files and prepare for build
@@ -152,7 +152,7 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('-D', '--dist',
                   default=None,
                   dest='dist',
-                  help='Specify distribution configuration file, which should' \
+                  help='Specify distribution configuration file, which should ' \
                        'be a full path')
     @cmdln.option('-R', '--repository',
                   action="callback",
@@ -169,7 +169,7 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('-A', '--arch',
                   default=None,
                   dest='arch',
-                  help='build target arch ')
+                  help='Build target arch ')
     @cmdln.option('-C', '--clean',
                   action='store_true',
                   default=False,
@@ -210,7 +210,7 @@ class Gbs(cmdln.Cmdln):
                   action='store_true',
                   default=False,
                   dest='include_all',
-                  help='uncommited changes and untracked files would be '\
+                  help='Uncommitted changes and untracked files would be '\
                        'included while generating tar ball')
     @cmdln.option('--debuginfo',
                   action='store_true',
@@ -249,11 +249,11 @@ class Gbs(cmdln.Cmdln):
                   action='store_true',
                   default=False,
                   dest='root',
-                  help='chroot as root instead of abuild by default')
+                  help='Chroot as root instead of abuild by default')
     @cmdln.option('-A', '--arch',
                   default='i586',
                   dest='arch',
-                  help='specify the build root arch')
+                  help='Specify the build root arch')
     def do_chroot(self, subcmd, opts, *args):
         """${cmd_name}: chroot to build root
 
@@ -304,7 +304,7 @@ class Gbs(cmdln.Cmdln):
                   action='store_true',
                   default=False,
                   dest='include_all',
-                  help='uncommited changes and untracked files would be '\
+                  help='Uncommitted changes and untracked files would be '\
                        'included while generating tar ball')
     def do_remotebuild(self, subcmd, opts, *args):
         """${cmd_name}: remote build package
@@ -332,15 +332,15 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--author-name',
                   default=None,
                   dest='author_name',
-                  help='author name of git commit')
+                  help='Author name of git commit')
     @cmdln.option('--author-email',
                   default=None,
                   dest='author_email',
-                  help='author email of git commit')
+                  help='Author email of git commit')
     @cmdln.option('--upstream_branch',
                   default='upstream',
                   dest='upstream_branch',
-                  help='specify upstream branch for new version of package')
+                  help='Specify upstream branch for new version of package')
     @cmdln.option('--no-merge',
                   action='store_true',
                   default=False,
@@ -368,11 +368,11 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('-s', '--since',
                   default=None,
                   dest='since',
-                  help='commit to start from')
+                  help='Commit to start from')
     @cmdln.option('-m', '--message',
                   default=None,
                   dest='message',
-                  help='use given message as the changelog entry')
+                  help='Use given message as the changelog entry')
     def do_changelog(self, _subcmd, opts, *args):
         """${cmd_name}: update the changelog file with the git commit messages
 
@@ -395,7 +395,7 @@ if __name__ == '__main__':
         sys.exit(Gbs().main())
 
     except KeyboardInterrupt:
-        msger.error('\n^C catched, program aborted.')
+        msger.error('\n^C caught, program aborted.')
 
     except errors.Usage, usage:
         msger.error(str(usage))
