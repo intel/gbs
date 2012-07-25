@@ -120,18 +120,6 @@ def do(opts, args):
     if not os.access(tmpdir, os.W_OK|os.R_OK|os.X_OK):
         msger.error('No access permission to %s, please check' % tmpdir)
 
-    oscrc = OSCRC_TEMPLATE % {
-                "http_debug": 1 if msger.get_loglevel() == 'debug' else 0,
-                "debug": 1 if msger.get_loglevel() == 'verbose' else 0,
-                "apiurl": APISERVER,
-                "user": USER,
-                "passwdx": PASSWDX,
-            }
-    (fds, oscrcpath) = tempfile.mkstemp(dir=tmpdir, prefix='.oscrc')
-    os.close(fds)
-    with file(oscrcpath, 'w+') as foscrc:
-        foscrc.write(oscrc)
-
     # TODO: check ./packaging dir at first
     specs = glob.glob('%s/packaging/*.spec' % workdir)
     if not specs:
@@ -157,6 +145,18 @@ def do(opts, args):
         target_prj = "home:%s:gbs:%s" % (USER, base_prj)
     else:
         target_prj = opts.target_obsprj
+
+    # Create temporary oscrc
+    oscrc = OSCRC_TEMPLATE % {
+                "http_debug": 1 if msger.get_loglevel() == 'debug' else 0,
+                "debug": 1 if msger.get_loglevel() == 'verbose' else 0,
+                "apiurl": APISERVER,
+                "user": USER,
+                "passwdx": PASSWDX,
+            }
+
+    tmpf = Temp(dirn=tmpdir, prefix='.oscrc', content=oscrc)
+    oscrcpath = tmpf.path
 
     if opts.buildlog:
         bs = buildservice.BuildService(apiurl=APISERVER, oscrc=oscrcpath)
@@ -243,7 +243,6 @@ def do(opts, args):
     except GitRepositoryError, exc:
         msger.error('failed to get commit info: %s' % exc)
 
-    os.unlink(oscrcpath)
     msger.info('local changes submitted to build server successfully')
     msger.info('follow the link to monitor the build progress:\n'
                '  %s/package/show?package=%s&project=%s' \

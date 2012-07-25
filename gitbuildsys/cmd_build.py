@@ -401,8 +401,9 @@ def do(opts, args):
     # Only guess spec filename here, parse later when we have the correct
     # spec file at hand
     specfile = utils.guess_spec(workdir, opts.spec)
-    packaging_dir = os.path.join(workdir, 'packaging/')
-    export_dir = tempfile.mkdtemp(prefix=packaging_dir + 'build_')
+    packaging_dir = os.path.join(workdir, 'packaging/', 'build_')
+    tmpd = utils.Temp(prefix=packaging_dir, directory=True)
+    export_dir = tmpd.path
     with utils.Workdir(workdir):
         if opts.commit:
             commit = opts.commit
@@ -460,6 +461,3 @@ def do(opts, args):
         msger.info('keyboard interrupt, killing build ...')
         subprocess.call(cmd + ["--kill"])
         msger.error('interrupt from keyboard')
-    finally:
-        import shutil
-        shutil.rmtree(export_dir, ignore_errors=True)

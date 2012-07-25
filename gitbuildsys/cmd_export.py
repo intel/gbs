@@ -108,7 +108,8 @@ def do(opts, args):
     # Only guess spec filename here, parse later when we have the correct
     # spec file at hand
     specfile = utils.guess_spec(workdir, opts.spec)
-    export_dir = tempfile.mkdtemp(prefix='gbs_export_', dir=outdir)
+    tempd = Temp(prefix='gbs_export_', dirn=outdir, directory=True)
+    export_dir = tempd.path
     with utils.Workdir(workdir):
         if opts.commit:
             commit = opts.commit

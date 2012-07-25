@@ -61,6 +61,41 @@ def guess_spec(workdir, default_spec):
             specfile = specs[0]
     return specfile
 
+class Temp(object):
+    """
+    Create temporary file or directory.
+    Delete it automatically when object is destroyed.
+
+    """
+
+    def __init__(self, suffix='', prefix='tmp', dirn=None,
+                 directory=False, content=None):
+        """
+        Create file or directory using tempfile.mk[sd]temp.
+        If content is provided write it to the file.
+
+        """
+        self.directory = directory
+
+        if directory:
+            path = tempfile.mkdtemp(suffix, prefix, dirn)
+        else:
+            (fds, path) = tempfile.mkstemp(suffix, prefix, dirn)
+            os.close(fds)
+            if content:
+                with file(path, 'w+') as fobj:
+                    fobj.write(content)
+
+        self.path = path
+
+    def __del__(self):
+        """Remove it when object is destroyed."""
+        if os.path.exists(self.path):
+            if self.directory:
+                shutil.rmtree(self.path, True)
+            else:
+                os.unlink(self.path)
+
 class TempCopy(object):
     """Copy original file to temporary file in the same directory as
        original. Creates empty termporary file if original doesn't exist.

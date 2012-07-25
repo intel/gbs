@@ -409,3 +409,7 @@ if __name__ == '__main__':
             msger.error(traceback.format_exc())
         else:
             msger.error('\n'+str(err))
+
+    except Exception:
+        import traceback
+        msger.error(traceback.format_exc())
