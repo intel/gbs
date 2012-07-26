@@ -155,7 +155,7 @@ def do(opts, args):
                 "passwdx": PASSWDX,
             }
 
-    tmpf = Temp(dirn=tmpdir, prefix='.oscrc', content=oscrc)
+    tmpf = utils.Temp(dirn=tmpdir, prefix='.oscrc', content=oscrc)
     oscrcpath = tmpf.path
 
     if opts.buildlog:
