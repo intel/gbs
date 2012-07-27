@@ -11,4 +11,7 @@ tarball:
 	@cd .. && git archive --prefix $(PKG_NAME)-$(PKG_VERSION)/ HEAD \
 		| gzip > packaging/$(TARBALL)
 
-all: tarball dsc
+clean:
+	@rm -f *.tar.gz
+
+all: clean tarball dsc
