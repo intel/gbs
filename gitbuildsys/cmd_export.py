@@ -24,6 +24,7 @@ import shutil
 import errno
 
 import msger
+import runner
 import utils
 import errors
 
@@ -139,5 +140,21 @@ def do(opts, args):
         outdir = "%s/%s-%s-%s" % (outdir, spec.name, spec.version, spec.release)
         shutil.rmtree(outdir, ignore_errors=True)
         shutil.move(export_dir, outdir)
+
+    if opts.source_rpm:
+        cmd = ['rpmbuild',
+               '--short-circuit', '-bs',
+               '--define "_topdir %s"' % outdir,
+               '--define "_builddir %_topdir"',
+               '--define "_buildrootdir %_topdir"',
+               '--define "_rpmdir %_topdir"',
+               '--define "_sourcedir %_topdir"',
+               '--define "_specdir %_topdir"',
+               '--define "_srcrpmdir %_topdir"',
+               specfile
+              ]
+        runner.quiet(' '.join(cmd))
+        msger.info('source rpm generated to:\n     %s/%s.src.rpm' % \
+                   (outdir, os.path.basename(outdir)))
 
     msger.info('package files have been exported to:\n     %s' % outdir)

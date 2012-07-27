@@ -134,6 +134,11 @@ class Gbs(cmdln.Cmdln):
                   dest='include_all',
                   help='Uncommitted changes and untracked files would be '\
                        'included while generating tar ball')
+    @cmdln.option('--source-rpm',
+                  action='store_true',
+                  default=False,
+                  dest='source_rpm',
+                  help='generate source rpm')
     def do_export(self, _subcmd, opts, *args):
         """${cmd_name}: export files and prepare for build
 
