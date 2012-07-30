@@ -45,13 +45,16 @@ class Workdir(object):
 
 def guess_spec(workdir, default_spec):
     if default_spec:
+        default_spec = os.path.abspath(default_spec)
         if not os.path.exists(default_spec):
             msger.error('%s does not exit' % default_spec)
         return default_spec
+
+    workdir = os.path.abspath(workdir)
     git_project =  os.path.basename(workdir)
-    specfile = '%s/packaging/%s.spec' % (workdir, git_project)
+    specfile = os.path.join(workdir, 'packaging', '%s.spec' % git_project)
     if not os.path.exists(specfile):
-        specs = glob.glob('%s/packaging/*.spec' % workdir)
+        specs = glob.glob(os.path.join(workdir, 'packaging', '*.spec'))
         if not specs:
             msger.error('no spec file found under %s/packaging' % workdir)
 
