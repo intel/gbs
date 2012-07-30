@@ -334,10 +334,9 @@ def do(opts, args):
                         'following repos:\n      %s' % \
                         (buildarch, '\n'.join(repos)))
         for url in repourls:
-		if not  re.match('https?://.*?/.*', url) and \
-                       not (url.startswith('/') and os.path.exists(url)):
-                    msger.error("Invalid repo url: %s" % url)
-
+            if not  re.match('https?://.*', url) and \
+               not (url.startswith('/') and os.path.exists(url)):
+                msger.error("Invalid repo url: %s" % url)
             cmd += ['--repository=%s' % url]
 
         if opts.dist:
