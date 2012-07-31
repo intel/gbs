@@ -246,35 +246,11 @@ def do(opts, args):
 
     try:
         repo = RpmGitRepository(workdir)
-        if opts.commit:
-            repo.rev_parse(opts.commit)
-        is_clean, out = repo.is_clean()
-        status = repo.status()
-        untracked_files = status['??']
-        uncommitted_files = []
-        for stat in status:
-            if stat == '??':
-                continue
-            uncommitted_files.extend(status[stat])
-        if not is_clean and not opts.include_all:
-            if untracked_files:
-                msger.warning('the following untracked files would NOT be '\
-                           'included:\n   %s' % '\n   '.join(untracked_files))
-            if uncommitted_files:
-                msger.warning('the following uncommitted changes would NOT be '\
-                           'included:\n   %s' % '\n   '.join(uncommitted_files))
-            msger.warning('you can specify \'--include-all\' option to '\
-                          'include these uncommitted and untracked files.')
-        if opts.include_all:
-            if untracked_files:
-                msger.info('the following untracked files would be included'  \
-                           ':\n   %s' % '\n   '.join(untracked_files))
-            if uncommitted_files:
-                msger.info('the following uncommitted changes would be included'\
-                           ':\n   %s' % '\n   '.join(uncommitted_files))
     except GitRepositoryError, err:
         msger.error(str(err))
 
+    if not opts.incremental:
+        utils.gitStatusChecker(repo, opts)
     workdir = repo.path
 
     hostarch = get_hostarch()
