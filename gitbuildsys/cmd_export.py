@@ -100,16 +100,18 @@ def do(opts, args):
     if not os.path.isdir("%s/.git" % workdir):
         msger.error('Not a git repository (%s), aborting' % workdir)
 
+    # Only guess spec filename here, parse later when we have the correct
+    # spec file at hand
+    specfile = utils.guess_spec(workdir, opts.spec)
+
     outdir = "%s/packaging" % workdir
     if opts.outdir:
         outdir = opts.outdir
     mkdir_p(outdir)
-
-    # Only guess spec filename here, parse later when we have the correct
-    # spec file at hand
-    specfile = utils.guess_spec(workdir, opts.spec)
+    outdir = os.path.abspath(outdir)
     tempd = utils.Temp(prefix='gbs_export_', dirn=outdir, directory=True)
     export_dir = tempd.path
+
     with utils.Workdir(workdir):
         if opts.commit:
             commit = opts.commit
