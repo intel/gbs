@@ -20,7 +20,8 @@ import sys
 import re
 
 from gitbuildsys import __version__
-from gitbuildsys import msger, cmdln, errors
+from gitbuildsys import msger, errors
+from osc import cmdln
 
 def handle_repository(option, opt_str, value, parser):
     if not value:
