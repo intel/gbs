@@ -225,8 +225,9 @@ def get_repos_conf():
                                      "has to be specified for %s" % key)
 
         splitted_list = list(splitted)
-        splitted_list[1] = "%s:%s@%s" % (urllib2.quote(user, safe=''), passwd,
-			                 splitted.hostname)
+        if user and passwd:
+            splitted_list[1] = "%s:%s@%s" % (urllib2.quote(user, safe=''), \
+                                             passwd, splitted.hostname)
 
         result.append(urlunsplit(splitted_list))
 
