@@ -30,9 +30,8 @@ import ssl
 from collections import defaultdict
 from urllib import quote_plus, pathname2url
 
-import msger
-import errors
-from utils import hexdigest
+from gitbuildsys import msger, errors
+from gitbuildsys.utils import hexdigest
 
 from osc import conf, core
 

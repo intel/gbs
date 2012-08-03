@@ -25,10 +25,8 @@ import glob
 import subprocess
 import shutil
 
-import msger
-import utils
-
-from conf import configmgr
+from gitbuildsys import msger, utils
+from gitbuildsys.conf import configmgr
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 

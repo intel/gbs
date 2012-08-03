@@ -19,7 +19,7 @@
 import os
 import subprocess
 
-import msger
+from gitbuildsys import msger
 
 def runtool(cmdln_or_args, catch=1):
     """ wrapper for most of the subprocess calls

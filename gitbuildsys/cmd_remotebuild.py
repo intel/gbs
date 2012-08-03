@@ -23,12 +23,11 @@ import os
 import glob
 import shutil
 
-import msger
-import errors
-import utils
 
-from conf import configmgr
-from oscapi import OSC, OSCError
+from gitbuildsys import msger, errors, utils
+
+from gitbuildsys.conf import configmgr
+from gitbuildsys.oscapi import OSC, OSCError
 
 import gbp.rpm
 from gbp.scripts.buildpackage_rpm import main as gbp_build

@@ -30,10 +30,11 @@ try:
 except ImportError:
     import cElementTree as ET
 
-import errors
-import msger
+from gitbuildsys import errors, msger
+
 from gbp.rpm.git import GitRepositoryError
 from gbp.errors import GbpError
+
 
 class Workdir(object):
     def __init__(self, path):

@@ -22,9 +22,10 @@
 import os
 import time
 
+from gitbuildsys import msger, errors
+
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
-import msger
-import errors
+
 
 def do(opts, args):
 

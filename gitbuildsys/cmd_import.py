@@ -20,7 +20,7 @@
 """
 import os
 
-import msger
+from gitbuildsys import msger
 
 from gbp.scripts.import_srpm import main as gbp_import_srpm
 from gbp.scripts.import_orig_rpm import main as gbp_import_orig

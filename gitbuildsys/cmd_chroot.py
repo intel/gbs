@@ -18,12 +18,11 @@
 
 """Implementation of subcmd: chroot
 """
-
 import os
 import subprocess
 
-import msger
-from conf import configmgr
+from gitbuildsys import msger
+from gitbuildsys.conf import configmgr
 
 def do(opts, args):
 

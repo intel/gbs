@@ -24,8 +24,7 @@ from ConfigParser import SafeConfigParser, DEFAULTSECT, ParsingError, \
                          NoSectionError, NoOptionError, \
                          MissingSectionHeaderError
 
-import msger
-import errors
+from gitbuildsys import msger, errors
 
 class BrainConfigParser(SafeConfigParser):
     """Standard ConfigParser derived class which can reserve most of the

@@ -29,11 +29,8 @@ import shutil
 import base64
 from urlparse import urlsplit, urlunsplit
 
-import msger
-import utils
-import runner
-import errors
-from conf import configmgr
+from gitbuildsys import msger, utils, runner, errors
+from gitbuildsys.conf import configmgr
 
 from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository

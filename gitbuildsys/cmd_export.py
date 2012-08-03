@@ -23,11 +23,8 @@ import os
 import shutil
 import errno
 
-import msger
-import runner
-import utils
-import errors
-from conf import configmgr
+from gitbuildsys import msger, runner, utils, errors
+from gitbuildsys.conf import configmgr
 
 from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
