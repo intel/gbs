@@ -293,7 +293,10 @@ distconf = $build__distconf
         self.replaced_keys = defaultdict(list)
 
         if fpaths:
-            self.cfgparser.read(fpaths)
+            try:
+                self.cfgparser.read(fpaths)
+            except MissingSectionHeaderError, err:
+                raise errors.ConfigError('config file error:%s' % err)
             self._check_passwd()
 
     def _lookfor_confs(self):
