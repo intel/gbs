@@ -24,6 +24,8 @@ import re
 import subprocess
 import tempfile
 import urllib2
+import glob
+import shutil
 from urlparse import urlsplit, urlunsplit
 
 import msger
@@ -245,6 +247,12 @@ def do(opts, args):
         raise errors.Usage('--commit can\'t be specified together with '\
                            '--include-all')
 
+    if opts.out:
+        if not os.path.exists(opts.out):
+            msger.error('Output directory %s doesn\'t exist' % opts.out)
+        if not os.path.isdir(opts.out):
+            msger.error('%s is not a directory' % opts.out)
+
     try:
         repo = RpmGitRepository(workdir)
     except GitRepositoryError, err:
@@ -404,9 +412,16 @@ def do(opts, args):
         if subprocess.call(cmd):
             msger.error('rpmbuild fails')
         else:
+            out_dir = os.path.join(build_root, 'home/abuild/rpmbuild/RPMS/')
+            if opts.out:
+                for fpath in glob.glob(out_dir + '/*/*.rpm'):
+                    shutil.copy(fpath, opts.out)
+                msger.info('RPMs have been copied from %s to %s' \
+                           % (out_dir, opts.out))
+                out_dir = os.path.abspath(opts.out)
             msger.info('The buildroot was: %s' % build_root)
-            msger.info('Binaries RPM packages can be found here:\n     %s/%s' % \
-                       (build_root, 'home/abuild/rpmbuild/RPMS/'))
+            msger.info('Binaries RPM packages can be found here:'\
+                       '\n     %s' % out_dir)
             msger.info('Done')
     except KeyboardInterrupt:
         msger.info('keyboard interrupt, killing build ...')

@@ -222,6 +222,10 @@ class Gbs(cmdln.Cmdln):
                   dest='include_all',
                   help='Uncommitted changes and untracked files would be '\
                        'included while generating tar ball')
+    @cmdln.option('--out',
+                  default=None,
+                  dest='out',
+                  help='Output directory for RPMs')
     @cmdln.option('--debuginfo',
                   action='store_true',
                   default=False,
