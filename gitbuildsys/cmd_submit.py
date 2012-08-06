@@ -65,7 +65,7 @@ def do(opts, args):
         if target_branch == 'master':
             target_branch = 'trunk'
         tagname = 'submit/%s/%s' % (target_branch, time.strftime( \
-                                    '%Y%m%d.%H%M%S', time.localtime()))
+                                    '%Y%m%d.%H%M%S', time.gmtime()))
         msger.info('creating tag: %s' % tagname)
         repo.create_tag(tagname, msg=opts.msg, commit=commit, sign=opts.sign,
                                                  keyid=opts.user_key)
