@@ -222,14 +222,17 @@ def get_repos_conf():
         user = item.get('user') or splitted.username
         passwd = item.get('passwd') or splitted.password
 
-        if (user and not passwd) or (passwd and not user):
-            raise errors.ConfigError("Both user and password "
-                                     "has to be specified for %s" % key)
-
         splitted_list = list(splitted)
-        if user and passwd:
-            splitted_list[1] = "%s:%s@%s" % (urllib2.quote(user, safe=''), \
-                                             passwd, splitted.hostname)
+        if user:
+            if passwd:
+                splitted_list[1] = '%s:%s@%s' % (urllib2.quote(user, safe=''),
+                                                 passwd, splitted.hostname)
+            else:
+                splitted_list[1] = '%s@%s' % (urllib2.quote(user, safe=''),
+                                              splitted.hostname)
+        elif passwd:
+            raise errors.ConfigError('No user is specified for %s, '\
+                                     'only password' % key)
 
         result.append(urlunsplit(splitted_list))
 
