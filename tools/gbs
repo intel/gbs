@@ -80,40 +80,52 @@ class Gbs(cmdln.Cmdln):
 
         if self.options.conf:
             configmgr.reset_from_conf(self.options.conf)
-    '''
     @cmdln.alias('sr')
-    @cmdln.option('--changelog',
-                  action='store_true',
-                  default=False,
-                  dest='changelog',
-                  help='invoke gbs changelog to create changelog')
     @cmdln.option('-m', '--msg',
                   default=None,
                   dest='msg',
-                  help='specify commit message info')
-    @cmdln.option('--tag',
+                  help='specify tag message info')
+    @cmdln.option('-c', '--commit',
+                  default='HEAD',
+                  dest='commit',
+                  help='specify a commit ID to submit')
+    @cmdln.option('-s', '--sign',
                   action='store_true',
                   default=False,
-                  help='make a tag before submit')
-    @cmdln.option('--branch',
-                  default='master',
-                  dest='target_branch',
-                  help='specify the target branch for submit')
-
+                  dest='sign',
+                  help='make a GPG-signed tag')
+    @cmdln.option('-u', '--user-key',
+                  default=None,
+                  dest='user_key',
+                  help='using the given key to make a GPG-signed tag')
+    @cmdln.option('-t', '--target',
+                  default=None,
+                  dest='target',
+                  help='specify target version to submit, eg: trunk.')
+    @cmdln.option('-r', '--remote',
+                  default='origin',
+                  dest='remote',
+                  help='specify gerrit project server, default value is '\
+                  'origin for example:\nssh://user@review.tizen.org:29418'\
+                  '/public/base/gcc')
     def do_submit(self, _subcmd, opts, *args):
-        """${cmd_name}: submit commit request to gerrit for review
+        """${cmd_name}: submit tag to gerrit and trigger building in OBS
 
         Usage:
-            gbs submit [-m] [--changelog] [--tag] [--branch]
+            gbs submit -m <message for tag> [options]
 
-        Note:
+        Examples:
+            gbs submit -m 'release for 0.1'
+            gbs submit -c <commit_ID> -m 'release for 0.2'
+            gbs submit -m 'release for 0.3' -s
+            gbs submit -r ssh://user@review.tizen.org:29418/public/base/gcc\
+ -m 'release for 0.4'
 
         ${cmd_option_list}
         """
 
         from gitbuildsys import cmd_submit as cmd
         cmd.do(opts, args)
-    '''
 
     @cmdln.alias('ex')
     @cmdln.option('-o', '--outdir',
