@@ -137,7 +137,7 @@ def do(opts, _args):
 
     if opts.message:
         author = repo.get_author_info()
-        lines = [" -%s" % line for line in opts.message.split(os.linesep) \
+        lines = ["- %s" % line for line in opts.message.split(os.linesep) \
                                             if line.strip()]
         new_entries = ["* %s %s <%s> %s" % \
                            (datetime.datetime.now().strftime("%a %b %d %Y"),
