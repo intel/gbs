@@ -49,10 +49,9 @@ def do(opts, args):
 
     if not opts.target:
         try:
-            upstream = repo.get_upstream([target_branch])
-            upstream_branch = upstream[target_branch]
-            if upstream_branch and upstream_branch.startswith(opts.remote):
-                target_branch = os.path.basename(upstream_branch)
+            upstream = repo.get_upstream_branch(target_branch)
+            if upstream and upstream.startswith(opts.remote):
+                target_branch = os.path.basename(upstream)
             else:
                 msger.warning('can\'t find upstream branch for current branch '\
                               '%s. Gbs will try to find it by name. Please '\
