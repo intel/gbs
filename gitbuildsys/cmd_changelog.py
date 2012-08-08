@@ -78,11 +78,6 @@ def make_log_entries(commits, git_repo):
                                                            commits[0])))
     for commit in commits:
         commit_info =  git_repo.get_commit_info(commit)
-
-        # Track authors
-        if not prevauthor or prevauthor != commit_info["author"]:
-            entries.append("[ %s ]" % commit_info["author"])
-
         entries.append("- %s" % commit_info["subject"])
         prevauthor = commit_info["author"]
     return entries
