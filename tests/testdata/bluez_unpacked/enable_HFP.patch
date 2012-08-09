@@ -1,0 +1,24 @@
+diff -Nur old/audio/audio.conf new/audio/audio.conf
+--- old/audio/audio.conf	2009-10-31 15:18:09.000000000 +0800
++++ new/audio/audio.conf	2010-04-26 12:37:02.000000000 +0800
+@@ -3,7 +3,7 @@
+ # This section contains options which are not specific to any
+ # particular interface
+ [General]
+-
++Enable=Gateway
+ # Switch to master role for incoming connections (defaults to true)
+ #Master=true
+ 
+diff -Nur old/Makefile.am new/Makefile.am
+--- old/Makefile.am	2010-03-26 03:27:55.000000000 +0800
++++ new/Makefile.am	2010-04-26 12:36:43.000000000 +0800
+@@ -211,7 +211,7 @@
+ man_MANS = src/bluetoothd.8
+ 
+ if CONFIGFILES
+-conf_DATA += src/main.conf
++conf_DATA += src/main.conf audio/audio.conf
+ endif
+ 
+ EXTRA_DIST += src/genbuiltin src/bluetooth.conf \

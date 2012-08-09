@@ -1,0 +1,12 @@
+diff -Nur old/Makefile.tools new/Makefile.tools
+--- old/Makefile.tools	2010-05-23 20:47:19.000000000 +0800
++++ new/Makefile.tools	2010-07-26 17:50:02.000000000 +0800
+@@ -135,7 +135,7 @@
+ 
+ bin_PROGRAMS += test/l2test test/rctest
+ 
+-noinst_PROGRAMS += test/gaptest test/sdptest test/scotest \
++bin_PROGRAMS += test/gaptest test/sdptest test/scotest \
+ 			test/attest test/hstest test/avtest test/ipctest \
+ 					test/lmptest test/bdaddr test/agent \
+ 					test/btiotest test/test-textfile

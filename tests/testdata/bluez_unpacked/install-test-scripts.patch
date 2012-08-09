@@ -1,0 +1,35 @@
+diff -Nur old/Makefile.am new/Makefile.am
+--- old/Makefile.am	2010-05-23 20:47:19.000000000 +0800
++++ new/Makefile.am	2010-07-13 15:22:47.000000000 +0800
+@@ -304,6 +304,31 @@
+ dist_udev_SCRIPTS = scripts/bluetooth_serial
+ endif
+ 
++
++test_scripts = test/apitest \
++	test/hsplay \
++	test/hsmicro \
++	test/list-devices \
++	test/monitor-bluetooth \
++	test/simple-agent \
++	test/simple-service \
++	test/test-adapter \
++	test/test-audio \
++	test/test-device \
++	test/test-discovery \
++	test/test-input \
++	test/test-manager \
++	test/test-network \
++	test/test-serial \
++	test/test-service \
++	test/test-telephony
++
++
++if TEST
++testdir = ${pkglibdir}/test
++test_SCRIPTS = ${test_scripts}
++endif
++
+ EXTRA_DIST += doc/manager-api.txt \
+ 		doc/adapter-api.txt doc/device-api.txt \
+ 		doc/service-api.txt doc/agent-api.txt \

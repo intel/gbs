@@ -1,0 +1,11 @@
+diff -Nur old/src/main.conf new/src/main.conf
+--- old/src/main.conf	2010-10-25 16:23:53.000000000 +0800
++++ new/src/main.conf	2010-10-25 16:26:03.000000000 +0800
+@@ -59,3 +59,7 @@
+ # Enable the GATT Attribute Server. Default is false, because it is only
+ # useful for testing.
+ AttributeServer = false
++
++
++# Disable the HAL plugin here since MeeGo has removed hald.
++DisablePlugins=hal

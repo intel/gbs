@@ -1,0 +1,67 @@
+#!/bin/sh
+#
+# chkconfig: 345 50 83
+# description: Bluetooth services for service discovery, authentication, \
+#	       Human Interface Devices, etc.
+#
+### BEGIN INIT INFO
+# Required-Start: $syslog messagebus
+# Short-Description: Bluetooth services
+# Description: Bluetooth services for service discovery, authentication, 
+#  Human Interface Devices, etc.
+### END INIT INFO
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+[ -e /etc/sysconfig/bluetooth ] && . /etc/sysconfig/bluetooth
+
+start()
+{
+	echo -n $"Starting Bluetooth services:"
+	daemon /usr/sbin/bluetoothd
+	RETVAL=$?
+	[ $RETVAL = 0 ] && touch /var/lock/subsys/bluetoothd
+	[ "$HID2HCI_ENABLE" = "true" ] && hid2hci --tohci > /dev/null 2>&1 || :
+	touch /var/lock/subsys/bluetooth
+	echo ""
+	return $RETVAL
+}
+
+stop()
+{
+	echo -n "Stopping Bluetooth services:"
+	[ "$HID2HCI_UNDO" = "true" ] && hid2hci --tohid > /dev/null 2>&1 || :
+	killproc bluetoothd
+	RETVAL=$?
+	rm -f /var/lock/subsys/bluetooth
+	rm -f /var/lock/subsys/bluetoothd
+	echo ""
+	return $RETVAL
+}
+
+case "$1" in
+  start)
+	start
+	;;
+  stop)
+	stop
+	;;
+  force-reload|restart|reload)
+        stop
+        start
+        ;;
+  try-restart|condrestart)
+        [ -e /var/lock/subsys/bluetooth ] && (stop; start)
+        ;;
+  status)
+        status bluetoothd
+	RETVAL=$?
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|reload|condrestart}"
+        exit 3
+	;;
+esac
+
+exit $RETVAL

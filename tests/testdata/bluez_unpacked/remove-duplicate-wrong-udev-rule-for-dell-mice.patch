@@ -1,0 +1,13 @@
+diff --git a/scripts/bluetooth-hid2hci.rules b/scripts/bluetooth-hid2hci.rules
+index 1b231d1..c834957 100644
+--- a/scripts/bluetooth-hid2hci.rules
++++ b/scripts/bluetooth-hid2hci.rules
+@@ -8,7 +8,7 @@
+ #   413c:8154
+ #   413c:8158
+ #   413c:8162
+-ACTION=="add", ENV{ID_VENDOR}=="413c", ENV{ID_CLASS}=="mouse", ATTRS{bmAttributes}=="e0", KERNEL=="mouse*", RUN+="/usr/sbin/hid2hci --method dell -v $env{ID_VENDOR} -p $env{ID_MODEL} --mode hci"
++# udev 144 or later has covered these Dell mice, so unnecessary to have a duplicate but wrong rule.
+ 
+ # Logitech devices
+ ACTION=="add", ENV{ID_VENDOR}=="046d", ENV{ID_MODEL}=="c703" RUN+="/usr/sbin/hid2hci --method logitech -v $env{ID_VENDOR} -p $env{ID_MODEL} --mode hci"
