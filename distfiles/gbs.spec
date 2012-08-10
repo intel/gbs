@@ -16,7 +16,7 @@ Requires:   build = 2012.07.21
 Requires:   qemu >= 0.14.1
 Requires:   qemu-arm-static >= 0.14.1
 Requires:   sudo
-Requires:   git-buildpackage-rpm >= 0.6.0git20120628
+Requires:   git-buildpackage-rpm >= 0.6.0git20120803
 %if 0%{?fedora_version}
 Requires:   rpm-build
 %else
