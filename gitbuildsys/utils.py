@@ -22,6 +22,7 @@ import tempfile
 import shutil
 import pycurl
 import urlparse
+import hashlib
 
 # cElementTree can be standard or 3rd-party depending on python version
 try:
@@ -330,3 +331,14 @@ def gitStatusChecker(git, opts):
         if uncommitted_files:
             msger.info('the following uncommitted changes would be included'\
                        ':\n   %s' % '\n   '.join(uncommitted_files))
+
+def hexdigest(fhandle, block_size=4096):
+    """Calculates hexdigest of file content."""
+    md5obj = hashlib.new('md5')
+    while True:
+        data = fhandle.read(block_size)
+        if not data:
+            break
+        md5obj.update(data)
+    return md5obj.hexdigest()
+
