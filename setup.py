@@ -2,6 +2,8 @@
 
 import os, sys
 import glob
+import re
+
 from distutils.core import setup
 try:
     import setuptools
@@ -10,24 +12,19 @@ except ImportError:
     pass
 
 MOD_NAME = 'gitbuildsys'
-
-version_path = 'VERSION'
+version_path = os.path.join(MOD_NAME, "__init__.py")
 if not os.path.isfile(version_path):
-    print 'No VERSION file in topdir, abort'
+    print 'No %s version file found' % version_path
     sys.exit(1)
 
-try:
-    # first line should be the version number
-    version = open(version_path).readline().strip()
-    if not version:
-        print 'VERSION file is invalid, abort'
-        sys.exit(1)
-
-    ver_file = open('%s/__version__.py' % MOD_NAME, 'w')
-    ver_file.write("VERSION = \"%s\"\n" % version)
-    ver_file.close()
-except IOError:
-    print 'WARNING: Cannot write version number file'
+content = open(version_path).read()
+match = re.search(r'^__version__\s*=\s*[\x22\x27]([^\x22\x27]+)[\x22\x27]',
+                  content, re.M)
+if match:
+    version = match.group(1)
+else:
+    print 'Unable to find version in %s' % version_path
+    sys.exit(1)
 
 # "--install-layout=deb" is required for pyver>2.5 in Debian likes
 if sys.version_info[:2] > (2, 5):

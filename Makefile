@@ -1,5 +1,5 @@
-VERSION = $(shell cat VERSION)
-TAGVER = $(shell cat VERSION | sed -e "s/\([0-9\.]*\).*/\1/")
+VERSION = $(shell sed -ne 's/__version__\s*=\s*[\x22\x27]\([^\x22\x27]\+\)[\x22\x27].*/\1/p ' gitbuildsys/__init__.py)
+TAGVER = $(shell echo $(VERSION) | sed -e "s/\([0-9\.]*\).*/\1/")
 PKGNAME = gbs
 
 ifeq ($(VERSION), $(TAGVER))
