@@ -300,7 +300,8 @@ def do(opts, args):
         cmd += ['--no-init']
     else:
         # check & prepare repos and build conf if no noinit option
-        cachedir = os.path.join(tmpdir, userid, 'gbscache')
+        cache = utils.Temp(prefix=os.path.join(tmpdir, 'gbscache'), directory=True)
+        cachedir  = cache.path
         if not os.path.exists(cachedir):
             os.makedirs(cachedir)
         msger.info('generate repositories ...')
