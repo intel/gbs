@@ -359,6 +359,7 @@ def do(opts, args):
     if buildarch.startswith('arm'):
         try:
             setup_qemu_emulator()
+            cmd += ['--use-system-qemu']
         except errors.QemuError, exc:
             msger.error('%s' % exc)
 
