@@ -26,6 +26,7 @@ import tempfile
 import urllib2
 import glob
 import shutil
+import base64
 from urlparse import urlsplit, urlunsplit
 
 import msger
@@ -200,7 +201,7 @@ def get_repos_conf():
             value = configmgr.get(opt, 'build')
             if name == 'passwdx':
                 try:
-                    value = value.decode('base64').decode('bz2')
+                    value = base64.b64decode(value).decode('bz2')
                 except (TypeError, IOError), err:
                     raise errors.ConfigError('Error decoding %s: %s' % \
                                              (opt, err))
