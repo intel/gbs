@@ -72,9 +72,6 @@ def do(opts, args):
     if not os.path.exists("%s/packaging" % workdir):
         msger.error('No packaging directory, so there is nothing to export.')
 
-    if not os.path.isdir("%s/.git" % workdir):
-        msger.error('Not a git repository (%s), aborting' % workdir)
-
     # Only guess spec filename here, parse later when we have the correct
     # spec file at hand
     specfile = utils.guess_spec(workdir, opts.spec)
