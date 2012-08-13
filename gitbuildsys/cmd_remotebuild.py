@@ -205,6 +205,8 @@ def do(opts, args):
         try:
             if gbp_build(["argv[0] placeholder", "--git-export-only",
                           "--git-ignore-new", "--git-builder=osc",
+                          "--git-no-auto-patch-gen",
+                          "--git-upstream-tree=%s" % commit,
                           "--git-export-dir=%s" % tmpdir,
                           "--git-packaging-dir=packaging",
                           "--git-specfile=%s" % relative_spec,
