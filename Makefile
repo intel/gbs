@@ -7,7 +7,7 @@ ifeq ($(VERSION), $(TAGVER))
 else
 	TAG = "HEAD"
 endif
-
+TAG="HEAD"
 ifndef PREFIX
     PREFIX = "/usr/local"
 endif

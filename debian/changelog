@@ -1,3 +1,25 @@
+gbs (0.9) unstable; urgency=high
+  * Upgrade to gbs v0.9, which contains the following features:
+    * Fedora support
+    * update build to 2012-08-10 version, which including featurs:
+      - prefix each build log line with the second since build started
+      - other refinements
+    * --out for `gbs build` to copy generated RPMs to specified directory
+    * --source-rpm supported in export subcommand to generate source
+    * Introduce a Temp class to create/cleanup temp file and directory.
+    * Use more standard way to transfer repository user/pass to build scripts and hidden passwd in build.
+    * Code cleanup and refinements.
+    * bug fix.
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Wed, 15 Aug  2012 10:56:15 +0800
+
+gbs (0.8.1) unstable; urgency=high
+
+  * Upgrade to gbs v0.8.1, which contains the following features:
+    * new subcommand 'submit' added, which can be used for developers
+      to submit code to OBS for building
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Wed, 1 Aug  2012 10:56:15 +0800
+
 gbs (0.8) unstable; urgency=high
 
   * Upgrade to gbs v0.8, which contains the following features:

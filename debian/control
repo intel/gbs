@@ -11,12 +11,12 @@ Architecture: all
 Depends: ${misc:Depends}, ${python:Depends},
  git-core,
  osc (= 0.134.0-1tizen+1),
- build (= 2012.07.21-1),
+ build (= 2012.08.10),
  rpm,
  qemu-arm-static (>= 0.14.1) | qemu-user-static,
  binfmt-support,
  sudo,
- git-buildpackage-rpm (>= 0.6.0git20120628)
+ git-buildpackage-rpm (= 0.6.0git20120810)
 Description: The command line tools for Tizen package developers
   The command line tools for Tizen package developers will
   be used to do packaging related tasks.
