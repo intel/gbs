@@ -350,7 +350,7 @@ def do(opts, args):
             distconf = opts.dist
         else:
             if repoparser.buildconf is None:
-                msger.info('failed to get build conf, use default build conf')
+                msger.warning('failed to get build conf, use default build conf')
                 distconf = configmgr.get('distconf', 'build')
             else:
                 shutil.copy(repoparser.buildconf, tmpdir)
