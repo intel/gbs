@@ -367,8 +367,7 @@ def do(opts, args):
     # Only guess spec filename here, parse later when we have the correct
     # spec file at hand
     specfile = utils.guess_spec(workdir, opts.spec)
-    packaging_dir = os.path.join(workdir, 'packaging/', 'build_')
-    tmpd = utils.Temp(prefix=packaging_dir, directory=True)
+    tmpd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_build'), directory=True)
     export_dir = tmpd.path
     with utils.Workdir(workdir):
         if opts.commit:

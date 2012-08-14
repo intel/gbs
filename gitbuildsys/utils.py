@@ -82,21 +82,34 @@ class Temp(object):
 
         """
         self.directory = directory
+        self.path = None
 
-        if directory:
-            path = tempfile.mkdtemp(suffix, prefix, dirn)
-        else:
-            (fds, path) = tempfile.mkstemp(suffix, prefix, dirn)
-            os.close(fds)
-            if content:
-                with file(path, 'w+') as fobj:
-                    fobj.write(content)
+        try:
+            if dirn:
+                target_dir = os.path.abspath(os.path.join(dirn, prefix))
+            else:
+                target_dir = os.path.abspath(prefix)
+            target_dir = os.path.dirname(target_dir)
 
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
+
+            if directory:
+                path = tempfile.mkdtemp(suffix, prefix, dirn)
+            else:
+                (fds, path) = tempfile.mkstemp(suffix, prefix, dirn)
+                os.close(fds)
+                if content:
+                    with file(path, 'w+') as fobj:
+                        fobj.write(content)
+        except OSError, (e, msg):
+            raise errors.GbsError("Failed to create dir or file on %s: %s" % \
+                            (target_dir, msg))
         self.path = path
 
     def __del__(self):
         """Remove it when object is destroyed."""
-        if os.path.exists(self.path):
+        if self.path and os.path.exists(self.path):
             if self.directory:
                 shutil.rmtree(self.path, True)
             else:

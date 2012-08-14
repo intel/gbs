@@ -27,6 +27,7 @@ import msger
 import runner
 import utils
 import errors
+from conf import configmgr
 
 from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
@@ -81,7 +82,9 @@ def do(opts, args):
         outdir = opts.outdir
     mkdir_p(outdir)
     outdir = os.path.abspath(outdir)
-    tempd = utils.Temp(prefix='gbs_export_', dirn=outdir, directory=True)
+    tmpdir     = configmgr.get('tmpdir', 'general')
+    tempd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_export_'), \
+                       directory=True)
     export_dir = tempd.path
 
     with utils.Workdir(workdir):
