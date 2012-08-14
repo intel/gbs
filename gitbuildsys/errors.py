@@ -50,3 +50,6 @@ class Abort(CmdError):
 
 class UrlError(CmdError):
     keyword = '<url>'
+
+class GbsError(CmdError):
+    keyword = '<gbs>'

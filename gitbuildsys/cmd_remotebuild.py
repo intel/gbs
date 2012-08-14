@@ -88,13 +88,6 @@ def do(opts, args):
         utils.gitStatusChecker(repo, opts)
     workdir = repo.path
 
-    tmpdir = os.path.join(workdir, 'packaging', '.export')
-    if not os.path.exists(tmpdir):
-        os.makedirs(tmpdir)
-
-    if not os.access(tmpdir, os.W_OK|os.R_OK|os.X_OK):
-        msger.error('No access permission to %s, please check' % tmpdir)
-
     # TODO: check ./packaging dir at first
     specs = glob.glob('%s/packaging/*.spec' % workdir)
     if not specs:
@@ -131,7 +124,10 @@ def do(opts, args):
                 "passwdx": PASSWDX,
             }
 
-    tmpf = utils.Temp(dirn=tmpdir, prefix='.oscrc', content=oscrc)
+    tmpdir     = configmgr.get('tmpdir', 'general')
+    tmpd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_remotebuild_'), directory=True)
+    exportdir = tmpd.path
+    tmpf = utils.Temp(dirn=exportdir, prefix='.oscrc', content=oscrc)
     oscrcpath = tmpf.path
 
     api = OSC(APISERVER, oscrc=oscrcpath)
@@ -207,7 +203,7 @@ def do(opts, args):
                           "--git-ignore-new", "--git-builder=osc",
                           "--git-no-auto-patch-gen",
                           "--git-upstream-tree=%s" % commit,
-                          "--git-export-dir=%s" % tmpdir,
+                          "--git-export-dir=%s" % exportdir,
                           "--git-packaging-dir=packaging",
                           "--git-spec-file=%s" % relative_spec,
                           "--git-export=%s" % commit]):
@@ -223,12 +219,11 @@ def do(opts, args):
     msger.info('commit packaging files to build server ...')
     try:
         api.commit_files(target_prj, package,
-                         glob.glob("%s/*" % tmpdir), commit_msg)
+                         glob.glob("%s/*" % exportdir), commit_msg)
     except errors.ObsError, exc:
         msger.error('commit packages fail: %s, please check the permission '\
                     'of target project:%s' % (exc, target_prj))
 
-    shutil.rmtree(tmpdir)
 
     msger.info('local changes submitted to build server successfully')
     msger.info('follow the link to monitor the build progress:\n'
