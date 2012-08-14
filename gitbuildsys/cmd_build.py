@@ -301,7 +301,8 @@ def do(opts, args):
         cmd += ['--no-init']
     else:
         # check & prepare repos and build conf if no noinit option
-        cache = utils.Temp(prefix=os.path.join(tmpdir, 'gbscache'), directory=True)
+        cache = utils.Temp(prefix=os.path.join(tmpdir, 'gbscache'),
+                           directory=True)
         cachedir  = cache.path
         if not os.path.exists(cachedir):
             os.makedirs(cachedir)
@@ -332,11 +333,13 @@ def do(opts, args):
         if opts.dist:
             distconf = opts.dist
         else:
-            distconf = repoparser.buildconf
-            if distconf is None:
+            if repoparser.buildconf is None:
                 msger.info('failed to get build conf, use default build conf')
                 distconf = configmgr.get('distconf', 'build')
             else:
+                shutil.copy(repoparser.buildconf, tmpdir)
+                distconf = os.path.join(tmpdir, os.path.basename(\
+                                        repoparser.buildconf))
                 msger.info('build conf has been downloaded at:\n      %s' \
                            % distconf)
 
