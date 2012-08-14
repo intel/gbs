@@ -54,9 +54,6 @@ class BrainConfigParser(SafeConfigParser):
         the sections and keys
         """
 
-        def _get_savekey(sec, opt):
-            return "%s.%s" % (sec, opt)
-
         # save the original filepath and contents
         self._fpname = fname
         self._flines = fptr.readlines()
@@ -86,7 +83,7 @@ class BrainConfigParser(SafeConfigParser):
                 value = line.strip()
                 if value:
                     cursect[optname] = "%s\n%s" % (cursect[optname], value)
-                    savekey = _get_savekey(cursect['__name__'], optname)
+                    savekey = "%s.%s" % (cursect['__name__'], optname)
                     self._opt_linenos[savekey].append(lineno)
             # a section header or option header?
             else:
@@ -132,7 +129,7 @@ class BrainConfigParser(SafeConfigParser):
                             optval = ''
                         optname = self.optionxform(optname.rstrip())
                         cursect[optname] = optval
-                        savekey = _get_savekey(cursect['__name__'], optname)
+                        savekey = "%s.%s" % (cursect['__name__'], optname)
                         self._opt_linenos[savekey] = [lineno]
 
                     else:
@@ -276,11 +273,13 @@ distconf = $build__distconf
     def __init__(self, fpath=None):
         self.cfgparser = BrainConfigParser()
         self.reset_from_conf(fpath)
+        self.replaced_keys = defaultdict(list)
 
     def reset_from_conf(self, fpath):
         if fpath:
             if not os.path.exists(fpath):
-                raise errors.ConfigError('Configuration file %s does not exist' % fpath)
+                raise errors.ConfigError('Configuration file %s does not '\
+                                         'exist' % fpath)
             fpaths = [fpath]
         else:
             # use the default path
@@ -298,7 +297,8 @@ distconf = $build__distconf
                 raise errors.ConfigError('config file error:%s' % err)
             self._check_passwd()
 
-    def _lookfor_confs(self):
+    @staticmethod
+    def _lookfor_confs():
         """Look for available config files following the order:
             > Global
             > User

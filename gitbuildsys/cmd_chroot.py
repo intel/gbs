@@ -24,7 +24,7 @@ import subprocess
 from gitbuildsys import msger
 from gitbuildsys.conf import configmgr
 
-def do(opts, args):
+def do(opts, _args):
 
     if opts.arch in ['ia32', 'i686', 'i586', 'i386']:
         arch = 'i686'
@@ -45,12 +45,12 @@ def do(opts, args):
     try:
         subprocess.call(['sudo', 'cp', '/etc/resolv.conf', build_root + \
                          '/etc/resolv.conf'])
-    except:
+    except OSError:
         msger.warning('failed to setup /etc/resolv.conf')
 
     try:
         build_env = os.environ
-        build_env['PS1']="(tizen-build-env)@\h \W]\$ "
+        build_env['PS1'] = "(tizen-build-env)@\h \W]\$ "
         subprocess.call(cmd, env=build_env)
     except OSError, err:
         msger.error('failed to chroot to %s: %s' % (build_root, err))

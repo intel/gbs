@@ -64,7 +64,7 @@ def do(opts, args):
     except GitRepositoryError, err:
         msger.error(str(err))
 
-    utils.gitStatusChecker(repo, opts)
+    utils.git_status_checker(repo, opts)
     workdir = repo.path
 
     if not os.path.exists("%s/packaging" % workdir):
@@ -106,7 +106,8 @@ def do(opts, args):
             msger.error("Repository error: %s" % excobj)
 
     try:
-        spec = rpm.parse_spec(os.path.join(export_dir, os.path.basename(specfile)))
+        spec = rpm.parse_spec(os.path.join(export_dir,
+                                           os.path.basename(specfile)))
     except GbpError, err:
         msger.error('%s' % err)
 

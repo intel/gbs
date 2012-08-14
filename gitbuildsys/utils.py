@@ -166,15 +166,15 @@ def urlgrab(url, filename, user = None, passwd = None):
 
     try:
         curl.perform()
-    except pycurl.error, e:
-        errcode = e.args[0]
+    except pycurl.error, err:
+        errcode = err.args[0]
         if errcode == pycurl.E_OPERATION_TIMEOUTED:
-            raise errors.UrlError('timeout on %s: %s' % (url, e))
+            raise errors.UrlError('timeout on %s: %s' % (url, err))
         elif errcode == pycurl.E_FILESIZE_EXCEEDED:
             raise errors.UrlError('max download size exceeded on %s'\
                                        % url)
         else:
-            errmsg = 'pycurl error %s - "%s"' % (errcode, str(e.args[1]))
+            errmsg = 'pycurl error %s - "%s"' % (errcode, str(err.args[1]))
             raise errors.UrlError(errmsg)
     finally:
         outfile.close()
@@ -196,21 +196,18 @@ class RepoParser(object):
         self.parse()
 
     def get_buildconf(self):
-        elementTree = ET.parse(self.buildmeta)
-        root = elementTree.getroot()
-        buildElem = root.find('buildconf')
-        if buildElem is None:
+        etree = ET.parse(self.buildmeta)
+        buildelem = etree.getroot().find('buildconf')
+        if buildelem is None:
             return None
-        buildconf = buildElem.text.strip()
-
-        return buildconf
+        return buildelem.text.strip()
 
     def build_repos_from_buildmeta(self, baseurl):
         if not (self.buildmeta and os.path.exists(self.buildmeta)):
             return
 
-        elementTree = ET.parse(self.buildmeta)
-        root = elementTree.getroot()
+        etree = ET.parse(self.buildmeta)
+        root = etree.getroot()
         archs = []
         repos = []
         repo_items = root.find('repos')
@@ -269,7 +266,6 @@ class RepoParser(object):
                 if self.buildmeta:
                     self.buildconf = None
                     break
-                pass
 
             # Check if it's repo with builddata/build.xml exist
             buildxml_url = os.path.join(repo, 'builddata/build.xml')
@@ -313,11 +309,11 @@ class RepoParser(object):
 
         return None
 
-def gitStatusChecker(git, opts):
+def git_status_checker(git, opts):
     try:
         if opts.commit:
             git.rev_parse(opts.commit)
-        is_clean, out = git.is_clean()
+        is_clean = git.is_clean()[0]
         status = git.status()
     except (GbpError, GitRepositoryError), err:
         msger.error(str(err))

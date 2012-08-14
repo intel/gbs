@@ -67,7 +67,6 @@ def get_version(git_repo, commit):
 def make_log_entries(commits, git_repo):
     """Make changelog entries from the set of git commits."""
     entries = []
-    prevauthor = None
     # Add header
     author = git_repo.get_author_info()
     entries.append("* %s %s <%s> %s" % \
@@ -77,7 +76,6 @@ def make_log_entries(commits, git_repo):
     for commit in commits:
         commit_info =  git_repo.get_commit_info(commit)
         entries.append("- %s" % commit_info["subject"])
-        prevauthor = commit_info["author"].name
     return entries
 
 

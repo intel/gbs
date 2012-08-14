@@ -37,7 +37,7 @@ from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 import gbp.rpm as rpm
 from gbp.errors import GbpError
 
-change_personality = {
+CHANGE_PERSONALITY = {
             'i686':  'linux32',
             'i586':  'linux32',
             'i386':  'linux32',
@@ -47,19 +47,14 @@ change_personality = {
             'sparcv8': 'linux32',
           }
 
-obsarchmap = {
-            'i686':     'i586',
-            'i586':     'i586',
-          }
-
-buildarchmap = {
+BUILDARCHMAP = {
             'ia32':     'i686',
             'i686':     'i686',
             'i586':     'i686',
             'i386':     'i686',
           }
 
-supportedarchs = [
+SUPPORTEDARCHS = [
             'ia32',
             'i686',
             'i586',
@@ -144,7 +139,11 @@ def setup_qemu_emulator():
 
     # register qemu emulator for interpreting other arch executable file
     if not os.path.exists(node):
-        qemu_arm_string = ":arm:M::\\x7fELF\\x01\\x01\\x01\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\x28\\x00:\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\x00\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xfa\\xff\\xff\\xff:%s:" % qemu_emulator
+        qemu_arm_string = ":arm:M::\\x7fELF\\x01\\x01\\x01\\x00\\x00\\x00\\x00"\
+                          "\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\x28\\x00:\\xff"\
+                          "\\xff\\xff\\xff\\xff\\xff\\xff\\x00\\xff\\xff\\xff"\
+                          "\\xff\\xff\\xff\\xff\\xff\\xfa\\xff\\xff\\xff:%s:" \
+                          % qemu_emulator
         try:
             (tmpfd, tmppth) = tempfile.mkstemp()
             os.write(tmpfd, "echo '%s' > /proc/sys/fs/binfmt_misc/register" \
@@ -265,7 +264,7 @@ def do(opts, args):
         msger.error(str(err))
 
     if not opts.incremental:
-        utils.gitStatusChecker(repo, opts)
+        utils.git_status_checker(repo, opts)
     workdir = repo.path
 
     hostarch = get_hostarch()
@@ -274,12 +273,12 @@ def do(opts, args):
     else:
         buildarch = hostarch
         msger.info('No arch specified, using system arch: %s' % hostarch)
-    if buildarch in buildarchmap:
-        buildarch = buildarchmap[buildarch]
+    if buildarch in BUILDARCHMAP:
+        buildarch = BUILDARCHMAP[buildarch]
 
-    if not buildarch in supportedarchs:
+    if not buildarch in SUPPORTEDARCHS:
         msger.error('arch %s not supported, supported archs are: %s ' % \
-                   (buildarch, ','.join(supportedarchs)))
+                   (buildarch, ','.join(SUPPORTEDARCHS)))
 
     build_cmd  = configmgr.get('build_cmd', 'build')
     userid     = configmgr.get('user', 'remotebuild')
@@ -357,8 +356,8 @@ def do(opts, args):
         extrapkgs = opts.extra_packs.split(',')
         cmd += ['--extra-packs=%s' % ' '.join(extrapkgs)]
 
-    if hostarch != buildarch and buildarch in change_personality:
-        cmd = [ change_personality[buildarch] ] + cmd
+    if hostarch != buildarch and buildarch in CHANGE_PERSONALITY:
+        cmd = [ CHANGE_PERSONALITY[buildarch] ] + cmd
 
     proxies = get_env_proxies()
 
@@ -398,7 +397,8 @@ def do(opts, args):
 
     # Parse spec file
     try:
-        spec = rpm.parse_spec(os.path.join(export_dir, os.path.basename(specfile)))
+        spec = rpm.parse_spec(os.path.join(export_dir,
+                                           os.path.basename(specfile)))
     except GbpError, err:
         msger.error('%s' % err)
 

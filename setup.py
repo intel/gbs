@@ -5,6 +5,7 @@ import glob
 import re
 
 from distutils.core import setup
+
 try:
     import setuptools
     # enable "setup.py develop", optional
@@ -31,13 +32,11 @@ if sys.version_info[:2] > (2, 5):
     if len(sys.argv) > 1 and 'install' in sys.argv:
         try:
             import platform
-            (dist, ver, rid) = platform.linux_distribution()
-
             # for debian-like distros, mods will be installed to
             # ${PYTHONLIB}/dist-packages
-            if dist in ('debian', 'Ubuntu'):
+            if platform.linux_distribution()[0] in ('debian', 'Ubuntu'):
                 sys.argv.append('--install-layout=deb')
-        except:
+        except Exception:
             pass
 
 setup(name='gbs',

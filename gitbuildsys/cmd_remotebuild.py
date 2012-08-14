@@ -21,8 +21,6 @@
 
 import os
 import glob
-import shutil
-
 
 from gitbuildsys import msger, errors, utils
 
@@ -84,7 +82,7 @@ def do(opts, args):
         msger.error(str(err))
 
     if not (opts.buildlog or opts.status):
-        utils.gitStatusChecker(repo, opts)
+        utils.git_status_checker(repo, opts)
     workdir = repo.path
 
     # TODO: check ./packaging dir at first
@@ -124,7 +122,8 @@ def do(opts, args):
             }
 
     tmpdir     = configmgr.get('tmpdir', 'general')
-    tmpd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_remotebuild_'), directory=True)
+    tmpd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_remotebuild_'),
+                      directory=True)
     exportdir = tmpd.path
     tmpf = utils.Temp(dirn=exportdir, prefix='.oscrc', content=oscrc)
     oscrcpath = tmpf.path
