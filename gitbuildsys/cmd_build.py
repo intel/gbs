@@ -239,6 +239,22 @@ def get_repos_conf():
 
     return result
 
+def clean_repos_userinfo(repos):
+    striped_repos = []
+    for repo in repos:
+        splitted = urlsplit(repo)
+        if not splitted.username:
+            striped_repos.append(repo)
+        else:
+            splitted_list = list(splitted)
+            if splitted.port:
+                splitted_list[1] = '%s:%d' % (splitted.hostname, splitted.port)
+            else:
+                splitted_list[1] = splitted.hostname
+            striped_repos.append(urlunsplit(splitted_list))
+
+    return striped_repos
+
 def do(opts, args):
 
     workdir = os.getcwd()
@@ -323,7 +339,7 @@ def do(opts, args):
         if not repourls:
             msger.error('no repositories found for arch: %s under the '\
                         'following repos:\n      %s' % \
-                        (buildarch, '\n'.join(repos)))
+                        (buildarch, '\n'.join(clean_repos_userinfo(repos))))
         for url in repourls:
             if not  re.match('https?://.*', url) and \
                not (url.startswith('/') and os.path.exists(url)):
