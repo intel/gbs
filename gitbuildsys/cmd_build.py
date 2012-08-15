@@ -223,14 +223,19 @@ def get_repos_conf():
         user = item.get('user') or splitted.username
         passwd = item.get('passwd') or splitted.password
 
+        if splitted.port:
+            hostport = '%s:%d' % (splitted.hostname, splitted.port)
+        else:
+            hostport = splitted.hostname
+
         splitted_list = list(splitted)
         if user:
             if passwd:
                 splitted_list[1] = '%s:%s@%s' % (urllib2.quote(user, safe=''),
-                                                 passwd, splitted.hostname)
+                                                 passwd, hostport)
             else:
                 splitted_list[1] = '%s@%s' % (urllib2.quote(user, safe=''),
-                                              splitted.hostname)
+                                              hostport)
         elif passwd:
             raise errors.ConfigError('No user is specified for %s, '\
                                      'only password' % key)
