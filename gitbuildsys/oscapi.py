@@ -81,6 +81,9 @@ class OSC(object):
         Copy config and repositories from src project to target
         """
 
+        if not self.exists(src):
+            raise errors.ObsError('base project: %s not exists' % src)
+
         if self.exists(target):
             msger.warning('target project: %s exists' % target)
             if rewrite:
