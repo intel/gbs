@@ -1,24 +1,46 @@
-# vim: set fileencoding=utf-8 :
+#!/usr/bin/python -tt
+# vim: ai ts=4 sts=4 et sw=4
 #
-# check if --help works
+# Copyright (c) 2012 Intel, Inc.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; version 2 of the License
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc., 59
+# Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-import os
+"""Functionality tests for gbs help."""
+
 import unittest
+import imp
+
+from nose.tools import eq_
+
+GBS = imp.load_source("gbs", "./tools/gbs").Gbs().main
 
 class TestHelp(unittest.TestCase):
     """Test help output of gbs commands"""
 
-    def testSubCommandHelp(self):
-        for prog in [ "build", "remotebuild"]:
-            ret = os.system("gbs help %s > /dev/null"  % prog)
-            self.assertEqual(ret, 0)
+    @staticmethod
+    def test_subcommand_help():
+        """Test running gbs help with all possible subcommands."""
+        for sub in [ "build", "lb", "remotebuild", "rb", "changelog",
+                     "submit", "sr", "export", "ex", "import", "im",
+                     "chroot"]:
 
-            ret = os.system("gbs %s --help > /dev/null"  % prog)
-            self.assertEqual(ret, 0)
+            eq_(GBS(argv=["gbs", "help", sub]), None)
+            eq_(GBS(argv=["gbs", sub, "--help"]), 0)
 
-    def testHelp(self):
-        ret = os.system("gbs --help > /dev/null")
-        self.assertEqual(ret, 0)
+    @staticmethod
+    def test_help():
+        """Test running gbs --help and gbs help."""
+        eq_(GBS(argv=["gbs", "--help"]), 0)        
+        eq_(GBS(argv=["gbs", "help"]), None)
 
-        ret = os.system("gbs help > /dev/null")
-        self.assertEqual(ret, 0)
