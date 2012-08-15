@@ -192,6 +192,7 @@ class RepoParser(object):
         self.repourls  = {}
         self.buildmeta = None
         self.buildconf = None
+        self.standardrepos = []
         self.parse()
 
     def get_buildconf(self):
@@ -233,7 +234,10 @@ class RepoParser(object):
                     validrepos.append(repo)
                 except errors.UrlError:
                     pass
-            self.repourls[arch] = validrepos
+            if arch in self.repourls:
+                self.repourls[arch] += validrepos
+            else:
+                self.repourls[arch] = validrepos
         self.archs = archs
 
     def parse(self):
@@ -245,29 +249,30 @@ class RepoParser(object):
 
             try:
                 urlgrab(repomd_url, repomd_file)
+                self.standardrepos.append(repo)
                 # Try to download build.xml
                 buildxml_url = urlparse.urljoin(repo.rstrip('/') + '/',      \
                                           '../../../../builddata/build.xml')
                 self.buildmeta = os.path.join(self.cachedir,                 \
                                             os.path.basename(buildxml_url))
-                urlgrab(buildxml_url, self.buildmeta)
 
                 # Try to download build conf
                 if self.buildconf is None:
+                    urlgrab(buildxml_url, self.buildmeta)
                     build_conf = self.get_buildconf()
                     buildconf_url = buildxml_url.replace(os.path.basename    \
                                                     (buildxml_url), build_conf)
                     self.buildconf = os.path.join(self.cachedir,        \
                                           os.path.basename(buildconf_url))
                     urlgrab(buildconf_url, self.buildconf)
-                    # buildconf downloaded succeed, break!
-                    break
+                # standard repo
+                continue
             except errors.UrlError:
                 # if it's standard repo, that means buildconf fails to be
-                # downloaded, so reset buildconf and break
+                # downloaded, so reset buildconf and continue
                 if self.buildmeta:
                     self.buildconf = None
-                    break
+                    continue
                 pass
 
             # Check if it's repo with builddata/build.xml exist
@@ -294,6 +299,9 @@ class RepoParser(object):
             except errors.UrlError:
                 self.buildconf = None
 
+            # reset buildmeta
+            self.buildmeta = None
+
         # Split out local repo
         for repo in self.repos:
             if repo.startswith('/') and os.path.exists(repo):
@@ -302,13 +310,13 @@ class RepoParser(object):
     def get_repos_by_arch(self, arch):
         #  return directly for standard repos
         if not self.repourls:
-            return self.repos + self.localrepos
+            return self.localrepos + self.standardrepos
 
         if arch in ['ia32', 'i686', 'i586']:
             arch = 'ia32'
 
         if arch in self.repourls:
-            return self.repourls[arch] + self.localrepos
+            return self.repourls[arch] + self.localrepos + self.standardrepos
 
         return None
 
