@@ -278,8 +278,7 @@ def do(opts, args):
     except GitRepositoryError, err:
         msger.error(str(err))
 
-    if not opts.incremental:
-        utils.gitStatusChecker(repo, opts)
+    utils.gitStatusChecker(repo, opts)
     workdir = repo.path
 
     hostarch = get_hostarch()
@@ -310,8 +309,6 @@ def do(opts, args):
         cmd += ['--jobs=%s' % build_jobs]
     if opts.clean:
         cmd += ['--clean']
-    if opts.debuginfo:
-        cmd += ['--debug']
 
     if opts.noinit:
         cmd += ['--no-init']
@@ -420,11 +417,6 @@ def do(opts, args):
         msger.error('can\'t get correct name or version from spec file.')
 
     cmd += [spec.specfile]
-
-    if opts.incremental:
-        cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
-        cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % \
-                (spec.name, spec.version)]
 
     # if current user is root, don't run with sucmd
     if os.getuid() != 0:

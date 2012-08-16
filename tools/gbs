@@ -203,13 +203,6 @@ class Gbs(cmdln.Cmdln):
                   default=False,
                   dest='ccache',
                   help='Use ccache to speed up rebuilds')
-    @cmdln.option('-I', '--incremental',
-                  action="store_true",
-                  default=False,
-                  dest='incremental',
-                  help='Do incremental build, which needs support of spec file,'
-                       ' and tar ball unpack stage should be enabled with the '
-                       'condition of RPM macro RSYNCDONE')
     @cmdln.option('--skip-conf-repos',
                   action="store_true",
                   default=False,
@@ -238,11 +231,6 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='out',
                   help='Output directory for RPMs')
-    @cmdln.option('--debuginfo',
-                  action='store_true',
-                  default=False,
-                  dest='debuginfo',
-                  help='Enable build debuginfo sub-packages')
     def do_build(self, _subcmd, opts, *args):
         """${cmd_name}: local build package
 
