@@ -363,7 +363,7 @@ def do(opts, args):
             commit = 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
         msger.info('export tar ball and packaging files ... ')
-        export_sources(repo, commit, export_dir, relative_spec)
+        export_sources(repo, commit, export_dir, relative_spec, opts)
 
     # Parse spec file
     try:

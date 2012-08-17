@@ -197,7 +197,7 @@ def do(opts, args):
         else:
             commit = 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
-        export_sources(repo, commit, exportdir, relative_spec)
+        export_sources(repo, commit, exportdir, relative_spec, opts)
 
     try:
         commit_msg = repo.get_commit_info(opts.commit or 'HEAD')['subject']

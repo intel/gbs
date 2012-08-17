@@ -152,6 +152,14 @@ class Gbs(cmdln.Cmdln):
                   default=False,
                   dest='source_rpm',
                   help='generate source rpm')
+    @cmdln.option('--upstream-branch',
+                  default=None,
+                  dest='upstream_branch',
+                  help='Upstream branch')
+    @cmdln.option('--upstream-tag',
+                  default=None,
+                  dest='upstream_tag',
+                  help="Upstream tag format, e.g. 'v%(upstreamversion)s'")
     def do_export(self, _subcmd, opts, *args):
         """${cmd_name}: export files and prepare for build
 
@@ -232,6 +240,14 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='out',
                   help='output directory for RPMs')
+    @cmdln.option('--upstream-branch',
+                  default=None,
+                  dest='upstream_branch',
+                  help='Upstream branch')
+    @cmdln.option('--upstream-tag',
+                  default=None,
+                  dest='upstream_tag',
+                  help="Upstream tag format, e.g. 'v%(upstreamversion)s'")
     def do_build(self, _subcmd, opts, *args):
         """${cmd_name}: local build package
 
@@ -321,6 +337,14 @@ class Gbs(cmdln.Cmdln):
                   dest='include_all',
                   help='uncommitted changes and untracked files will be '\
                        'included while generating tar ball')
+    @cmdln.option('--upstream-branch',
+                  default=None,
+                  dest='upstream_branch',
+                  help='Upstream branch')
+    @cmdln.option('--upstream-tag',
+                  default=None,
+                  dest='upstream_tag',
+                  help="Upstream tag format, e.g. 'v%(upstreamversion)s'")
     def do_remotebuild(self, subcmd, opts, *args):
         """${cmd_name}: remote build package
 

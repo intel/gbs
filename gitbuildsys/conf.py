@@ -161,6 +161,8 @@ class ConfigMgr(object):
             'general': {
                 'tmpdir': '/var/tmp',
                 'editor': '',
+                'upstream_branch': 'upstream',
+                'upstream_tag': 'upstream/%(upstreamversion)s',
             },
             'remotebuild': {
                 'build_server': 'https://api.tizen.org',

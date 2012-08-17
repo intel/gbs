@@ -44,24 +44,42 @@ def mkdir_p(path):
         else:
             raise
 
-def is_native_pkg(repo):
+def is_native_pkg(repo, opts):
     """
     Determine if the package is "native"
     """
-    return not repo.has_branch("upstream")
+    if opts.upstream_branch:
+        upstream_branch = opts.upstream_branch
+    else:
+        upstream_branch = configmgr.get('upstream_branch', 'general')
+    return not repo.has_branch(upstream_branch)
 
-def create_gbp_export_args(repo, commit, export_dir, spec, force_native=False):
+def create_gbp_export_args(repo, commit, export_dir, spec, opts,
+                           force_native=False):
     """
     Construct the cmdline argument list for git-buildpackage export
     """
+    if opts.upstream_branch:
+        upstream_branch = opts.upstream_branch
+    else:
+        upstream_branch = configmgr.get('upstream_branch', 'general')
+    if opts.upstream_tag:
+        upstream_tag = opts.upstream_tag
+    else:
+        upstream_tag = configmgr.get('upstream_tag', 'general')
+    msger.debug("Using upstream branch: %s" % upstream_branch)
+    msger.debug("Using upstream tag format: '%s'" % upstream_tag)
+
     args = ["argv[0] placeholder", "--git-export-only",
             "--git-ignore-new", "--git-builder=osc",
             "--git-upstream-branch=upstream",
             "--git-export-dir=%s" % export_dir,
             "--git-packaging-dir=packaging",
             "--git-spec-file=%s" % spec,
-            "--git-export=%s" % commit]
-    if force_native or is_native_pkg(repo):
+            "--git-export=%s" % commit,
+            "--git-upstream-branch=%s" % upstream_branch,
+            "--git-upstream-tag=%s" % upstream_tag]
+    if force_native or is_native_pkg(repo, opts):
         args.extend(["--git-no-patch-export",
                      "--git-upstream-tree=%s" % commit])
     else:
@@ -73,14 +91,14 @@ def create_gbp_export_args(repo, commit, export_dir, spec, force_native=False):
 
     return args
 
-def export_sources(repo, commit, export_dir, spec):
+def export_sources(repo, commit, export_dir, spec, opts):
     """
     Export packaging files using git-buildpackage
     """
-    gbp_args = create_gbp_export_args(repo, commit, export_dir, spec)
+    gbp_args = create_gbp_export_args(repo, commit, export_dir, spec, opts)
     try:
         ret = gbp_build(gbp_args)
-        if ret and not is_native_pkg(repo):
+        if ret and not is_native_pkg(repo, opts):
             # Try falling back to old logic of one monolithic tarball
             msger.warning("Generating upstream tarball and/or generating "\
                           "patches failed. GBS tried this as you have "\
@@ -88,12 +106,12 @@ def export_sources(repo, commit, export_dir, spec):
                           "mode introduced in GBS v0.10. "\
                           "Consider fixing the problem by either:\n"\
                           "  1. Update your upstream branch and/or fix the "\
-                          "spec file\n"\
+                          "spec file. Also, check the upstream tag format.\n"\
                           "  2. Remove or rename the upstream branch")
             msger.info("Falling back to the old method of generating one "\
                        "monolithic source archive")
             gbp_args = create_gbp_export_args(repo, commit, export_dir,
-                                              spec, force_native=True)
+                                              spec, opts, force_native=True)
             ret = gbp_build(gbp_args)
         if ret:
             msger.error("Failed to get export packaging files from git tree")
@@ -149,7 +167,7 @@ def do(opts, args):
         else:
             commit = 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
-        export_sources(repo, commit, export_dir, relative_spec)
+        export_sources(repo, commit, export_dir, relative_spec, opts)
 
     try:
         spec = rpm.parse_spec(os.path.join(export_dir,
