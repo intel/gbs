@@ -209,7 +209,7 @@ distconf = $build__distconf
         return cls._instance
 
     def __init__(self, fpath=None):
-        self.cfgparser = BrainConfigParser()
+        self._cfgparsers = []
         self.reset_from_conf(fpath)
 
     def reset_from_conf(self, fpath):
@@ -225,26 +225,27 @@ distconf = $build__distconf
                 if not self._new_conf():
                     msger.error('No config file available')
 
-        if fpaths:
+        for fpath in fpaths:
+            cfgparser = BrainConfigParser()
             try:
-                self.cfgparser.read(fpaths)
+                cfgparser.read(fpath)
             except MissingSectionHeaderError, err:
                 raise errors.ConfigError('config file error:%s' % err)
-            self._check_passwd()
+            self._cfgparsers.append(cfgparser)
+        self._check_passwd()
 
     @staticmethod
     def _lookfor_confs():
         """Look for available config files following the order:
-            > Global
-            > User
-            > Cwd
             > Current git
+            > Cwd
+            > User
         """
 
         paths = []
-        for path in (os.path.expanduser('~/.gbs.conf'),
+        for path in (os.path.abspath('.git/gbs.conf'),
                      os.path.abspath('.gbs.conf'),
-                     os.path.abspath('.git/gbs.conf')):
+                     os.path.expanduser('~/.gbs.conf')):
             if os.path.exists(path) and path not in paths:
                 paths.append(path)
 
@@ -301,31 +302,39 @@ distconf = $build__distconf
         for sec in self.DEFAULTS.keys():
             for key in self.options(sec):
                 if key.endswith('passwd'):
-                    plainpass = self._get(key, sec)
-                    if plainpass is None:
-                        continue
-                    # empty string password is acceptable here
-                    replaced_keys = True
-                    self.set(key,
-                             base64.b64encode(plainpass.encode('bz2')),
-                             sec)
+                    for cfgparser in self._cfgparsers:
+                        if cfgparser.has_option(sec, key):
+                            plainpass = cfgparser.get(sec, key)
+                            if plainpass is None:
+                                # empty string password is acceptable here
+                                continue
+                            cfgparser.set(sec,
+                                     key + 'x',
+                                     base64.b64encode(plainpass.encode('bz2')),
+                                     key)
+                            replaced_keys = True
 
         if replaced_keys:
-            msger.warning('plaintext password in config file will '
-                          'be replaced by encoded one')
+            msger.warning('plaintext password in config files will '
+                          'be replaced by encoded ones')
             self.update()
 
     def _get(self, opt, section='general'):
-        try:
-            return self.cfgparser.get(section, opt)
-        except NoSectionError:
-            if section in self.DEFAULTS and \
-               opt in self.DEFAULTS[section]:
+        sect_found = False
+        for cfgparser in self._cfgparsers:
+            try:
+                return cfgparser.get(section, opt)
+            except NoSectionError:
+                pass
+            except NoOptionError:
+                sect_found = True
+
+        if not sect_found:
+            if section in self.DEFAULTS and opt in self.DEFAULTS[section]:
                 return self.DEFAULTS[section][opt]
             else:
                 raise errors.ConfigError('no section %s' % section)
-
-        except NoOptionError:
+        else:
             if opt in self.DEFAULTS[section]:
                 return self.DEFAULTS[section][opt]
             else:
@@ -340,14 +349,23 @@ distconf = $build__distconf
             return False
 
     def options(self, section='general'):
-        try:
-            return self.cfgparser.options(section)
+        sect_found = False
+        options = set()
+        for cfgparser in self._cfgparsers:
+            try:
+                options.update(cfgparser.options(section))
+                sect_found = True
+            except NoSectionError:
+                pass
 
-        except NoSectionError:
-            if section in self.DEFAULTS:
-                return self.DEFAULTS[section]
-            else:
-                raise errors.ConfigError('invalid section %s' % (section))
+        if section in self.DEFAULTS:
+            options.update(self.DEFAULTS[section].keys())
+            sect_found = True
+
+        if not sect_found:
+            raise errors.ConfigError('invalid section %s' % (section))
+
+        return options
 
     def get(self, opt, section='general'):
         if opt == 'passwd':
@@ -363,13 +381,25 @@ distconf = $build__distconf
         else:
             return self._get(opt, section)
 
-    def set(self, opt, val, section='general', replace_opt=None):
+    def set(self, opt, val, section='general'):
         if opt.endswith('passwd'):
-            replace_opt = opt
+            val = base64.b64encode(val.encode('bz2'))
             opt += 'x'
-        return self.cfgparser.set(section, opt, val, replace_opt)
+
+        for cfgparser in self._cfgparsers:
+            if cfgparser.has_option(section, opt):
+                return cfgparser.set(section, opt, val)
+
+        # Option not found, add a new key to the first cfg file that has
+        # the section
+        for cfgparser in self._cfgparsers:
+            if cfgparser.has_section(section):
+                return cfgparser.set(section, opt, val)
+
+        raise errors.ConfigError('invalid section %s' % (section))
 
     def update(self):
-        self.cfgparser.update()
+        for cfgparser in self._cfgparsers:
+            cfgparser.update()
 
 configmgr = ConfigMgr()
