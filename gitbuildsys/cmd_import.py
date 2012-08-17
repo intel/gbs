@@ -21,6 +21,7 @@
 import os
 
 from gitbuildsys import msger
+from gitbuildsys.cmd_export import get_packaging_dir
 
 from gbp.scripts.import_srpm import main as gbp_import_srpm
 from gbp.scripts.import_orig_rpm import main as gbp_import_orig
@@ -35,7 +36,8 @@ def main(args):
 
     path = args.path
 
-    params = ["argv[0] placeholder", "--packaging-dir=packaging",
+    params = ["argv[0] placeholder",
+              "--packaging-dir=%s" % get_packaging_dir(args),
               "--upstream-branch=%s" % args.upstream_branch, path]
 
     if path.endswith('.src.rpm') or path.endswith('.spec'):

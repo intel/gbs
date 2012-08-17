@@ -26,7 +26,7 @@ from gitbuildsys import msger, errors, utils
 
 from gitbuildsys.conf import configmgr, encode_passwd
 from gitbuildsys.oscapi import OSC, OSCError
-from gitbuildsys.cmd_export import export_sources
+from gitbuildsys.cmd_export import export_sources, get_packaging_dir
 from gitbuildsys.cmd_build import get_profile
 
 import gbp.rpm
@@ -81,11 +81,12 @@ def main(args):
         utils.git_status_checker(repo, args)
 
     # TODO: check ./packaging dir at first
-    specs = glob.glob('%s/packaging/*.spec' % workdir)
+    packaging_dir = get_packaging_dir(args)
+    specs = glob.glob('%s/%s/*.spec' % (workdir, packaging_dir))
     if not specs:
-        msger.error('no spec file found under /packaging sub-directory')
+        msger.error("no spec file found under './%s'" % packaging_dir)
 
-    specfile = utils.guess_spec(workdir, args.spec)
+    specfile = utils.guess_spec(workdir, packaging_dir, args.spec)
     # get 'name' and 'version' from spec file
     try:
         spec = gbp.rpm.parse_spec(specfile)

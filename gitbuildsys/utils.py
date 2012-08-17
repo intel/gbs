@@ -43,7 +43,7 @@ class Workdir(object):
     def __exit__(self, _type, _value, _tb):
         os.chdir(self._cwd)
 
-def guess_spec(workdir, default_spec):
+def guess_spec(workdir, packaging_dir, default_spec):
     workdir = os.path.abspath(workdir)
     git_project =  os.path.basename(workdir)
 
@@ -56,11 +56,12 @@ def guess_spec(workdir, default_spec):
             msger.error('%s does not exit' % default_spec)
         return default_spec
 
-    specfile = os.path.join(workdir, 'packaging', '%s.spec' % git_project)
+    specfile = os.path.join(workdir, packaging_dir, '%s.spec' % git_project)
     if not os.path.exists(specfile):
-        specs = glob.glob(os.path.join(workdir, 'packaging', '*.spec'))
+        specs = glob.glob(os.path.join(workdir, packaging_dir, '*.spec'))
         if not specs:
-            msger.error('no spec file found under %s/packaging' % workdir)
+            msger.error('no spec file found under %s/%s' % (workdir,
+                                                            packaging_dir))
 
         if len(specs) > 1:
             msger.error("Can't decide which spec file to use.")

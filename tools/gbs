@@ -54,6 +54,8 @@ def import_parser(parser):
                         help='specify upstream branch for new package version')
     parser.add_argument('--no-merge', action='store_true',
                          help='don\'t merge new upstream branch to master')
+    parser.add_argument('--packaging-dir',
+                        help='directory containing packaging files')
 
     parser.set_defaults(alias="im")
     return parser
@@ -89,6 +91,8 @@ def export_parser(parser):
                          'to given commit-ish into one monolithic diff file. '
                          'Format is the commit-ish optionally followed by a '
                          'colon and diff filename base.')
+    parser.add_argument('--packaging-dir',
+                        help='directory containing packaging files')
 
     parser.set_defaults(alias="ex")
     return parser
@@ -161,6 +165,8 @@ def build_parser(parser):
                         'to given commit-ish into one monolithic diff file. '
                         'Format is the commit-ish optionally followed by a '
                         'colon and diff filename base.')
+    parser.add_argument('--packaging-dir',
+                        help='directory containing packaging files')
 
     # depanneur special options
     parser.add_argument('--clean-once', action='store_true',
@@ -248,6 +254,8 @@ def remotebuild_parser(parser):
                         'given commit-ish into one monolithic diff file. '
                         'Format is the commit-ish optionally followed by a '
                         'colon and diff filename base.')
+    parser.add_argument('--packaging-dir',
+                        help='directory containing packaging files')
 
     parser.set_defaults(alias="rb")
     return parser
@@ -291,6 +299,8 @@ def changelog_parser(parser):
                         help='commit to start from')
     parser.add_argument('-m', '--message',
                         help='use given message as the changelog entry')
+    parser.add_argument('--packaging-dir',
+                        help='directory containing packaging files')
     parser.set_defaults(alias='ch')
     return parser
 

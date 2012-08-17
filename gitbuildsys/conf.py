@@ -189,6 +189,7 @@ class ConfigMgr(object):
                 'upstream_tag': 'upstream/${upstreamversion}',
                 'squash_patches_until': '',
                 'buildroot':    '~/GBS-ROOT/',
+                'packaging_dir': 'packaging',
             },
     }
 

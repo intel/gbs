@@ -27,6 +27,7 @@ import shutil
 
 from gitbuildsys import msger, utils
 from gitbuildsys.conf import configmgr
+from gitbuildsys.cmd_export import get_packaging_dir
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
@@ -89,7 +90,9 @@ def main(args):
 
     project_root_dir = repo.path
 
-    changes_file_list = glob.glob("%s/packaging/*.changes" % project_root_dir)
+    packaging_dir = get_packaging_dir(args)
+    changes_file_list = glob.glob("%s/%s/*.changes" % (project_root_dir,
+                                                       packaging_dir))
 
     if changes_file_list:
         fn_changes = changes_file_list[0]
@@ -98,7 +101,7 @@ def main(args):
                            % (changes_file_list[0]))
     else:
         # Create .changes file with the same name as a spec
-        specfile = utils.guess_spec(project_root_dir, args.spec)
+        specfile = utils.guess_spec(project_root_dir, packaging_dir, args.spec)
         fn_changes = os.path.splitext(specfile)[0] + ".changes"
 
     # get the commit start from the args.since

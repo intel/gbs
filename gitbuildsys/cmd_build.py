@@ -29,7 +29,8 @@ import re
 from gitbuildsys import msger, utils, runner, errors
 from gitbuildsys.conf import configmgr
 from gitbuildsys.safe_url import SafeURL
-from gitbuildsys.cmd_export import transform_var_format_from_shell_to_python
+from gitbuildsys.cmd_export import transform_var_format_from_shell_to_python, \
+                                   get_packaging_dir
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
@@ -157,6 +158,7 @@ def prepare_depanneur_opts(args):
                         args.binary_list)
         cmd_opts += ['--binary=%s' % args.binary_list]
     cmd_opts += ['--threads=%s' % args.threads]
+    cmd_opts += ['--packaging-dir=%s' % get_packaging_dir(args)]
 
     return cmd_opts
 

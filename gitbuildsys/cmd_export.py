@@ -55,6 +55,14 @@ def is_native_pkg(repo, args):
         upstream_branch = configmgr.get('upstream_branch', 'general')
     return not repo.has_branch(upstream_branch)
 
+def get_packaging_dir(args):
+    """
+    Determine the packaging dir to be used
+    """
+    if args.packaging_dir:
+        return args.packaging_dir
+    return configmgr.get('packaging_dir', 'general')
+
 def transform_var_format_from_shell_to_python(whole):
     '''replace string like ${xxx} with %(xxx)s'''
     return re.sub(r'\$\{([^}]+)\}', r'%(\1)s', whole)
@@ -88,7 +96,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
             "--git-upstream-branch=upstream",
             "--git-export-dir=%s" % export_dir,
             "--git-tmp-dir=%s" % tmp_dir,
-            "--git-packaging-dir=packaging",
+            "--git-packaging-dir=%s" % get_packaging_dir(args),
             "--git-spec-file=%s" % spec,
             "--git-export=%s" % commit,
             "--git-upstream-branch=%s" % upstream_branch,
@@ -171,12 +179,14 @@ def main(args):
     utils.git_status_checker(repo, args)
     workdir = repo.path
 
-    if not os.path.exists("%s/packaging" % workdir):
-        msger.error('No packaging directory, so there is nothing to export.')
+    packaging_dir = get_packaging_dir(args)
+    if not os.path.exists(os.path.join(workdir, packaging_dir)):
+        msger.error("No packaging directory '%s/', so there is nothing to "
+                    "export." % packaging_dir)
 
     # Only guess spec filename here, parse later when we have the correct
     # spec file at hand
-    specfile = utils.guess_spec(workdir, args.spec)
+    specfile = utils.guess_spec(workdir, packaging_dir, args.spec)
 
     outdir = "%s/packaging" % workdir
     if args.outdir:
