@@ -62,12 +62,12 @@ class Gbs(cmdln.Cmdln):
         optparser = cmdln.CmdlnOptionParser(self, version=self.version)
         optparser.add_option('-d', '--debug', action='store_true',
                                               dest='debug',
-                                              help='Print debug message')
+                                              help='print debug message')
         optparser.add_option('-v', '--verbose', action='store_true',
                                                 dest='verbose',
-                                                help='Verbose information')
+                                                help='verbose information')
         optparser.add_option('-c', '--conf', dest='conf',
-                                             help='Specify config file for gbs')
+                                             help='specify config file for gbs')
         return optparser
 
     def postoptparse(self):
@@ -131,20 +131,20 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('-o', '--outdir',
                   default=None,
                   dest='outdir',
-                  help='Output directory')
+                  help='output directory')
     @cmdln.option('--spec',
                   default=None,
                   dest='spec',
-                  help='Specify a spec file to use')
+                  help='specify a spec file to use')
     @cmdln.option('-c', '--commit',
                   default=None,
                   dest='commit',
-                  help='Specify a commit ID to export')
+                  help='specify a commit ID to export')
     @cmdln.option('--include-all',
                   action='store_true',
                   default=False,
                   dest='include_all',
-                  help='Uncommitted changes and untracked files would be '\
+                  help='uncommitted changes and untracked files would be '\
                        'included while generating tar ball')
     @cmdln.option('--source-rpm',
                   action='store_true',
@@ -169,7 +169,7 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('-D', '--dist',
                   default=None,
                   dest='dist',
-                  help='Specify distribution configuration file, which should ' \
+                  help='specify distribution configuration file, which should ' \
                        'be a full path')
     @cmdln.option('-R', '--repository',
                   action="callback",
@@ -177,60 +177,60 @@ class Gbs(cmdln.Cmdln):
                   type='string',
                   dest='repositories',
                   callback=handle_repository,
-                  help='Specify package repositories, Only rpm-md format' \
+                  help='specify package repositories, only rpm-md format ' \
                        'is supported')
     @cmdln.option('-B', '--buildroot',
                   default=None,
                   dest='buildroot',
-                  help='Specify build root to setup chroot environment')
+                  help='specify build root to setup chroot environment')
     @cmdln.option('-A', '--arch',
                   default=None,
                   dest='arch',
-                  help='Build target arch ')
+                  help='build target arch ')
     @cmdln.option('-C', '--clean',
                   action='store_true',
                   default=False,
                   dest='clean',
-                  help='Delete old build root before initialization')
+                  help='delete old build root before initialization')
     @cmdln.option('--noinit',
                   action='store_true',
                   default=False,
                   dest='noinit',
-                  help='Skip initialization of build root and start ' \
+                  help='skip initialization of build root and start ' \
                        'with build immediately')
     @cmdln.option('--ccache',
                   action="store_true",
                   default=False,
                   dest='ccache',
-                  help='Use ccache to speed up rebuilds')
+                  help='use ccache to speed up rebuilds')
     @cmdln.option('--skip-conf-repos',
                   action="store_true",
                   default=False,
                   dest='skip_conf_repos',
-                  help='Skip repositories mentioned in config file')
+                  help='skip repositories mentioned in config file')
     @cmdln.option('-c', '--commit',
                   default=None,
                   dest='commit',
-                  help='Specify a commit ID to build')
+                  help='specify a commit ID to build')
     @cmdln.option('--spec',
                   default=None,
                   dest='spec',
-                  help='Specify a spec file to use')
+                  help='specify a spec file to use')
     @cmdln.option('--extra-packs',
                   default=None,
                   dest='extra_packs',
-                  help='Specify extra packages to install to build root '\
+                  help='specify extra packages to install to build root '\
                        'multiple packages can be separated by comma')
     @cmdln.option('--include-all',
                   action='store_true',
                   default=False,
                   dest='include_all',
-                  help='Uncommitted changes and untracked files would be '\
+                  help='uncommitted changes and untracked files would be '\
                        'included while generating tar ball')
     @cmdln.option('--out',
                   default=None,
                   dest='out',
-                  help='Output directory for RPMs')
+                  help='output directory for RPMs')
     def do_build(self, _subcmd, opts, *args):
         """${cmd_name}: local build package
 
@@ -242,14 +242,14 @@ class Gbs(cmdln.Cmdln):
 
         Examples:
             gbs build -R http://example1.org/packages/ \\
-                           -R http://example2.org/packages/ \\
-                           -A i586                          \\
-                           -D /usr/share/gbs/tizen-1.0.conf
+                      -R http://example2.org/packages/ \\
+                      -A i586                          \\
+                      -D /usr/share/gbs/tizen-1.0.conf
 
         Note:
 
-        if -D not specified, distconf key in ~/.gbs.conf would be used.
-        If distconf key is None, dist conf file would be got  from  OBS
+        If -D not specified, distconf key in ~/.gbs.conf would be used.
+        If distconf key is None, dist conf file would be got from OBS
         project (Tizen:Main by default).
 
         ${cmd_option_list}
@@ -263,11 +263,11 @@ class Gbs(cmdln.Cmdln):
                   action='store_true',
                   default=False,
                   dest='root',
-                  help='Chroot as root instead of abuild by default')
+                  help='chroot as root instead of abuild by default')
     @cmdln.option('-A', '--arch',
                   default='i586',
                   dest='arch',
-                  help='Specify the build root arch')
+                  help='specify the build root arch')
     def do_chroot(self, subcmd, opts, *args):
         """${cmd_name}: chroot to build root
 
@@ -299,26 +299,26 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--spec',
                   default=None,
                   dest='spec',
-                  help='Specify a spec file to use')
+                  help='specify a spec file to use')
     @cmdln.option('-c', '--commit',
                   default=None,
                   dest='commit',
-                  help='Specify a commit ID to build')
+                  help='specify a commit ID to build')
     @cmdln.option('--buildlog',
                   action='store_true',
                   default=False,
                   dest='buildlog',
-                  help='Get buildlog from build sever')
+                  help='get buildlog from build sever')
     @cmdln.option('--status',
                   action='store_true',
                   default=False,
                   dest='status',
-                  help='Get build status from build server')
+                  help='get build status from build server')
     @cmdln.option('--include-all',
                   action='store_true',
                   default=False,
                   dest='include_all',
-                  help='Uncommitted changes and untracked files would be '\
+                  help='uncommitted changes and untracked files will be '\
                        'included while generating tar ball')
     def do_remotebuild(self, subcmd, opts, *args):
         """${cmd_name}: remote build package
@@ -346,22 +346,22 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--author-name',
                   default=None,
                   dest='author_name',
-                  help='Author name of git commit')
+                  help='author name of git commit')
     @cmdln.option('--author-email',
                   default=None,
                   dest='author_email',
-                  help='Author email of git commit')
+                  help='author email of git commit')
     @cmdln.option('--upstream_branch',
                   default='upstream',
                   dest='upstream_branch',
-                  help='Specify upstream branch for new version of package')
+                  help='specify upstream branch for new version of package')
     @cmdln.option('--no-merge',
                   action='store_true',
                   default=False,
                   dest='no_merge',
-                  help='Don\'t merge new upstream branch to master')
+                  help='don\'t merge new upstream branch to master')
     def do_import(self, subcmd, opts, *args):
-        """${cmd_name}: Import spec file/source rpm/tar ball to git repository
+        """${cmd_name}: import spec file/source rpm/tar ball to git repository
 
         Usage:
             gbs import [options] specfile | source rpm | tar ball
@@ -382,11 +382,11 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('-s', '--since',
                   default=None,
                   dest='since',
-                  help='Commit to start from')
+                  help='commit to start from')
     @cmdln.option('-m', '--message',
                   default=None,
                   dest='message',
-                  help='Use given message as the changelog entry')
+                  help='use given message as the changelog entry')
     def do_changelog(self, _subcmd, opts, *args):
         """${cmd_name}: update the changelog file with the git commit messages
 
