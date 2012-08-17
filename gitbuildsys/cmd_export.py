@@ -44,16 +44,62 @@ def mkdir_p(path):
         else:
             raise
 
-def create_gbp_export_args(commit, export_dir, spec):
+def is_native_pkg(repo):
+    """
+    Determine if the package is "native"
+    """
+    return not repo.has_branch("upstream")
+
+def create_gbp_export_args(repo, commit, export_dir, spec, force_native=False):
+    """
+    Construct the cmdline argument list for git-buildpackage export
+    """
     args = ["argv[0] placeholder", "--git-export-only",
             "--git-ignore-new", "--git-builder=osc",
-            "--git-no-patch-export",
-            "--git-upstream-tree=%s" % commit,
+            "--git-upstream-branch=upstream",
             "--git-export-dir=%s" % export_dir,
             "--git-packaging-dir=packaging",
             "--git-spec-file=%s" % spec,
             "--git-export=%s" % commit]
+    if force_native or is_native_pkg(repo):
+        args.extend(["--git-no-patch-export",
+                     "--git-upstream-tree=%s" % commit])
+    else:
+        args.extend(["--git-patch-export",
+                     "--git-patch-export-compress=100k",
+                     "--git-force-create",])
+        if repo.has_branch("pristine-tar"):
+            args.extend(["--git-pristine-tar"])
+
     return args
+
+def export_sources(repo, commit, export_dir, spec):
+    """
+    Export packaging files using git-buildpackage
+    """
+    gbp_args = create_gbp_export_args(repo, commit, export_dir, spec)
+    try:
+        ret = gbp_build(gbp_args)
+        if ret and not is_native_pkg(repo):
+            # Try falling back to old logic of one monolithic tarball
+            msger.warning("Generating upstream tarball and/or generating "\
+                          "patches failed. GBS tried this as you have "\
+                          "upstream branch in you git tree. This is a new "\
+                          "mode introduced in GBS v0.10. "\
+                          "Consider fixing the problem by either:\n"\
+                          "  1. Update your upstream branch and/or fix the "\
+                          "spec file\n"\
+                          "  2. Remove or rename the upstream branch")
+            msger.info("Falling back to the old method of generating one "\
+                       "monolithic source archive")
+            gbp_args = create_gbp_export_args(repo, commit, export_dir,
+                                              spec, force_native=True)
+            ret = gbp_build(gbp_args)
+        if ret:
+            msger.error("Failed to get export packaging files from git tree")
+    except GitRepositoryError, excobj:
+        msger.error("Repository error: %s" % excobj)
+
 
 def do(opts, args):
     """
@@ -103,12 +149,7 @@ def do(opts, args):
         else:
             commit = 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
-        gbp_args = create_gbp_export_args(commit, export_dir, relative_spec)
-        try:
-            if gbp_build(gbp_args):
-                msger.error("Failed to get packaging info from git tree")
-        except GitRepositoryError, excobj:
-            msger.error("Repository error: %s" % excobj)
+        export_sources(repo, commit, export_dir, relative_spec)
 
     try:
         spec = rpm.parse_spec(os.path.join(export_dir,

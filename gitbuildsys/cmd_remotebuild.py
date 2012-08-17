@@ -26,7 +26,7 @@ from gitbuildsys import msger, errors, utils
 
 from gitbuildsys.conf import configmgr
 from gitbuildsys.oscapi import OSC, OSCError
-from gitbuildsys.cmd_export import create_gbp_export_args
+from gitbuildsys.cmd_export import export_sources
 
 import gbp.rpm
 from gbp.scripts.buildpackage_rpm import main as gbp_build
@@ -197,12 +197,7 @@ def do(opts, args):
         else:
             commit = 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
-        gbp_args = create_gbp_export_args(commit, exportdir, relative_spec)
-        try:
-            if gbp_build(gbp_args):
-                msger.error("Failed to get packaging info from git tree")
-        except GitRepositoryError, excobj:
-            msger.error("Repository error: %s" % excobj)
+        export_sources(repo, commit, exportdir, relative_spec)
 
     try:
         commit_msg = repo.get_commit_info(opts.commit or 'HEAD')['subject']
