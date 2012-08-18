@@ -199,7 +199,7 @@ def do(opts, args):
         try:
             if gbp_build(["argv[0] placeholder", "--git-export-only",
                           "--git-ignore-new", "--git-builder=osc",
-                          "--git-no-auto-patch-gen",
+                          "--git-no-patch-export",
                           "--git-upstream-tree=%s" % commit,
                           "--git-export-dir=%s" % exportdir,
                           "--git-packaging-dir=packaging",
