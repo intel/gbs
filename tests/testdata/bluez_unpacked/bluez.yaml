@@ -1,0 +1,111 @@
+Name: bluez
+Summary: Bluetooth utilities
+Version: 4.87
+Release: 1
+Group: Applications/System
+License: GPLv2+
+URL: http://www.bluez.org/
+Sources:
+    - http://www.kernel.org/pub/linux/bluetooth/%{name}-%{version}.tar.gz
+    - bluetooth.init
+Patches:
+    - bluez-fsync.patch
+    - remove-duplicate-wrong-udev-rule-for-dell-mice.patch
+    - enable_HFP.patch
+    - powered.patch
+    - install-test-scripts.patch
+    - install-more-binary-test.patch
+    - disable-hal-plugin.patch
+Description: |
+    Utilities for use in Bluetooth applications:
+    	--ciptool
+    	--dfutool
+    	--hcitool
+    	--l2ping
+    	--rfcomm
+    	--sdptool
+    	--hciattach
+    	--hciconfig
+    	--hid2hci
+    
+    The BLUETOOTH trademarks are owned by Bluetooth SIG, Inc., U.S.A.
+
+Requires:
+    - bluez-libs = %{version}
+    - dbus >= 0.60
+    - hwdata >= 0.215
+    - ofono >= 0.2
+
+PkgConfigBR:
+    - dbus-1
+    - libusb
+    - alsa
+    - udev
+    - sndfile
+    - glib-2.0
+    - gstreamer-plugins-base-0.10
+    - gstreamer-0.10
+
+PkgBR:
+    - flex
+Configure: reconfigure
+ConfigOptions:
+    - --enable-cups
+    - --enable-hid2hci
+    - --enable-dfutool
+    - --enable-bccmd
+    - --enable-hidd
+    - --enable-pand
+    - --enable-dund
+    - --enable-gstreamer
+    - --enable-alsa
+    - --enable-usb
+    - --enable-tools
+    - --enable-test
+    - --with-telephony=dummy
+Builder: make
+SubPackages:
+    - Name: libs
+      Summary: Libraries for use in Bluetooth applications
+      Group: System/Libraries
+      Description: Libraries for use in Bluetooth applications.
+
+    - Name: libs-devel
+      Summary: Development libraries for Bluetooth applications
+      Group: Development/Libraries
+      Description: |
+          bluez-libs-devel contains development libraries and headers for
+          use in Bluetooth applications.
+      Requires:
+          - bluez-libs = %{version}
+
+    - Name: cups
+      Summary: CUPS printer backend for Bluetooth printers
+      Group: System/Daemons
+      Description: This package contains the CUPS backend
+      Requires:
+          - bluez-libs = %{version}
+          - cups
+
+    - Name: alsa
+      Summary: ALSA support for Bluetooth audio devices
+      Group: System/Daemons
+      Description: This package contains ALSA support for Bluetooth audio devices
+      Requires:
+          - bluez-libs = %{version}
+
+    - Name: gstreamer
+      Summary: GStreamer support for SBC audio format
+      Group: System/Daemons
+      Description: This package contains gstreamer plugins for the Bluetooth SBC audio format
+      Requires:
+          - bluez-libs = %{version}
+
+    - Name: test
+      Summary: Test Programs for BlueZ
+      Group: Development/Tools
+      Description: Scripts for testing BlueZ and its functionality
+      Requires:
+          - bluez-libs = %{version}
+          - dbus-python
+          - pygobject2

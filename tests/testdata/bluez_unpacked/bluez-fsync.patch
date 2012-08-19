@@ -1,0 +1,11 @@
+--- bluez-4.28/src/textfile.c~	2009-02-11 03:01:06.000000000 -0800
++++ bluez-4.28/src/textfile.c	2009-02-11 03:01:06.000000000 -0800
+@@ -271,7 +271,7 @@
+ 	flock(fd, LOCK_UN);
+ 
+ close:
+-	fdatasync(fd);
++//	fdatasync(fd);
+ 
+ 	close(fd);
+ 	errno = err;

@@ -1,0 +1,157 @@
+* Thu Feb 10 2011 Zheng wu <wu.zheng@intel.com> - 4.87
+- upgrade to 4.87 for BMC #13393
+- ver 4.87:
+	Fix issue with initialization when adapter is already up.
+	Fix issue with attribute server MTU and incoming connections.
+	Fix issue with duplicate characteristics after discovery.
+
+* Fri Jan 21 2011 Zheng wu <wu.zheng@intel.com> - 4.86
+- upgrade to 4.86 for BMC #12691
+- ver 4.86:
+	Revert wrong fix for SDP PDU size error response.
+	Fix various memory leaks in A2DP and AVDTP support.
+	Add Routing property to MediaTransport interface
+	Add proper tracking mechanism to NREC status.
+	Add READ_BLOB_REQUEST support to attribute server.
+
+* Thu Jan 13 2011 Martin Xu <martin.xu@intel.com> - 4.85
+- upgrade to 4.85 
+- to partly support Bluetooth LE feature, FEA #7110
+
+* Thu Jan  6 2011 Zhang Qiang<qiang.z.zhang@intel.com> 4.84
+- Upgrade to 4.84
+
+* Mon Oct 25 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.76
+- Add disable-hal-plugin.patch to fix BMC#7676.
+
+* Mon Oct 25 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.76
+- Add Fix-crash-in-Manager.GetProperties.patch to fix BMC#7772.
+
+* Mon Oct 18 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.76
+- Upgrade to 4.76
+
+* Thu Sep 30 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.70
+- Add powered.patch to make sure the initial power status aligned
+  with connman's requirement.
+
+* Fri Aug 27 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.70
+- Upgrade to 4.70
+
+* Mon Jul 26 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.69
+- Add more binary test programs into bluez-test sub-package.
+
+* Mon Jul 19 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.69
+- Upgrade to 4.69
+
+* Thu Jul 15 2010 Anas Nashif <anas.nashif@intel.com> - 4.66
+- Install udev rules into /lib/udev (bmc #3424)
+
+* Tue Jul 13 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.66
+- Add a sub-package for test scripts.
+- Corrected bluez.yaml to avoid spectacle's warnings.
+
+* Wed Jun 30 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.66
+- Upgrade to 4.66
+- Remove unnecessary patch correct-ref.patch
+- Switch to build with Spectacle
+
+* fri jun 4 2010 zhu yanhai <yanhai.zhu@linux.intel.com> 4.65
+- add correct-ref.patch to fix bmc#1882
+
+* Thu Jun 3 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.65
+- Upgrade to 4.65
+
+* Tue Apr 27 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.63
+- Enable HFP without oFono binding in Trunk. Because IVI and Netbooks don't have a
+  physical modem, we just build BlueZ with the default dummy telephony driver.
+  (BMC#400). This will make MeeGo BlueZ be able to play HFP HS and AG role.
+
+* Mon Apr 12 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.63
+- Upgrade to 4.63. As the HSP part is under changes in upstream, this upgrade
+  will potentially improve HSP performance (BMC#65, BMC#400, BMC#402)
+- Refresh no-crash-if-no-modem.path: use the hotifx from upstream to
+  replace my home made one. (BMO#8991)
+
+* Tue Mar 9 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.62
+- Upgrade to 4.62, which also fix bluez-hcidump build failure.
+
+* Sat Feb 27 2010 Anas Nashif <anas.nashif@intel.com> - 4.61
+- Spec cleanup
+
+* Thu Feb 25 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.61
+- Upgrade to 4.61
+
+* Tue Feb 2 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.60
+- Upgrade to 4.60
+
+* Tue Jan 12 2010 Zhu Yanhai <yanhai.zhu@linux.intel.com> 4.58
+- add no-crash-if-no-modem.patch to fix MB#8991. 
+
+* Fri Dec 4 2009 Martin Xu  <martin.xu@intel.com> 4.58
+- upgrade to 4.58
+
+* Fri Dec 4 2009 Martin Xu  <martin.xu@intel.com> 4.56
+- add set_RememberPowered_as_false.patch to partly fix bug #6835
+
+* Tue Oct 28 2009 Martin Xu  <martin.xu@intel.com> 4.56
+- add disable_HFP_at_audio_conf.patch to fix bug# 7236
+
+* Tue Oct 13 2009 Martin Xu  <martin.xu@intel.com> 4.56
+- Upgrade to 4.56
+- update bluez-fsync.patch
+
+* Thu Sep 17 2009 Yi Yang <yi.y.yang@intel.com> 4.50
+- Remove a duplicate but wrong udev rule for dell mice (MB#5316)
+
+* Fri Aug 27 2009 Martin Xu  <martin.xu@intel.com> 4.50
+- Upgrade to 4.50
+- Add --with-telephony=ofono to enable HFP telephony plugins See Bug #5486
+- Add ofono as runtime requirements
+
+* Fri Aug 7 2009 Martin Xu  <martin.xu@intel.com> 4.47
+- Upgrade to 4.47
+- Remove HFP patch, the patch has been included in 4.47
+
+* Wed July 1 2009 Todd Brandt <todd.e.brandt@intel.com> 4.40
+- Added Forrest Zhao's HFP support patch. Fixes a crash when using org.bluez.HeadsetGateway
+
+* Thu June 4 2009 Martin Xu  <martin.xu@intel.com> 4.40
+- Upgrade to 4.40
+- Remove fix-alsa-bluez-plugin-poll-revents-err.patch, the fix has been done in alsa-lib-1.0.20 
+
+* Mon May 25 2009 Anas Nashif <anas.nashif@intel.com> 4.38
+- Fixed ChangeLog
+
+* Fri May 8 2009 Martin Xu  <martin.xu@intel.com> 4.38
+- Upgrade to 4.38
+
+ Tue Apr 28 2009  <martin.xu@intel.com> 4.36
+- Upgrade to 4.36
+
+* Fri Apr 3 2009  <martin.xu@intel.com> 4.30
+- add patch fix-alsa-bluez-plugin-poll-revents-err.patch to fix a2dp error
+
+ Fri Feb 13 2009 Anas Nashif <anas.nashif@intel.com> 4.30
+- Update to 4.30
+
+* Tue Feb 10 2009 Arjan van de Ven <arjan@linux.intel.com> 4.28
+- disable f(data)sync calls in bluetoothd
+
+* Mon Feb 9 2009 Arjan van de Ven <arjan@linux.intel.com> 4.28
+- update to 4.28
+- don't start the daemon from the initscript
+
+* Thu Dec 11 2008 Anas Nashif <anas.nashif@intel.com> 4.22
+- fastinit replaces initscripts
+
+* Thu Dec 11 2008 - Martin Xu <martin.xu@intel.com>
+- Upgrade to bluez-4.22
+
+* Tue Dec 09 2008 Anas Nashif <anas.nashif@intel.com> 4.18
+- Change BR for gstreamer plugins
+
+* Fri Nov 25 2008 - Martin Xu <martin.xu@intel.com>
+- Remove "Provides bluez-utils-*"
+
+* Fri Nov 11 2008 - Martin Xu <martin.xu@intel.com>
+- initialized bluez-4.18 package

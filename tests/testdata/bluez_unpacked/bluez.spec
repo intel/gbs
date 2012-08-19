@@ -12,7 +12,7 @@ Release:    1
 Group:      Applications/System
 License:    GPLv2+
 URL:        http://www.bluez.org/
-Source0:    http://www.kernel.org/pub/linux/bluetooth/%{name}-%{version}-tizen.tar.bz2
+Source0:    http://www.kernel.org/pub/linux/bluetooth/%{name}-%{version}.tar.gz
 Source1:    bluetooth.init
 Source100:  bluez.yaml
 Patch0:     bluez-fsync.patch
