@@ -128,7 +128,7 @@ class OSC(object):
         url = core.make_meta_url("prjconf", quote_plus(target),
                                  self.apiurl, False)
         try:
-            self.core_http(core.http_PUT, url, data=config)
+            self.core_http(core.http_PUT, url, data=''.join(config))
         except OSCError, err:
             raise OSCError("can't copy config from %s to %s: %s" \
                            % (src, target, err))
