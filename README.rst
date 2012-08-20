@@ -241,7 +241,6 @@ usage of subcommand `build` can be available using `gbs build --help`
   if -D not specified, distconf key in ~/.gbs.conf would be used.
   Options:
       -h, --help          show this help message and exit
-      --debuginfo         Enable build debuginfo sub-packages
       --noinit            Skip initialization of build root and start with build
                           immediately
       -C, --clean         Delete old build root before initializing it

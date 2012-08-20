@@ -240,6 +240,22 @@ def get_repos_conf():
 
     return result
 
+def clean_repos_userinfo(repos):
+    striped_repos = []
+    for repo in repos:
+        splitted = urlsplit(repo)
+        if not splitted.username:
+            striped_repos.append(repo)
+        else:
+            splitted_list = list(splitted)
+            if splitted.port:
+                splitted_list[1] = '%s:%d' % (splitted.hostname, splitted.port)
+            else:
+                splitted_list[1] = splitted.hostname
+            striped_repos.append(urlunsplit(splitted_list))
+
+    return striped_repos
+
 def do(opts, args):
 
     workdir = os.getcwd()
@@ -263,8 +279,7 @@ def do(opts, args):
     except GitRepositoryError, err:
         msger.error(str(err))
 
-    if not opts.incremental:
-        utils.git_status_checker(repo, opts)
+    utils.gitStatusChecker(repo, opts)
     workdir = repo.path
 
     hostarch = get_hostarch()
@@ -295,8 +310,6 @@ def do(opts, args):
         cmd += ['--jobs=%s' % build_jobs]
     if opts.clean:
         cmd += ['--clean']
-    if opts.debuginfo:
-        cmd += ['--debug']
 
     if opts.noinit:
         cmd += ['--no-init']
@@ -324,7 +337,7 @@ def do(opts, args):
         if not repourls:
             msger.error('no repositories found for arch: %s under the '\
                         'following repos:\n      %s' % \
-                        (buildarch, '\n'.join(repos)))
+                        (buildarch, '\n'.join(clean_repos_userinfo(repos))))
         for url in repourls:
             if not  re.match('https?://.*', url) and \
                not (url.startswith('/') and os.path.exists(url)):
@@ -335,7 +348,7 @@ def do(opts, args):
             distconf = opts.dist
         else:
             if repoparser.buildconf is None:
-                msger.info('failed to get build conf, use default build conf')
+                msger.warning('failed to get build conf, use default build conf')
                 distconf = configmgr.get('distconf', 'build')
             else:
                 shutil.copy(repoparser.buildconf, tmpdir)
@@ -406,11 +419,6 @@ def do(opts, args):
         msger.error('can\'t get correct name or version from spec file.')
 
     cmd += [spec.specfile]
-
-    if opts.incremental:
-        cmd += ['--rsync-src=%s' % os.path.abspath(workdir)]
-        cmd += ['--rsync-dest=/home/abuild/rpmbuild/BUILD/%s-%s' % \
-                (spec.name, spec.version)]
 
     # if current user is root, don't run with sucmd
     if os.getuid() != 0:
