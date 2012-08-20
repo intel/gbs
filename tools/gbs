@@ -160,6 +160,13 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='upstream_tag',
                   help="Upstream tag format, e.g. 'v%(upstreamversion)s'")
+    @cmdln.option('--squash-patches-until',
+                  default=None,
+                  dest='squash_patches_until',
+                  help="When generating patches, squash patches up to given "\
+                       "commit-ish into one monolithic diff file. Format is "\
+                       "the commit-ish optionally followed by a colon and "\
+                       "diff filename base.")
     def do_export(self, _subcmd, opts, *args):
         """${cmd_name}: export files and prepare for build
 
@@ -391,6 +398,13 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='upstream_tag',
                   help="Upstream tag format, e.g. 'v%(upstreamversion)s'")
+    @cmdln.option('--squash-patches-until',
+                  default=None,
+                  dest='squash_patches_until',
+                  help="When generating patches, squash patches up to given "\
+                       "commit-ish into one monolithic diff file. Format is "\
+                       "the commit-ish optionally followed by a colon and "\
+                       "diff filename base.")
     def do_build(self, _subcmd, opts, *args):
         """${cmd_name}: local build package
 
@@ -488,6 +502,13 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   dest='upstream_tag',
                   help="Upstream tag format, e.g. 'v%(upstreamversion)s'")
+    @cmdln.option('--squash-patches-until',
+                  default=None,
+                  dest='squash_patches_until',
+                  help="When generating patches, squash patches up to given "\
+                       "commit-ish into one monolithic diff file. Format is "\
+                       "the commit-ish optionally followed by a colon and "\
+                       "diff filename base.")
     def do_remotebuild(self, subcmd, opts, *args):
         """${cmd_name}: remote build package
 

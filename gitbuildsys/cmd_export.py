@@ -70,6 +70,13 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
     msger.debug("Using upstream branch: %s" % upstream_branch)
     msger.debug("Using upstream tag format: '%s'" % upstream_tag)
 
+    # Get patch squashing option
+    if opts.squash_patches_until:
+        squash_patches_until = opts.squash_patches_until
+    else:
+        squash_patches_until = configmgr.get('squash_patches_until', 'general')
+
+    # Now, start constructing the argument list
     args = ["argv[0] placeholder", "--git-export-only",
             "--git-ignore-new", "--git-builder=osc",
             "--git-upstream-branch=upstream",
@@ -86,7 +93,9 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
     else:
         args.extend(["--git-patch-export",
                      "--git-patch-export-compress=100k",
-                     "--git-force-create",])
+                     "--git-force-create",
+                     "--git-patch-export-squash-until=%s" %
+                            squash_patches_until])
         if repo.has_branch("pristine-tar"):
             args.extend(["--git-pristine-tar"])
 

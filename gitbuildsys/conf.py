@@ -185,6 +185,7 @@ class ConfigMgr(object):
                 'editor': '',
                 'upstream_branch': 'upstream',
                 'upstream_tag': 'upstream/%(upstreamversion)s',
+                'squash_patches_until': '',
             },
             'remotebuild': {
                 'build_server': 'https://api.tizen.org',
