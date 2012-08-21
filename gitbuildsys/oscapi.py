@@ -72,7 +72,7 @@ class OSC(object):
             return method(url, data=data, file=filep)
         except (urllib2.URLError, M2Crypto.m2urllib2.URLError,
                 M2Crypto.SSL.SSLError, ssl.SSLError), err:
-            raise errors.ObsError(str(err))
+            raise OSCError(str(err))
 
     def copy_project(self, src, target, rewrite=False):
         """
