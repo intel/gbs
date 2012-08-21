@@ -210,7 +210,7 @@ def do(opts, args):
             msger.error("Repository error: %s" % excobj)
 
     try:
-        commit_msg = repo.get_commit_info('HEAD')['subject']
+        commit_msg = repo.get_commit_info(opts.commit or 'HEAD')['subject']
     except GitRepositoryError, exc:
         msger.error('failed to get commit info: %s' % exc)
 
