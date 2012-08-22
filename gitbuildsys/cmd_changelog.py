@@ -88,9 +88,6 @@ def do(opts, _args):
 
     project_root_dir = repo.path
 
-    if not repo.is_clean():
-        msger.error("Git tree is not clean")
-
     changes_file_list = glob.glob("%s/packaging/*.changes" % project_root_dir)
 
     if changes_file_list:
