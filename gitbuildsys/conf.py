@@ -169,6 +169,8 @@ class BrainConfigParser(SafeConfigParser):
 
         try:
             SafeConfigParser.set(self, section, option, value)
+            if replace_opt:
+                SafeConfigParser.remove_option(self, section, replace_opt)
         except NoSectionError, err:
             raise errors.ConfigError(str(err))
 
@@ -273,7 +275,6 @@ distconf = $build__distconf
     def __init__(self, fpath=None):
         self.cfgparser = BrainConfigParser()
         self.reset_from_conf(fpath)
-        self.replaced_keys = defaultdict(list)
 
     def reset_from_conf(self, fpath):
         if fpath:
@@ -287,8 +288,6 @@ distconf = $build__distconf
             if not fpaths:
                 if not self._new_conf():
                     msger.error('No config file available')
-
-        self.replaced_keys = defaultdict(list)
 
         if fpaths:
             try:
@@ -363,6 +362,7 @@ distconf = $build__distconf
         return True
 
     def _check_passwd(self):
+        replaced_keys = False
         for sec in self.DEFAULTS.keys():
             for key in self.options(sec):
                 if key.endswith('passwd'):
@@ -370,12 +370,12 @@ distconf = $build__distconf
                     if plainpass is None:
                         continue
                     # empty string password is acceptable here
-                    self.replaced_keys[sec].append(key)
+                    replaced_keys = True
                     self.set(key,
                              base64.b64encode(plainpass.encode('bz2')),
                              sec)
 
-        if self.replaced_keys:
+        if replaced_keys:
             msger.warning('plaintext password in config file will '
                           'be replaced by encoded one')
             self.update()
@@ -406,11 +406,7 @@ distconf = $build__distconf
 
     def options(self, section='general'):
         try:
-            opts = self.cfgparser.options(section)
-            if section in self.replaced_keys:
-                opts = list(set(opts) - set(self.replaced_keys[section]))
-
-            return opts
+            return self.cfgparser.options(section)
 
         except NoSectionError:
             if section in self.DEFAULTS:
