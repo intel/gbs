@@ -30,8 +30,9 @@ import ssl
 from collections import defaultdict
 from urllib import quote_plus, pathname2url
 
-from gitbuildsys import msger, errors
+from gitbuildsys import msger
 from gitbuildsys.utils import hexdigest
+from gitbuildsys.errors import ObsError
 
 from osc import conf, core
 
@@ -51,12 +52,12 @@ class OSC(object):
             except OSError, err:
                 if err.errno == 1:
                     # permission problem, should be the chmod(0600) issue
-                    raise errors.ObsError('Current user has no write permission '\
-                                       'for specified oscrc: %s' % oscrc)
+                    raise ObsError('Current user has no write permission '\
+                                   'for specified oscrc: %s' % oscrc)
 
                 raise # else
             except urllib2.URLError:
-                raise errors.ObsError("invalid service apiurl: %s" % apiurl)
+                raise ObsError("invalid service apiurl: %s" % apiurl)
         else:
             conf.get_config()
 
@@ -91,7 +92,7 @@ class OSC(object):
         """
 
         if not self.exists(src):
-            raise errors.ObsError('base project: %s not exists' % src)
+            raise ObsError('base project: %s not exists' % src)
 
         if self.exists(target):
             msger.warning('target project: %s exists' % target)
@@ -124,14 +125,14 @@ class OSC(object):
             core.edit_meta('prj', path_args=quote_plus(target), data=meta)
         except (urllib2.URLError, M2Crypto.m2urllib2.URLError,
                 M2Crypto.SSL.SSLError), err:
-            raise errors.ObsError("Can't set meta for %s: %s" % (target, str(err)))
+            raise ObsError("Can't set meta for %s: %s" % (target, str(err)))
 
         # copy project config
         try:
             config = core.show_project_conf(self.apiurl, src)
         except (urllib2.URLError, M2Crypto.m2urllib2.URLError,
                 M2Crypto.SSL.SSLError), err:
-            raise errors.ObsError("Can't get config from project %s: %s" \
+            raise ObsError("Can't get config from project %s: %s" \
                            % (src, str(err)))
 
         url = core.make_meta_url("prjconf", quote_plus(target),
@@ -139,7 +140,7 @@ class OSC(object):
         try:
             self.core_http(core.http_PUT, url, data=''.join(config))
         except OSCError, err:
-            raise errors.ObsError("can't copy config from %s to %s: %s" \
+            raise ObsError("can't copy config from %s to %s: %s" \
                            % (src, target, err))
 
     def exists(self, prj, pkg=''):
@@ -161,7 +162,7 @@ class OSC(object):
                                   M2Crypto.SSL.SSLError), err:
             pass
         if err:
-            raise errors.ObsError("can't check if %s/%s exists: %s" % (prj, pkg, err))
+            raise ObsError("can't check if %s/%s exists: %s" % (prj, pkg, err))
 
         return True
 
@@ -190,7 +191,7 @@ class OSC(object):
                 self.core_http(core.http_PUT, put_url, filep=fpath)
             self.core_http(core.http_POST, url, data=xml)
         except OSCError, err:
-            raise errors.ObsError("can't commit files to %s/%s: %s" % (prj, pkg, err))
+            raise ObsError("can't commit files to %s/%s: %s" % (prj, pkg, err))
 
     def remove_files(self, prj, pkg, fnames=None):
         """
@@ -215,7 +216,7 @@ class OSC(object):
             try:
                 self.core_http(core.http_DELETE, url)
             except OSCError, err:
-                raise errors.ObsError("can\'t remove files from %s/%s: %s" \
+                raise ObsError("can\'t remove files from %s/%s: %s" \
                                % (prj, pkg, err))
 
     def create_package(self, prj, pkg):
@@ -228,7 +229,7 @@ class OSC(object):
         try:
             self.core_http(core.http_PUT, url, data=meta)
         except OSCError, err:
-            raise errors.ObsError("can't create %s/%s: %s" % (prj, pkg, err))
+            raise ObsError("can't create %s/%s: %s" % (prj, pkg, err))
 
     def get_results(self, prj, pkg):
         """Get package build results."""
@@ -237,7 +238,7 @@ class OSC(object):
             build_status = core.get_results(self.apiurl, prj, pkg)
         except (urllib2.URLError, M2Crypto.m2urllib2.URLError,
                 M2Crypto.SSL.SSLError), err:
-            raise errors.ObsError("can't get %s/%s build results: %s" \
+            raise ObsError("can't get %s/%s build results: %s" \
                            % (prj, pkg, str(err)))
 
         for res in build_status:
@@ -253,7 +254,7 @@ class OSC(object):
         try:
             log = self.core_http(core.http_GET, url).read()
         except OSCError, err:
-            raise errors.ObsError("can't get %s/%s build log: %s" % (prj, pkg, err))
+            raise ObsError("can't get %s/%s build log: %s" % (prj, pkg, err))
 
         return log.translate(None, "".join([chr(i) \
                                             for i in range(10) + range(11,32)]))
