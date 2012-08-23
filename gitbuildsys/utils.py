@@ -147,40 +147,63 @@ class TempCopy(object):
         if os.path.exists(self.name):
             os.unlink(self.name)
 
-def urlgrab(url, filename, user = None, passwd = None):
 
-    outfile = open(filename, 'w')
-    curl = pycurl.Curl()
-    curl.setopt(pycurl.URL, url)
-    curl.setopt(pycurl.WRITEDATA, outfile)
-    curl.setopt(pycurl.FAILONERROR, True)
-    curl.setopt(pycurl.FOLLOWLOCATION, True)
-    curl.setopt(pycurl.SSL_VERIFYPEER, False)
-    curl.setopt(pycurl.SSL_VERIFYHOST, False)
-    curl.setopt(pycurl.CONNECTTIMEOUT, 30)
-    if user:
-        userpwd = user
-        if passwd:
-            userpwd = '%s:%s' % (user, passwd)
-        curl.setopt(pycurl.USERPWD, userpwd)
+class URLGrabber(object):
+    '''grab an url and save to local file'''
 
-    try:
-        curl.perform()
-    except pycurl.error, err:
-        errcode = err.args[0]
-        if errcode == pycurl.E_OPERATION_TIMEOUTED:
-            raise errors.UrlError('timeout on %s: %s' % (url, err))
-        elif errcode == pycurl.E_FILESIZE_EXCEEDED:
-            raise errors.UrlError('max download size exceeded on %s'\
-                                       % url)
-        else:
-            errmsg = 'pycurl error %s - "%s"' % (errcode, str(err.args[1]))
-            raise errors.UrlError(errmsg)
-    finally:
-        outfile.close()
-        curl.close()
+    def __init__(self, connect_timeout=30):
+        '''create Curl object and set one-time options'''
+        curl = pycurl.Curl()
+        curl.setopt(pycurl.FAILONERROR, True)
+        curl.setopt(pycurl.FOLLOWLOCATION, True)
+        curl.setopt(pycurl.SSL_VERIFYPEER, False)
+        curl.setopt(pycurl.SSL_VERIFYHOST, False)
+        curl.setopt(pycurl.CONNECTTIMEOUT, connect_timeout)
+        #curl.setopt(pycurl.VERBOSE, 1)
+        self.curl = curl
 
-    return filename
+    def change_url(self, url, outfile, user, passwd):
+        '''change options for individual url'''
+
+        curl = self.curl
+        curl.url = url
+        curl.setopt(pycurl.URL, url)
+        curl.setopt(pycurl.WRITEDATA, outfile)
+        if user:
+            userpwd = user
+            if passwd:
+                userpwd = '%s:%s' % (user, passwd)
+            curl.setopt(pycurl.USERPWD, userpwd)
+
+    def perform(self):
+        '''do the real Curl perform work'''
+
+        curl = self.curl
+        try:
+            curl.perform()
+        except pycurl.error, err:
+            errcode = err.args[0]
+            if errcode == pycurl.E_OPERATION_TIMEOUTED:
+                raise errors.UrlError('timeout on %s: %s' % (curl.url, err))
+            elif errcode == pycurl.E_FILESIZE_EXCEEDED:
+                raise errors.UrlError('max download size exceeded on %s'\
+                                           % curl.url)
+            else:
+                errmsg = 'pycurl error %s - "%s"' % (errcode, str(err.args[1]))
+                raise errors.UrlError(errmsg)
+
+    def __del__(self):
+        '''close Curl object'''
+        self.curl.close()
+        self.curl = None
+
+    def grab(self, url, filename, user=None, passwd=None):
+        '''grab url to filename'''
+
+        with open(filename, 'w') as outfile:
+            self.change_url(url, outfile, user, passwd)
+            self.perform()
+
 
 class RepoParser(object):
     """ Repository parser for generate real repourl and build config
@@ -194,6 +217,7 @@ class RepoParser(object):
         self.buildmeta = None
         self.buildconf = None
         self.standardrepos = []
+        self.urlgrabber = URLGrabber()
         self.parse()
 
     def get_buildconf(self):
@@ -228,7 +252,7 @@ class RepoParser(object):
                 repomd_url = os.path.join(repo, 'repodata/repomd.xml')
                 repomd_file = os.path.join(self.cachedir, 'repomd.xml')
                 try:
-                    urlgrab(repomd_url, repomd_file)
+                    self.urlgrabber.grab(repomd_url, repomd_file)
                     validrepos.append(repo)
                 except errors.UrlError:
                     pass
@@ -246,7 +270,7 @@ class RepoParser(object):
             repomd_file = os.path.join(self.cachedir, 'repomd.xml')
 
             try:
-                urlgrab(repomd_url, repomd_file)
+                self.urlgrabber.grab(repomd_url, repomd_file)
                 self.standardrepos.append(repo)
                 # Try to download build.xml
                 buildxml_url = urlparse.urljoin(repo.rstrip('/') + '/',      \
@@ -256,13 +280,13 @@ class RepoParser(object):
 
                 # Try to download build conf
                 if self.buildconf is None:
-                    urlgrab(buildxml_url, self.buildmeta)
+                    self.urlgrabber.grab(buildxml_url, self.buildmeta)
                     build_conf = self.get_buildconf()
                     buildconf_url = buildxml_url.replace(os.path.basename    \
                                                     (buildxml_url), build_conf)
                     self.buildconf = os.path.join(self.cachedir,        \
                                           os.path.basename(buildconf_url))
-                    urlgrab(buildconf_url, self.buildconf)
+                    self.urlgrabber.grab(buildconf_url, self.buildconf)
                 # standard repo
                 continue
             except errors.UrlError:
@@ -277,7 +301,7 @@ class RepoParser(object):
             buildxml_url = os.path.join(repo, 'builddata/build.xml')
             self.buildmeta = os.path.join(self.cachedir, 'build.xml')
             try:
-                urlgrab(buildxml_url, self.buildmeta)
+                self.urlgrabber.grab(buildxml_url, self.buildmeta)
             except errors.UrlError:
                 self.buildmeta = None
                 continue
@@ -292,7 +316,7 @@ class RepoParser(object):
                                                 'builddata/%s' % build_conf)
                 self.buildconf = os.path.join(self.cachedir,                \
                                              os.path.basename(buildconf_url))
-                urlgrab(buildconf_url, self.buildconf)
+                self.urlgrabber.grab(buildconf_url, self.buildconf)
 
             except errors.UrlError:
                 self.buildconf = None
