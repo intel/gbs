@@ -279,7 +279,7 @@ def do(opts, args):
     except GitRepositoryError, err:
         msger.error(str(err))
 
-    utils.gitStatusChecker(repo, opts)
+    utils.git_status_checker(repo, opts)
     workdir = repo.path
 
     hostarch = get_hostarch()
