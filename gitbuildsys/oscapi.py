@@ -68,11 +68,21 @@ class OSC(object):
     @staticmethod
     def core_http(method, url, data=None, filep=None):
         """Wrapper above core.<http_METHOD> to catch exceptions."""
-        try:
-            return method(url, data=data, file=filep)
-        except (urllib2.URLError, M2Crypto.m2urllib2.URLError,
-                M2Crypto.SSL.SSLError, ssl.SSLError), err:
-            raise OSCError(str(err))
+
+        # Workarounded osc bug. http_GET sometimes returns empty responce
+        # Usually next try succeeds, so let's try 3 times
+        for count in (1, 2, 3):
+            try:
+                result = method(url, data=data, file=filep)
+            except (urllib2.URLError, M2Crypto.m2urllib2.URLError,
+                    M2Crypto.SSL.SSLError, ssl.SSLError), err:
+                if count == 3:
+                    raise OSCError(str(err))
+            if result:
+                return result
+
+        raise OSCError('Got empty responce from %s %s' % \
+                       (method.func_name.split('_')[-1], url))
 
     def copy_project(self, src, target, rewrite=False):
         """
@@ -189,8 +199,14 @@ class OSC(object):
         """
         if not fnames:
             url = core.makeurl(self.apiurl, ['source', prj, pkg])
+            try:
+                responce = self.core_http(core.http_GET, url).read()
+            except OSCError, err:
+                raise ObsError("can't get list of sources from"\
+                               " %s/%s: %s" % (prj, pkg, err))
+
             fnames = [entry.get('name') for entry in \
-                      core.ET.fromstring(core.http_GET(url).read())]
+                                            core.ET.fromstring(responce)]
         for fname in fnames:
             query = 'rev=upload'
             url = core.makeurl(self.apiurl,
