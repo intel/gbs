@@ -19,9 +19,7 @@
 from __future__ import with_statement
 import os
 import base64
-from collections import defaultdict
-from ConfigParser import SafeConfigParser, DEFAULTSECT, ParsingError, \
-                         NoSectionError, NoOptionError, \
+from ConfigParser import SafeConfigParser, NoSectionError, NoOptionError, \
                          MissingSectionHeaderError
 
 from gitbuildsys import msger, errors
@@ -37,7 +35,7 @@ class BrainConfigParser(SafeConfigParser):
         If the input list has multiple values, use the last one.
         """
 
-        if len(filenames) > 1:
+        if not isinstance(filenames, basestring) and len(filenames) > 1:
             msger.warning('Will not support multiple config files, '
                           'only read in the last one.')
             filenames = filenames[-1:]
@@ -47,11 +45,9 @@ class BrainConfigParser(SafeConfigParser):
     def _read(self, fptr, fname):
         """Parse a sectioned setup file.
 
-        Override the same method of parent class. Some code snip were
-        copied from standard ConfigParser module.
+        Override the same method of parent class.
 
-        Customization: save filename and corresponding lineno for all
-        the sections and keys
+        Customization: save filename and file contents
         """
 
         # save the original filepath and contents
@@ -59,19 +55,26 @@ class BrainConfigParser(SafeConfigParser):
         self._flines = fptr.readlines()
         fptr.seek(0)
 
-        # init dict DS to store lineno
-        self._sec_linenos = {}
-        self._opt_linenos = {}
+        return SafeConfigParser._read(self, fptr, fname)
 
-        cursect = None
+    def _set_into_file(self, section, option, value, replace_opt=None):
+        """Set the value in the file contents
+
+        Parsing logic and lot of the code was copied directly from the
+        ConfigParser module of Python standard library.
+        """
+        cursect = None                        # None, or a str
         optname = None
-        lineno = 0
-        exc = ''
-        while True:
-            line = fptr.readline()
-            if not line:
-                break
-            lineno = lineno + 1
+        new_line = '%s = %s\n' % (option, value)
+        new_line_written = False
+        last_section_line = None
+
+        for lineno in range(len(self._flines)):
+            line = self._flines[lineno]
+            # We might have 'None' lines because of earlier updates
+            if line is None:
+                continue
+
             # comment or blank line?
             if line.strip() == '' or line[0] in '#;':
                 continue
@@ -79,94 +82,52 @@ class BrainConfigParser(SafeConfigParser):
                 # no leading whitespace
                 continue
             # continuation line?
-            if line[0].isspace() and cursect is not None and optname:
-                value = line.strip()
-                if value:
-                    cursect[optname] = "%s\n%s" % (cursect[optname], value)
-                    savekey = "%s.%s" % (cursect['__name__'], optname)
-                    self._opt_linenos[savekey].append(lineno)
-            # a section header or option header?
+            if line[0].isspace() and cursect == section and \
+                (optname == option or optname == replace_opt):
+                self._flines[lineno] = None
             else:
                 # is it a section header?
-                match = self.SECTCRE.match(line)
-                if match:
-                    sectname = match.group('header')
-                    if sectname in self._sec_linenos:
-                        self._sec_linenos[sectname].append(lineno)
-                    else:
-                        self._sec_linenos[sectname] = [lineno]
-
-                    if sectname in self._sections:
-                        cursect = self._sections[sectname]
-                    elif sectname == DEFAULTSECT:
-                        cursect = self._defaults
-                    else:
-                        cursect = self._dict()
-                        cursect['__name__'] = sectname
-                        self._sections[sectname] = cursect
+                mo = self.SECTCRE.match(line)
+                if mo:
+                    cursect = mo.group('header')
                     # So sections can't start with a continuation line
                     optname = None
-
+                # no section header in the file?
                 elif cursect is None:
-                    # no section header in the file?
-                    raise MissingSectionHeaderError(fname, lineno, line)
-
+                    raise MissingSectionHeaderError(self._fpname, lineno + 1, line)
+                # an option line?
                 else:
-                    # an option line?
-                    match = self.OPTCRE.match(line)
-                    if match:
-                        optname, sign, optval = match.group('option',
-                                                            'vi', 'value')
-                        if sign in ('=', ':') and ';' in optval:
-                            # ';' is a comment delimiter only if it follows
-                            # a spacing character
-                            pos = optval.find(';')
-                            if pos != -1 and optval[pos-1].isspace():
-                                optval = optval[:pos]
-                        optval = optval.strip()
-                        # allow empty values
-                        if optval == '""':
-                            optval = ''
+                    mo = self.OPTCRE.match(line)
+                    if mo:
+                        optname = mo.group('option')
                         optname = self.optionxform(optname.rstrip())
-                        cursect[optname] = optval
-                        savekey = "%s.%s" % (cursect['__name__'], optname)
-                        self._opt_linenos[savekey] = [lineno]
+                        # Replace / remove options
+                        if cursect == section and \
+                           (optname == option or optname == replace_opt):
+                            if not new_line_written:
+                                self._flines[lineno] = new_line
+                                new_line_written = True
+                            else:
+                                # Just remove all matching lines, if we've
+                                # already written the new value
+                                self._flines[lineno] = None
+                    # Just ignore non-fatal parsing errors
 
-                    else:
-                        # a non-fatal parsing error occurred.  set up the
-                        # exception but keep going. the exception will be
-                        # raised at the end of the file and will contain a
-                        # list of all bogus lines
-                        if not exc:
-                            exc = ParsingError(fname)
-                        exc.append(lineno, repr(line))
+            # Save the last line of the matching section
+            if cursect == section:
+                last_section_line = lineno
 
-        # if any parsing errors occurred, raise an exception
-        if exc:
-            raise errors.ConfigError(str(exc))
+        # Insert new key
+        if not new_line_written:
+            if last_section_line is not None:
+                self._flines.insert(last_section_line + 1, new_line)
+            else:
+                raise NoSectionError(section)
 
     def set(self, section, option, value, replace_opt=None):
         """When set new value, need to update the readin file lines,
         which can be saved back to file later.
         """
-
-        def _find_next_section_lineno(section):
-            if section not in self._sec_linenos:
-                # new section?
-                return -1
-
-            found = False
-            for sec, lineno in sorted(self._sec_linenos.items(),
-                                          key=lambda x: x[1][0]):
-                if found:
-                    return lineno[0]-1
-
-                if sec == section:
-                    found = True
-
-            # if reach here, sec is the last one
-            return -1
-
         try:
             SafeConfigParser.set(self, section, option, value)
             if replace_opt:
@@ -175,37 +136,12 @@ class BrainConfigParser(SafeConfigParser):
             raise errors.ConfigError(str(err))
 
         # If the code reach here, it means the section and key are ok
-        if replace_opt is None:
-            o_kname = "%s.%s" % (section, option)
-            n_kname = "%s.%s" % (section, option)
-        else:
-            o_kname = "%s.%s" % (section, option)
-            n_kname = "%s.%s" % (section, replace_opt)
-
-        line = '%s = %s\n' % (option, value)
-        if n_kname in self._opt_linenos:
-            # update an old key
-            self._flines[self._opt_linenos[n_kname][0]-1] = line
-            if len(self._opt_linenos[n_kname]) > 1:
-                # multiple lines value, remote the rest
-                for lno in range(self._opt_linenos[n_kname][1]-1,
-                                 self._opt_linenos[n_kname][-1]):
-                    self._flines[lno] = None
-        else:
-            # new key
-            line += '\n' # one more blank line
-            nextsec = _find_next_section_lineno(section)
-            if nextsec == -1:
-                self._flines.append(line)
-            else:
-                # FIXME
-                self._flines.insert(nextsec, line)
-
-        # remove old opt if need
-        if o_kname != n_kname and o_kname in self._opt_linenos:
-            for lno in range(self._opt_linenos[o_kname][0]-1,
-                             self._opt_linenos[o_kname][-1]):
-                self._flines[lno] = None
+        try:
+            self._set_into_file(section, option, value, replace_opt)
+        except Exception as err:
+            # This really shouldn't happen, we've already once parsed the file
+            # contents successfully.
+            raise errors.ConfigError('BUG: ' + str(err))
 
     def update(self):
         """Update the original config file using updated values"""
