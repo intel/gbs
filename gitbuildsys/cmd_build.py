@@ -23,15 +23,14 @@ import os
 import re
 import subprocess
 import tempfile
-import urllib2
 import glob
 import shutil
 import base64
 import pwd
-from urlparse import urlsplit, urlunsplit
 
 from gitbuildsys import msger, utils, runner, errors
 from gitbuildsys.conf import configmgr
+from gitbuildsys.safe_url import SafeURL
 
 from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
@@ -202,7 +201,7 @@ def get_repos_conf():
                 except (TypeError, IOError), err:
                     raise errors.ConfigError('Error decoding %s: %s' % \
                                              (opt, err))
-                repos[key]['passwd'] = urllib2.quote(value, safe='')
+                repos[key]['passwd'] = value
             else:
                 repos[key][name] = value
 
@@ -211,51 +210,15 @@ def get_repos_conf():
         if 'url' not in item:
             raise errors.ConfigError("Url is not specified for %s" % key)
 
-        splitted = urlsplit(item['url'])
-        if splitted.username and item['user'] or \
-           splitted.password and item['passwd']:
-            raise errors.ConfigError("Auth info specified twice for %s" % key)
+        try:
+            url = SafeURL(item['url'], item.get('user'), item.get('passwd'))
+        except ValueError, e:
+            raise errors.ConfigError('%s for %s' % (str(e), key))
 
-        # Get auth info from the url or urlx.user and urlx.pass
-        user = item.get('user') or splitted.username
-        passwd = item.get('passwd') or splitted.password
-
-        if splitted.port:
-            hostport = '%s:%d' % (splitted.hostname, splitted.port)
-        else:
-            hostport = splitted.hostname
-
-        splitted_list = list(splitted)
-        if user:
-            if passwd:
-                splitted_list[1] = '%s:%s@%s' % (urllib2.quote(user, safe=''),
-                                                 passwd, hostport)
-            else:
-                splitted_list[1] = '%s@%s' % (urllib2.quote(user, safe=''),
-                                              hostport)
-        elif passwd:
-            raise errors.ConfigError('No user is specified for %s, '\
-                                     'only password' % key)
-
-        result.append(urlunsplit(splitted_list))
+        result.append(url)
 
     return result
 
-def clean_repos_userinfo(repos):
-    striped_repos = []
-    for repo in repos:
-        splitted = urlsplit(repo)
-        if not splitted.username:
-            striped_repos.append(repo)
-        else:
-            splitted_list = list(splitted)
-            if splitted.port:
-                splitted_list[1] = '%s:%d' % (splitted.hostname, splitted.port)
-            else:
-                splitted_list[1] = splitted.hostname
-            striped_repos.append(urlunsplit(splitted_list))
-
-    return striped_repos
 
 def do(opts, args):
 
@@ -329,7 +292,7 @@ def do(opts, args):
             repos = get_repos_conf()
 
         if opts.repositories:
-            repos.extend(opts.repositories)
+            repos.extend([ SafeURL(repo) for repo in opts.repositories ])
         if not repos:
             msger.error('No package repository specified.')
 
@@ -338,12 +301,12 @@ def do(opts, args):
         if not repourls:
             msger.error('no repositories found for arch: %s under the '\
                         'following repos:\n      %s' % \
-                        (buildarch, '\n'.join(clean_repos_userinfo(repos))))
+                        (buildarch, '\n'.join(repos)))
         for url in repourls:
             if not  re.match('https?://.*', url) and \
                not (url.startswith('/') and os.path.exists(url)):
                 msger.error("Invalid repo url: %s" % url)
-            cmd += ['--repository=%s' % url]
+            cmd += ['--repository=%s' % url.full]
 
         if opts.dist:
             distconf = opts.dist

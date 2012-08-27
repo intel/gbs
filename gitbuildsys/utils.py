@@ -21,7 +21,6 @@ import glob
 import tempfile
 import shutil
 import pycurl
-import urlparse
 import hashlib
 import signal
 from collections import defaultdict
@@ -200,6 +199,7 @@ class URLGrabber(object):
         try:
             curl.perform()
         except pycurl.error, err:
+            msger.debug('fetching error:%s' % str(err))
             errcode = err.args[0]
             if errcode == pycurl.E_OPERATION_TIMEOUTED:
                 raise errors.UrlError('timeout on %s: %s' % (curl.url, err))
@@ -223,6 +223,8 @@ class URLGrabber(object):
 
     def grab(self, url, filename, user=None, passwd=None):
         '''grab url to filename'''
+
+        msger.debug("fetching %s => %s" % (url, filename))
 
         with open(filename, 'w') as outfile:
             self.change_url(url, outfile, user, passwd)
@@ -276,7 +278,8 @@ class RepoParser(object):
 
         for arch in archs:
             for repo in repos:
-                repourl = os.path.join(baseurl, 'repos', repo, arch, 'packages')
+                repourl = baseurl.pathjoin('repos/%s/%s/packages' % (repo,
+                                                                     arch))
                 if self.is_standard_repo(repourl):
                     self.repourls[arch].append(repourl)
 
@@ -285,7 +288,7 @@ class RepoParser(object):
         fname = os.path.join(self.cachedir, os.path.basename(url))
 
         try:
-            self.urlgrabber.grab(url, fname)
+            self.urlgrabber.grab(url, fname, url.user, url.passwd)
         except errors.UrlError:
             return
 
@@ -294,7 +297,7 @@ class RepoParser(object):
     def is_standard_repo(self, repo):
         '''Check if repo is standard repo with repodata/repomd.xml exist'''
 
-        repomd_url = os.path.join(repo, 'repodata/repomd.xml')
+        repomd_url = repo.pathjoin('repodata/repomd.xml')
         return not not self.fetch(repomd_url)
 
     def parse(self, remotes):
@@ -307,22 +310,20 @@ class RepoParser(object):
                 if self.buildconf:
                     continue
 
-                buildxml_url = urlparse.urljoin(repo.rstrip('/') + '/',
-                    '../../../../builddata/build.xml')
+                buildxml_url = repo.pathjoin('../../../../builddata/build.xml')
                 buildmeta = self.fetch(buildxml_url)
                 if not buildmeta:
                     continue
 
                 build_conf = self.get_buildconf(buildmeta)
-                buildconf_url = buildxml_url.replace(os.path.basename    \
-                                                (buildxml_url), build_conf)
+                buildconf_url = buildxml_url.urljoin(build_conf)
                 fname = self.fetch(buildconf_url)
                 if fname:
                     self.buildconf = fname
                 continue
 
             # Check if it's repo with builddata/build.xml exist
-            buildxml_url = os.path.join(repo, 'builddata/build.xml')
+            buildxml_url = repo.pathjoin('builddata/build.xml')
             buildmeta = self.fetch(buildxml_url)
             if not buildmeta:
                 continue
@@ -334,8 +335,7 @@ class RepoParser(object):
                 continue
 
             build_conf = self.get_buildconf(buildmeta)
-            buildconf_url = urlparse.urljoin(repo.rstrip('/') + '/', \
-                'builddata/%s' % build_conf)
+            buildconf_url = repo.pathjoin('builddata/%s' % build_conf)
 
             fname = self.fetch(buildconf_url)
             if fname:
