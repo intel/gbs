@@ -23,6 +23,7 @@ import shutil
 import pycurl
 import urlparse
 import hashlib
+import signal
 from collections import defaultdict
 
 # cElementTree can be standard or 3rd-party depending on python version
@@ -180,6 +181,22 @@ class URLGrabber(object):
         '''do the real Curl perform work'''
 
         curl = self.curl
+
+        stop = [False]
+        def progressing(*_args):
+            '''Returning a non-zero value from this callback will cause libcurl
+            to abort the transfer and return CURLE_ABORTED_BY_CALLBACK.'''
+            return -1 if stop[0] else 0
+
+        def handler(_signum, _frame):
+            '''set stop flag if catch SIGINT,
+            if not catch SIGINT, pycurl will print traceback'''
+            stop[0] = True
+
+        curl.setopt(pycurl.PROGRESSFUNCTION, progressing)
+        curl.setopt(pycurl.NOPROGRESS, False)
+        original_handler = signal.signal(signal.SIGINT, handler)
+
         try:
             curl.perform()
         except pycurl.error, err:
@@ -189,9 +206,15 @@ class URLGrabber(object):
             elif errcode == pycurl.E_FILESIZE_EXCEEDED:
                 raise errors.UrlError('max download size exceeded on %s'\
                                            % curl.url)
+            elif errcode == pycurl.E_ABORTED_BY_CALLBACK:
+                # callback aborted means SIGINT had been received, raising
+                # KeyboardInterrupt can stop all downloads
+                raise KeyboardInterrupt(err)
             else:
                 errmsg = 'pycurl error %s - "%s"' % (errcode, str(err.args[1]))
                 raise errors.UrlError(errmsg)
+        finally:
+            signal.signal(signal.SIGINT, original_handler)
 
     def __del__(self):
         '''close Curl object'''
