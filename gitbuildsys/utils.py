@@ -23,6 +23,7 @@ import shutil
 import pycurl
 import urlparse
 import hashlib
+from collections import defaultdict
 
 # cElementTree can be standard or 3rd-party depending on python version
 try:
@@ -208,139 +209,141 @@ class URLGrabber(object):
 class RepoParser(object):
     """ Repository parser for generate real repourl and build config
     """
+
     def __init__(self, repos, cachedir):
-        self.repos = repos
         self.cachedir = cachedir
-        self.archs = []
-        self.localrepos = []
-        self.repourls  = {}
-        self.buildmeta = None
+        self.repourls  = defaultdict(list)
         self.buildconf = None
         self.standardrepos = []
         self.urlgrabber = URLGrabber()
-        self.parse()
 
-    def get_buildconf(self):
-        etree = ET.parse(self.buildmeta)
+        self.localrepos, remotes = self.split_out_local_repo(repos)
+        self.parse(remotes)
+
+    @staticmethod
+    def get_buildconf(buildmeta):
+        '''parse build.xml and get build.conf fname it contains'''
+
+        etree = ET.parse(buildmeta)
         buildelem = etree.getroot().find('buildconf')
         if buildelem is None:
             return None
         return buildelem.text.strip()
 
-    def build_repos_from_buildmeta(self, baseurl):
-        if not (self.buildmeta and os.path.exists(self.buildmeta)):
+    def build_repos_from_buildmeta(self, baseurl, buildmeta):
+        '''parse build.xml and pickup standard repos it contains'''
+
+        if not (buildmeta and os.path.exists(buildmeta)):
             return
 
-        etree = ET.parse(self.buildmeta)
+        etree = ET.parse(buildmeta)
         root = etree.getroot()
         archs = []
         repos = []
+
         repo_items = root.find('repos')
         if repo_items:
             for repo in repo_items.findall('repo'):
                 repos.append(repo.text.strip())
+
         arch_items = root.find('archs')
         if arch_items:
             for arch in arch_items.findall('arch'):
                 archs.append(arch.text.strip())
+
         for arch in archs:
-            repourls = [os.path.join(baseurl, 'repos', repo, arch, 'packages') \
-                        for repo in repos]
-            validrepos = []
-            for repo in repourls:
-                # Check if repo is valid standard repo
-                repomd_url = os.path.join(repo, 'repodata/repomd.xml')
-                repomd_file = os.path.join(self.cachedir, 'repomd.xml')
-                try:
-                    self.urlgrabber.grab(repomd_url, repomd_file)
-                    validrepos.append(repo)
-                except errors.UrlError:
-                    pass
-            if arch in self.repourls:
-                self.repourls[arch] += validrepos
-            else:
-                self.repourls[arch] = validrepos
-        self.archs = archs
+            for repo in repos:
+                repourl = os.path.join(baseurl, 'repos', repo, arch, 'packages')
+                if self.is_standard_repo(repourl):
+                    self.repourls[arch].append(repourl)
 
-    def parse(self):
-        for repo in self.repos:
+    def fetch(self, url):
+        '''return file name if fetch url success, else None'''
+        fname = os.path.join(self.cachedir, os.path.basename(url))
 
-            # Check if repo is standard repo with repodata/repomd.xml exist
-            repomd_url = os.path.join(repo, 'repodata/repomd.xml')
-            repomd_file = os.path.join(self.cachedir, 'repomd.xml')
+        try:
+            self.urlgrabber.grab(url, fname)
+        except errors.UrlError:
+            return
 
-            try:
-                self.urlgrabber.grab(repomd_url, repomd_file)
+        return fname
+
+    def is_standard_repo(self, repo):
+        '''Check if repo is standard repo with repodata/repomd.xml exist'''
+
+        repomd_url = os.path.join(repo, 'repodata/repomd.xml')
+        return not not self.fetch(repomd_url)
+
+    def parse(self, remotes):
+        '''parse each remote repo, try to fetch build.xml and build.conf'''
+
+        for repo in remotes:
+            if self.is_standard_repo(repo):
                 self.standardrepos.append(repo)
-                # Try to download build.xml
-                buildxml_url = urlparse.urljoin(repo.rstrip('/') + '/',      \
-                                          '../../../../builddata/build.xml')
-                self.buildmeta = os.path.join(self.cachedir,                 \
-                                            os.path.basename(buildxml_url))
 
-                # Try to download build conf
-                if self.buildconf is None:
-                    self.urlgrabber.grab(buildxml_url, self.buildmeta)
-                    build_conf = self.get_buildconf()
-                    buildconf_url = buildxml_url.replace(os.path.basename    \
-                                                    (buildxml_url), build_conf)
-                    self.buildconf = os.path.join(self.cachedir,        \
-                                          os.path.basename(buildconf_url))
-                    self.urlgrabber.grab(buildconf_url, self.buildconf)
-                # standard repo
-                continue
-            except errors.UrlError:
-                # if it's standard repo, that means buildconf fails to be
-                # downloaded, so reset buildconf and continue
-                if self.buildmeta:
-                    self.buildconf = None
+                if self.buildconf:
                     continue
-                pass
+
+                buildxml_url = urlparse.urljoin(repo.rstrip('/') + '/',
+                    '../../../../builddata/build.xml')
+                buildmeta = self.fetch(buildxml_url)
+                if not buildmeta:
+                    continue
+
+                build_conf = self.get_buildconf(buildmeta)
+                buildconf_url = buildxml_url.replace(os.path.basename    \
+                                                (buildxml_url), build_conf)
+                fname = self.fetch(buildconf_url)
+                if fname:
+                    self.buildconf = fname
+                continue
 
             # Check if it's repo with builddata/build.xml exist
             buildxml_url = os.path.join(repo, 'builddata/build.xml')
-            self.buildmeta = os.path.join(self.cachedir, 'build.xml')
-            try:
-                self.urlgrabber.grab(buildxml_url, self.buildmeta)
-            except errors.UrlError:
-                self.buildmeta = None
+            buildmeta = self.fetch(buildxml_url)
+            if not buildmeta:
                 continue
 
             # Generate repos from build.xml
-            self.build_repos_from_buildmeta(repo)
+            self.build_repos_from_buildmeta(repo, buildmeta)
 
-            try:
-                # download build conf
-                build_conf = self.get_buildconf()
-                buildconf_url = urlparse.urljoin(repo.rstrip('/') + '/',    \
-                                                'builddata/%s' % build_conf)
-                self.buildconf = os.path.join(self.cachedir,                \
-                                             os.path.basename(buildconf_url))
-                self.urlgrabber.grab(buildconf_url, self.buildconf)
+            if self.buildconf:
+                continue
 
-            except errors.UrlError:
-                self.buildconf = None
+            build_conf = self.get_buildconf(buildmeta)
+            buildconf_url = urlparse.urljoin(repo.rstrip('/') + '/', \
+                'builddata/%s' % build_conf)
 
-            # reset buildmeta
-            self.buildmeta = None
+            fname = self.fetch(buildconf_url)
+            if fname:
+                self.buildconf = fname
 
-        # Split out local repo
-        for repo in self.repos:
+    @staticmethod
+    def split_out_local_repo(repos):
+        '''divide repos into two parts, local and remote'''
+        local_repos = []
+        remotes = []
+
+        for repo in repos:
             if repo.startswith('/') and os.path.exists(repo):
-                self.localrepos.append(repo)
+                local_repos.append(repo)
+            else:
+                remotes.append(repo)
+
+        return local_repos, remotes
 
     def get_repos_by_arch(self, arch):
-        #  return directly for standard repos
-        if not self.repourls:
-            return self.localrepos + self.standardrepos
+        '''get repos by arch'''
+
+        repos = self.localrepos + self.standardrepos # local repos first
 
         if arch in ['ia32', 'i686', 'i586']:
             arch = 'ia32'
+        if self.repourls and arch in self.repourls:
+            repos.extend(self.repourls[arch])
 
-        if arch in self.repourls:
-            return self.repourls[arch] + self.localrepos + self.standardrepos
+        return repos
 
-        return None
 
 def git_status_checker(git, opts):
     try:
