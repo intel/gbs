@@ -242,8 +242,7 @@ distconf = $build__distconf
         """
 
         paths = []
-        for path in ('/etc/gbs.conf',
-                     os.path.expanduser('~/.gbs.conf'),
+        for path in (os.path.expanduser('~/.gbs.conf'),
                      os.path.abspath('.gbs.conf'),
                      os.path.abspath('.git/gbs.conf')):
             if os.path.exists(path) and path not in paths:
