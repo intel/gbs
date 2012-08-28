@@ -27,6 +27,7 @@ import urllib2
 import glob
 import shutil
 import base64
+import pwd
 from urlparse import urlsplit, urlunsplit
 
 from gitbuildsys import msger, utils, runner, errors
@@ -296,7 +297,7 @@ def do(opts, args):
                    (buildarch, ','.join(SUPPORTEDARCHS)))
 
     build_cmd  = configmgr.get('build_cmd', 'build')
-    userid     = configmgr.get('user', 'remotebuild')
+    userid     = pwd.getpwuid(os.getuid())[0]
     tmpdir     = configmgr.get('tmpdir', 'general')
     build_root = os.path.join(tmpdir, userid, 'gbs-buildroot.%s' % buildarch)
     if opts.buildroot:
