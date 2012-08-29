@@ -61,10 +61,6 @@ class SafeURL(str):
         new = urlparse.urljoin(self.rstrip('/') + '/', *args)
         return SafeURL(new, self.user, self.passwd)
 
-    def urljoin(self, *args):
-        '''join by urlparse.urljoin'''
-        return SafeURL(urlparse.urljoin(self, *args), self.user, self.passwd)
-
     def _get_userinfo(self):
         '''return userinfo component of url'''
         if not self.user:

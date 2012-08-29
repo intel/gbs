@@ -39,7 +39,7 @@ class SafeURLTest(unittest.TestCase):
         '''raise ValueError if only given password'''
         self.assertRaises(ValueError, SafeURL, 'http://:password@server')
 
-    def test_password_no_user2(self):
+    def test_password_no_user_by_arg(self):
         '''raise ValueError if only given password'''
         self.assertRaises(ValueError, SafeURL, 'http://server', None, 'passwd')
 
@@ -78,50 +78,27 @@ class SafeURLTest(unittest.TestCase):
         self.assertEqual('http://Alice:a%3B%2F%3F%3A%40%26%3D%2B%24%2Cb@server',
                          url.full)
 
-    def test_join_double_dot(self):
-        '''reduce double dot in path'''
-        url = SafeURL('https://download.tz.otcshare.org/snapshots/trunk/'
-                      'common/latest/repos/non-oss/armv7l/packages')
+    def test_join_a_file(self):
+        '''join a file'''
+        self.assertEqual('http://server/path/a/file.txt',
+                         SafeURL('http://server/path').pathjoin('a/file.txt'))
 
-        self.assertEqual('https://download.tz.otcshare.org/snapshots/trunk/'
-                         'common/latest/builddata/build.xml',
-                         url.pathjoin('../../../../builddata/build.xml'))
+    def test_join_with_tailing_slash(self):
+        '''join a file to url with tailing slash'''
+        self.assertEqual('http://server/path/a/file.txt',
+                         SafeURL('http://server/path/').pathjoin('a/file.txt'))
 
-    def test_join_build_conf(self):
-        '''get build conf'''
-        url = SafeURL('https://download.tz.otcshare.org/snapshots/trunk/'
-                      'common/latest')
+    def test_join_a_dir(self):
+        '''join a dir'''
+        self.assertEqual('http://server/path/a/dir',
+                         SafeURL('http://server/path').pathjoin('a/dir'))
 
-        self.assertEqual('https://download.tz.otcshare.org/snapshots/trunk/'
-                         'common/latest/builddata/test.conf',
-                         url.pathjoin('builddata/test.conf'))
+    def test_reduce_doubel_dot(self):
+        '''reduce .. and get a path(alwasy with tailing slash)'''
+        url = SafeURL('http://server/a/b/c')
 
-    def test_join_build_conf2(self):
-        '''get build conf'''
-        url = SafeURL('https://download.tz.otcshare.org/snapshots/trunk/'
-                      'common/latest/builddata/build.xml')
-
-        self.assertEqual('https://download.tz.otcshare.org/snapshots/trunk/'
-                         'common/latest/builddata/test.conf',
-                         url.urljoin('test.conf'))
-
-    def test_join_build_xml(self):
-        '''get build xml'''
-        url = SafeURL('https://download.tz.otcshare.org/snapshots/trunk/'
-                      'common/latest')
-
-        self.assertEqual('https://download.tz.otcshare.org/snapshots/trunk/'
-                         'common/latest/builddata/build.xml',
-                         url.pathjoin('builddata/build.xml'))
-
-    def test_join_repo(self):
-        '''get repo and arch repo'''
-        url = SafeURL('https://download.tz.otcshare.org/snapshots/trunk/'
-                      'common/latest')
-
-        self.assertEqual('https://download.tz.otcshare.org/snapshots/trunk/'
-                         'common/latest/repos/non-oss/armv7l/packages',
-                         url.pathjoin('repos/non-oss/armv7l/packages'))
+        self.assertEqual('http://server/a/', url.pathjoin('../../'))
+        self.assertEqual('http://server/a/', url.pathjoin('../..'))
 
     def test_local_path(self):
         '''local path should not change'''

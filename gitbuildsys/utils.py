@@ -246,35 +246,42 @@ class RepoParser(object):
         self.parse(remotes)
 
     @staticmethod
-    def get_buildconf(buildmeta):
-        '''parse build.xml and get build.conf fname it contains'''
-
-        etree = ET.parse(buildmeta)
-        buildelem = etree.getroot().find('buildconf')
-        if buildelem is None:
-            return None
-        return buildelem.text.strip()
-
-    def build_repos_from_buildmeta(self, baseurl, buildmeta):
-        '''parse build.xml and pickup standard repos it contains'''
-
-        if not (buildmeta and os.path.exists(buildmeta)):
+    def _parse_build_xml(build_xml):
+        '''parse build.xml returns a dict contains buildconf, repos and archs'''
+        if not (build_xml and os.path.exists(build_xml)):
             return
 
-        etree = ET.parse(buildmeta)
+        try:
+            etree = ET.parse(build_xml)
+        except ET.ParseError:
+            msger.warning('Not well formed xml: %s' % build_xml)
+            return
+
+        meta = {}
         root = etree.getroot()
-        archs = []
-        repos = []
+
+        buildelem = root.find('buildconf')
+        # Must using None here, "if buildelem" is wrong
+        # None means item does not exist
+        # It's different from bool(buildelem)
+        if buildelem is not None:
+            meta['buildconf'] = buildelem.text.strip()
 
         repo_items = root.find('repos')
-        if repo_items:
-            for repo in repo_items.findall('repo'):
-                repos.append(repo.text.strip())
+        if repo_items is not None:
+            meta['repos'] = [ repo.text.strip()
+                             for repo in repo_items.findall('repo') ]
 
         arch_items = root.find('archs')
-        if arch_items:
-            for arch in arch_items.findall('arch'):
-                archs.append(arch.text.strip())
+        if arch_items is not None:
+            meta['archs'] = [ arch.text.strip()
+                             for arch in arch_items.findall('arch') ]
+        return meta
+
+    def build_repos_from_buildmeta(self, baseurl, meta):
+        '''parse build.xml and pickup standard repos it contains'''
+        archs = meta.get('archs', [])
+        repos = meta.get('repos', [])
 
         for arch in archs:
             for repo in repos:
@@ -300,6 +307,31 @@ class RepoParser(object):
         repomd_url = repo.pathjoin('repodata/repomd.xml')
         return not not self.fetch(repomd_url)
 
+    def _fetch_build_meta(self, latest_repo_url):
+        '''fetch build.xml and parse'''
+        buildxml_url = latest_repo_url.pathjoin('builddata/build.xml')
+        build_xml = self.fetch(buildxml_url)
+        if build_xml:
+            return self._parse_build_xml(build_xml)
+
+    def _fetch_build_conf(self, latest_repo_url, meta):
+        '''fetch build.conf whose file name is get from build.xml'''
+        if self.buildconf:
+            return
+
+        if not meta or \
+            'buildconf' not in meta or \
+            not meta['buildconf']:
+            msger.warning("No build.conf in build.xml "
+                          "of repo: %s" % latest_repo_url)
+            return
+
+        buildconf_url = latest_repo_url.pathjoin('builddata/%s' %
+                                                 meta['buildconf'])
+        fname = self.fetch(buildconf_url)
+        if fname:
+            self.buildconf = fname
+
     def parse(self, remotes):
         '''parse each remote repo, try to fetch build.xml and build.conf'''
 
@@ -310,36 +342,18 @@ class RepoParser(object):
                 if self.buildconf:
                     continue
 
-                buildxml_url = repo.pathjoin('../../../../builddata/build.xml')
-                buildmeta = self.fetch(buildxml_url)
-                if not buildmeta:
-                    continue
-
-                build_conf = self.get_buildconf(buildmeta)
-                buildconf_url = buildxml_url.urljoin(build_conf)
-                fname = self.fetch(buildconf_url)
-                if fname:
-                    self.buildconf = fname
+                latest_repo_url = repo.pathjoin('../../../../')
+                meta = self._fetch_build_meta(latest_repo_url)
+                if meta:
+                    self._fetch_build_conf(latest_repo_url, meta)
                 continue
 
             # Check if it's repo with builddata/build.xml exist
-            buildxml_url = repo.pathjoin('builddata/build.xml')
-            buildmeta = self.fetch(buildxml_url)
-            if not buildmeta:
-                continue
-
-            # Generate repos from build.xml
-            self.build_repos_from_buildmeta(repo, buildmeta)
-
-            if self.buildconf:
-                continue
-
-            build_conf = self.get_buildconf(buildmeta)
-            buildconf_url = repo.pathjoin('builddata/%s' % build_conf)
-
-            fname = self.fetch(buildconf_url)
-            if fname:
-                self.buildconf = fname
+            meta = self._fetch_build_meta(repo)
+            if meta:
+                # Generate repos from build.xml
+                self.build_repos_from_buildmeta(repo, meta)
+                self._fetch_build_conf(repo, meta)
 
     @staticmethod
     def split_out_local_repo(repos):
