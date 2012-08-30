@@ -261,8 +261,8 @@ def do(opts, args):
 
     build_cmd  = configmgr.get('build_cmd', 'build')
     userid     = pwd.getpwuid(os.getuid())[0]
-    tmpdir     = configmgr.get('tmpdir', 'general')
-    build_root = os.path.join(tmpdir, userid, 'gbs-buildroot.%s' % buildarch)
+    tmpdir     = os.path.join(configmgr.get('tmpdir', 'general'),  "%s-gbs" % userid)
+    build_root = os.path.join(tmpdir, 'gbs-buildroot.%s' % buildarch)
     if opts.buildroot:
         build_root = opts.buildroot
     cmd = [ build_cmd,
