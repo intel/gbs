@@ -114,7 +114,8 @@ def do(opts, args):
     if not spec.name or not spec.version:
         msger.error('can\'t get correct name or version from spec file.')
     else:
-        outdir = "%s/%s-%s-%s" % (outdir, spec.name, spec.upstreamversion, spec.release)
+        outdir = "%s/%s-%s-%s" % (outdir, spec.name, spec.upstreamversion,
+                                  spec.release)
         shutil.rmtree(outdir, ignore_errors=True)
         shutil.move(export_dir, outdir)
 

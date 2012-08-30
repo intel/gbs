@@ -49,18 +49,8 @@ def runtool(cmdln_or_args, catch=1):
     if catch != 3:
         dev_null = os.open("/dev/null", os.O_WRONLY)
 
-    if catch == 0:
-        sout = dev_null
-        serr = dev_null
-    elif catch == 1:
-        sout = subprocess.PIPE
-        serr = dev_null
-    elif catch == 2:
-        sout = dev_null
-        serr = subprocess.PIPE
-    elif catch == 3:
-        sout = subprocess.PIPE
-        serr = subprocess.STDOUT
+    sout = [dev_null, subprocess.PIPE, dev_null, subprocess.PIPE][catch]
+    serr = [dev_null, dev_null, subprocess.PIPE, subprocess.STDOUT][catch]
 
     try:
         process = subprocess.Popen(cmdln_or_args, stdout=sout,
@@ -110,22 +100,3 @@ def outs(cmdln_or_args, catch=1):
 def quiet(cmdln_or_args):
     return runtool(cmdln_or_args, catch=0)[0]
 
-def embed(cmdln_or_args):
-    # embed shell script into python frame code
-
-    if isinstance(cmdln_or_args, list):
-        args = cmdln_or_args
-    else:
-        import shlex
-        args = shlex.split(cmdln_or_args)
-
-    try:
-        sts = subprocess.call(args)
-    except OSError, exc:
-        if exc.errno == 2:
-            # [Errno 2] No such file or directory
-            msger.error('Cannot run command: %s, lost dependency?' % args[0])
-        else:
-            raise # relay
-
-    return sts

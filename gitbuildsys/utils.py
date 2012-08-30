@@ -23,13 +23,8 @@ import shutil
 import pycurl
 import hashlib
 import signal
+import xml.etree.ElementTree as ET
 from collections import defaultdict
-
-# cElementTree can be standard or 3rd-party depending on python version
-try:
-    from xml.etree import cElementTree as ET
-except ImportError:
-    import cElementTree as ET
 
 from gitbuildsys import errors, msger
 
@@ -104,9 +99,9 @@ class Temp(object):
                 if content:
                     with file(path, 'w+') as fobj:
                         fobj.write(content)
-        except OSError, (e, msg):
+        except OSError, err:
             raise errors.GbsError("Failed to create dir or file on %s: %s" % \
-                            (target_dir, msg))
+                            (target_dir, str(err)))
         self.path = path
 
     def __del__(self):

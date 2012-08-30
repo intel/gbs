@@ -87,19 +87,20 @@ class BrainConfigParser(SafeConfigParser):
                 self._flines[lineno] = None
             else:
                 # is it a section header?
-                mo = self.SECTCRE.match(line)
-                if mo:
-                    cursect = mo.group('header')
+                match = self.SECTCRE.match(line)
+                if match:
+                    cursect = match.group('header')
                     # So sections can't start with a continuation line
                     optname = None
                 # no section header in the file?
                 elif cursect is None:
-                    raise MissingSectionHeaderError(self._fpname, lineno + 1, line)
+                    raise MissingSectionHeaderError(self._fpname,
+                                                    lineno + 1, line)
                 # an option line?
                 else:
-                    mo = self.OPTCRE.match(line)
-                    if mo:
-                        optname = mo.group('option')
+                    match = self.OPTCRE.match(line)
+                    if match:
+                        optname = match.group('option')
                         optname = self.optionxform(optname.rstrip())
                         # Replace / remove options
                         if cursect == section and \
