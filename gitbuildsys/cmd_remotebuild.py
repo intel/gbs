@@ -102,13 +102,13 @@ def do(opts, args):
     package = spec.name
 
     if opts.base_obsprj is None:
-        # TODO, get current branch of git to determine it
-        base_prj = 'Tizen:Main'
+	base_prj = configmgr.get('base_prj', 'remotebuild')
     else:
         base_prj = opts.base_obsprj
 
     if opts.target_obsprj is None:
-        target_prj = "home:%s:gbs:%s" % (USER, base_prj)
+        target_prj = configmgr.get('target_prj', 'remotebuild') or \
+			"home:%s:gbs:%s" % (USER, base_prj)
     else:
         target_prj = opts.target_obsprj
 

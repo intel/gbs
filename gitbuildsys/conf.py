@@ -165,6 +165,8 @@ class ConfigMgr(object):
                 'build_server': 'https://api.tizen.org',
                 'user':         '',
                 'passwd':       '',
+                'base_prj':     'Tizen:Main',
+                'target_prj':   ''
             },
             'build': {
                 'build_cmd':    '/usr/bin/build',
@@ -184,6 +186,10 @@ build_server = $remotebuild__build_server
 user = $remotebuild__user
 ; CAUTION: please use the key name "passwd" to reset plaintext password
 passwdx = $remotebuild__passwdx
+; Default base project
+base_prj = $remotebuild__base_prj
+; Default target project
+target_prj = $remotebuild__target_prj
 
 [build]
 build_cmd = $build__build_cmd
