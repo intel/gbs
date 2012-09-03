@@ -401,6 +401,8 @@ def do(opts, args):
                 msger.info('RPMs have been copied from %s to %s' \
                            % (out_dir, opts.out))
                 out_dir = os.path.abspath(opts.out)
+                subprocess.call(["createrepo", out_dir])
+                msger.info("RPM repo has been created: %s" % out_dir)
             msger.info('The buildroot was: %s' % build_root)
             msger.info('Binaries RPM packages can be found here:'\
                        '\n     %s' % out_dir)
