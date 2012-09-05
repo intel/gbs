@@ -170,7 +170,6 @@ class ConfigMgr(object):
             },
             'build': {
                 'build_cmd':    '/usr/bin/build',
-                'build_root':   '/var/tmp/build-root-gbs',
                 'distconf':     '/usr/share/gbs/tizen-1.0.conf',
             },
     }
@@ -193,7 +192,6 @@ target_prj = $remotebuild__target_prj
 
 [build]
 build_cmd = $build__build_cmd
-build_root = $build__build_root
 distconf = $build__distconf
 
 ; optional, repos definitions

@@ -140,7 +140,6 @@ configuration file by yourself.  Just make sure it looks like as below:
 
   [build]
   build_cmd = /usr/bin/build
-  build_root= /var/tmp/build-root-gbs
   su-wrapper= sudo
   distconf=/usr/share/gbs/tizen-1.0.conf
   repo1.url=
@@ -170,8 +169,6 @@ In the [build] section, the following values can be specified:
 
 build_cmd
     build script path for building RPMs in a chroot environment
-build_root
-    patch for chroot environment
 distconf
     Specify distribution configure file
 repox.url
