@@ -31,6 +31,7 @@ import pwd
 from gitbuildsys import msger, utils, runner, errors
 from gitbuildsys.conf import configmgr
 from gitbuildsys.safe_url import SafeURL
+from gitbuildsys.cmd_export import create_gbp_export_args
 
 from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
@@ -359,15 +360,9 @@ def do(opts, args):
             commit = 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
         msger.info('export tar ball and packaging files ... ')
+        gbp_args = create_gbp_export_args(commit, export_dir, relative_spec)
         try:
-            if gbp_build(["argv[0] placeholder", "--git-export-only",
-                          "--git-ignore-new", "--git-builder=osc",
-                          "--git-no-patch-export",
-                          "--git-upstream-tree=%s" % commit,
-                          "--git-export-dir=%s" % export_dir,
-                          "--git-packaging-dir=packaging",
-                          "--git-spec-file=%s" % relative_spec,
-                          "--git-export=%s" % commit]):
+            if gbp_build(gbp_args):
                 msger.error("Failed to get packaging info from git tree")
         except GitRepositoryError, excobj:
             msger.error("Repository error: %s" % excobj)
