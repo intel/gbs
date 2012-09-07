@@ -74,13 +74,11 @@ class OSC(object):
         # Usually next try succeeds, so let's try 3 times
         for count in (1, 2, 3):
             try:
-                result = method(url, data=data, file=filep)
+                return method(url, data=data, file=filep)
             except (urllib2.URLError, M2Crypto.m2urllib2.URLError,
                     M2Crypto.SSL.SSLError, ssl.SSLError), err:
                 if count == 3:
                     raise OSCError(str(err))
-            if result:
-                return result
 
         raise OSCError('Got empty responce from %s %s' % \
                        (method.func_name.split('_')[-1], url))
