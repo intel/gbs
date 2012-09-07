@@ -46,9 +46,7 @@ def runtool(cmdln_or_args, catch=1):
         cmd = shlex.split(cmdln_or_args)[0]
         shell = True
 
-    if catch != 3:
-        dev_null = os.open("/dev/null", os.O_WRONLY)
-
+    dev_null = os.open("/dev/null", os.O_WRONLY)
     sout = [dev_null, subprocess.PIPE, dev_null, subprocess.PIPE][catch]
     serr = [dev_null, dev_null, subprocess.PIPE, subprocess.STDOUT][catch]
 
@@ -65,8 +63,7 @@ def runtool(cmdln_or_args, catch=1):
         else:
             raise # relay
     finally:
-        if catch != 3:
-            os.close(dev_null)
+        os.close(dev_null)
 
     return (process.returncode, out)
 
