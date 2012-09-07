@@ -114,6 +114,12 @@ class ConfigGettingTest(unittest.TestCase):
                           self.get, 'not_exists_section', 'key')
 
     @Fixture(project='project1.ini')
+    def test_no_such_option(self):
+        '''test no such option'''
+        self.assertRaises(errors.ConfigError,
+                          self.get, 'section', 'not_exists_option')
+
+    @Fixture(project='project1.ini')
     def test_simple_get(self):
         '''get value when one config file provides'''
         self.assertEqual('projv2', self.get('section', 'proj_only_key'))
