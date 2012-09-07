@@ -270,10 +270,13 @@ def do(opts, args):
             '--root='+build_root,
             '--arch='+buildarch ]
 
+    if os.path.exists(os.path.join(build_root, 'not-ready')):
+        cmd += ['--clean']
+
     build_jobs = get_processors()
     if build_jobs > 1:
         cmd += ['--jobs=%s' % build_jobs]
-    if opts.clean:
+    if opts.clean and '--clean' not in cmd:
         cmd += ['--clean']
 
     if opts.noinit:
