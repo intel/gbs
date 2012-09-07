@@ -334,17 +334,14 @@ distconf = $build__distconf
             except NoOptionError:
                 sect_found = True
 
+        if section in self.DEFAULTS and opt in self.DEFAULTS[section]:
+            return self.DEFAULTS[section][opt]
+
         if not sect_found:
-            if section in self.DEFAULTS and opt in self.DEFAULTS[section]:
-                return self.DEFAULTS[section][opt]
-            else:
-                raise errors.ConfigError('no section %s' % section)
+            raise errors.ConfigError('no section %s' % section)
         else:
-            if opt in self.DEFAULTS[section]:
-                return self.DEFAULTS[section][opt]
-            else:
-                raise errors.ConfigError('no opt: %s in section %s' \
-                                         % (opt, section))
+            raise errors.ConfigError('no opt: %s in section %s' \
+                                     % (opt, section))
 
     def check_opt(self, opt, section='general'):
         if section in self.DEFAULTS and \
