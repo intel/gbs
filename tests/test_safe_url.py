@@ -106,3 +106,10 @@ class SafeURLTest(unittest.TestCase):
 
         self.assertEqual('/local/path', url)
         self.assertEqual(url, url.full)
+
+    def test_local_path_need_not_auth(self):
+        '''local path should ignore user and password'''
+        url = SafeURL('/local/path', 'test', 'password')
+
+        self.assertEqual('/local/path', url)
+        self.assertEqual(url, url.full)

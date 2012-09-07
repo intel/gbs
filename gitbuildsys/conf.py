@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+'''
+Provides classes and functions to read and write gbs.conf.
+'''
 
 from __future__ import with_statement
 import os
@@ -25,6 +28,29 @@ from ConfigParser import SafeConfigParser, NoSectionError, NoOptionError, \
                          MissingSectionHeaderError
 
 from gitbuildsys import msger, errors
+from gitbuildsys.safe_url import SafeURL
+
+
+def decode_passwdx(passwdx):
+    '''decode passwdx into plain format'''
+    return base64.b64decode(passwdx).decode('bz2')
+
+
+def encode_passwd(passwd):
+    '''encode passwd by bz2 and base64'''
+    return base64.b64encode(passwd.encode('bz2'))
+
+
+def evalute_string(string):
+    '''safely evaluate string'''
+    if string.startswith('"') or string.startswith("'"):
+        return ast.literal_eval(string)
+    return string
+
+
+def split_and_evaluate_string(string, sep=None, maxsplit=-1):
+    '''split a string and evaluate each of them'''
+    return [ evalute_string(i.strip()) for i in string.split(sep, maxsplit) ]
 
 
 class SectionPattern(object):
@@ -59,15 +85,8 @@ class SectionPattern(object):
             if not name:
                 return type_
 
-            name = self.evalute_string(name)
+            name = evalute_string(name)
             return type_, name
-
-        @staticmethod
-        def evalute_string(string):
-            '''safely evaluate string'''
-            if string.startswith('"') or string.startswith("'"):
-                return ast.literal_eval(string)
-            return string
 
     def match(self, string):
         '''return MatchObject if string match the pattern'''
@@ -210,6 +229,9 @@ class BrainConfigParser(SafeConfigParser):
         fptr.close()
 
 class ConfigMgr(object):
+    '''Support multi-levels of gbs.conf. Use this class to get and set
+    item value without caring about concrete ini format'''
+
     DEFAULTS = {
             'general': {
                 'tmpdir': '/var/tmp',
@@ -273,6 +295,7 @@ distconf = $build__distconf
         self.reset_from_conf(fpath)
 
     def reset_from_conf(self, fpath):
+        'reset all config values by files passed in'
         if fpath:
             if not os.path.exists(fpath):
                 raise errors.ConfigError('Configuration file %s does not '\
@@ -312,6 +335,7 @@ distconf = $build__distconf
         return paths
 
     def get_default_conf(self, defaults=None):
+        'returns ini template string contains default values'
         from string import Template
         if not defaults:
             defaults = self.DEFAULTS
@@ -324,6 +348,7 @@ distconf = $build__distconf
         return Template(self.DEFAULT_CONF_TEMPLATE).safe_substitute(tmpl_keys)
 
     def _new_conf(self, fpath=None):
+        'generate a new conf file located by fpath'
         if not fpath:
             fpath = os.path.expanduser('~/.gbs.conf')
 
@@ -343,11 +368,10 @@ distconf = $build__distconf
         if defaults['remotebuild']['user']:
             msger.info('Your password will be encoded before saving ...')
             defaults['remotebuild']['passwdx'] = \
-                        base64.b64encode(getpass.getpass().encode('bz2'))
+                encode_passwd(getpass.getpass())
         else:
             defaults['remotebuild']['passwdx'] = \
-                        base64.b64encode(
-                            defaults['remotebuild']['passwd'].encode('bz2'))
+                encode_passwd(defaults['remotebuild']['passwd'])
 
         with open(fpath, 'w') as wfile:
             wfile.write(self.get_default_conf(defaults))
@@ -358,8 +382,15 @@ distconf = $build__distconf
         return True
 
     def _check_passwd(self):
+        'convert passwd item to passwdx and then update origin conf files'
         replaced_keys = False
-        for sec in self.DEFAULTS.keys():
+
+        all_sections = set()
+        for layer in self._cfgparsers:
+            for sec in layer.sections():
+                all_sections.add(sec)
+
+        for sec in all_sections:
             for key in self.options(sec):
                 if key.endswith('passwd'):
                     for cfgparser in self._cfgparsers:
@@ -370,7 +401,7 @@ distconf = $build__distconf
                                 continue
                             cfgparser.set(sec,
                                      key + 'x',
-                                     base64.b64encode(plainpass.encode('bz2')),
+                                     encode_passwd(plainpass),
                                      key)
                             replaced_keys = True
 
@@ -380,6 +411,7 @@ distconf = $build__distconf
             self.update()
 
     def _get(self, opt, section='general'):
+        'get value from multi-levels of config file'
         sect_found = False
         for cfgparser in self._cfgparsers:
             try:
@@ -406,6 +438,7 @@ distconf = $build__distconf
             return False
 
     def options(self, section='general'):
+        'merge and return options of certain section from multi-levels'
         sect_found = False
         options = set()
         for cfgparser in self._cfgparsers:
@@ -425,12 +458,13 @@ distconf = $build__distconf
         return options
 
     def get(self, opt, section='general'):
+        'get item value. return plain text of password if item is passwd'
         if opt == 'passwd':
             opt = 'passwdx'
             val = self._get(opt, section)
             if val:
                 try:
-                    return base64.b64decode(val).decode('bz2')
+                    return decode_passwdx(val)
                 except (TypeError, IOError), err:
                     raise errors.ConfigError('passwdx:%s' % err)
             else:
@@ -440,7 +474,7 @@ distconf = $build__distconf
 
     def set(self, opt, val, section='general'):
         if opt.endswith('passwd'):
-            val = base64.b64encode(val.encode('bz2'))
+            val = encode_passwd(val)
             opt += 'x'
 
         for cfgparser in self._cfgparsers:
@@ -456,7 +490,153 @@ distconf = $build__distconf
         raise errors.ConfigError('invalid section %s' % (section))
 
     def update(self):
+        'update changed values into files on disk'
         for cfgparser in self._cfgparsers:
             cfgparser.update()
 
-configmgr = ConfigMgr()
+
+class Profile(object):
+    '''Profile which contains all config values related to same domain'''
+
+    def __init__(self, user, password):
+        self.common_user = user
+        self.common_password = password
+        self.repos = []
+        self.api = None
+
+    def make_url(self, url, user, password):
+        '''make a safe url which contains auth info'''
+        user = user or self.common_user
+        password = password or self.common_password
+        try:
+            return SafeURL(url, user, password)
+        except ValueError, err:
+            raise errors.ConfigError('%s for %s' % (str(err), url))
+
+    def add_repo(self, url, user, password):
+        '''add a repo to repo list of the profile'''
+        self.repos.append(self.make_url(url, user, password))
+
+    def set_api(self, url, user, password):
+        '''set OBS api of the profile'''
+        self.api = self.make_url(url, user, password)
+
+    def get_repos(self):
+        '''get repo list of the profile'''
+        return self.repos
+
+    def get_api(self):
+        '''get OBS api of the profile'''
+        return self.api
+
+
+class BizConfigManager(ConfigMgr):
+    '''config manager which handles high level conception, such as profile info
+    '''
+
+    def is_profile_oriented(self):
+        '''return True if config file is profile oriented'''
+        return self.get_optional_item('general', 'profile') is not None
+
+    def get_current_profile(self):
+        '''get profile current used'''
+        if self.is_profile_oriented():
+            return self._build_profile_by_name(self.get('profile'))
+
+        msger.warning('subcommand oriented style of config is deprecated, '
+                      'please convert to profile oriented style.')
+        return self._build_profile_by_subcommand()
+
+    def get_optional_item(self, section, option, default=None):
+        '''return default if section.option does not exist'''
+        try:
+            return self.get(option, section)
+        except errors.ConfigError:
+            return default
+
+    def _get_url_section(self, section_id):
+        '''get url/user/passwd from a section'''
+        url = self.get('url', section_id)
+        user = self.get_optional_item(section_id, 'user')
+        password = self.get_optional_item(section_id, 'passwd')
+        return url, user, password
+
+    def _build_profile_by_name(self, name):
+        '''return profile object by a given section'''
+        profile_id = ('profile', name)
+        user = self.get_optional_item(profile_id, 'user')
+        password = self.get_optional_item(profile_id, 'passwd')
+
+        profile = Profile(user, password)
+
+        conf_api = self.get_optional_item(profile_id, 'api')
+        if conf_api:
+            api = self.get('api', profile_id)
+            api_id = ('obs', api)
+            profile.set_api(*self._get_url_section(api_id))
+
+        conf_repos = self.get_optional_item(profile_id, 'repos')
+        if conf_repos:
+            repos = split_and_evaluate_string(conf_repos, ',')
+            for repo in repos:
+                repo_id = ('repo', repo)
+                profile.add_repo(*self._get_url_section(repo_id))
+
+        return profile
+
+    def _parse_build_repos(self):
+        """
+        Make list of urls using repox.url, repox.user and repox.passwd
+        configuration file parameters from 'build' section.
+        Validate configuration parameters.
+        """
+        repos = {}
+        # get repo settings form build section
+        for opt in self.options('build'):
+            if opt.startswith('repo'):
+                try:
+                    key, name = opt.split('.')
+                except ValueError:
+                    raise errors.ConfigError("invalid repo option: %s" % opt)
+
+                if name not in ('url', 'user', 'passwdx'):
+                    raise errors.ConfigError("invalid repo option: %s" % opt)
+
+                if key not in repos:
+                    repos[key] = {}
+
+                if name in repos[key]:
+                    raise errors.ConfigError('Duplicate entry %s' % opt)
+
+                value = self.get(opt, 'build')
+                if name == 'passwdx':
+                    try:
+                        value = decode_passwdx(value)
+                    except (TypeError, IOError), err:
+                        raise errors.ConfigError('Error decoding %s: %s' % \
+                                                 (opt, err))
+                    repos[key]['passwd'] = value
+                else:
+                    repos[key][name] = value
+        return sorted(repos.items(), key=lambda i: i[0])
+
+    def _build_profile_by_subcommand(self):
+        '''return profile object from subcommand oriented style of config'''
+        profile = Profile(None, None)
+
+        section_id = 'remotebuild'
+        url = self.get('build_server', section_id)
+        user = self.get_optional_item(section_id, 'user')
+        password = self.get_optional_item(section_id, 'passwd')
+        profile.set_api(url, user, password)
+
+        repos = self._parse_build_repos()
+        for key, item in repos:
+            if 'url' not in item:
+                raise errors.ConfigError("Url is not specified for %s" % key)
+            profile.add_repo(item['url'], item.get('user'), item.get('passwd'))
+
+        return profile
+
+
+configmgr = BizConfigManager()

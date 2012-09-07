@@ -357,8 +357,11 @@ class RepoParser(object):
         remotes = []
 
         for repo in repos:
-            if repo.startswith('/') and os.path.exists(repo):
-                local_repos.append(repo)
+            if repo.is_local():
+                if os.path.exists(repo):
+                    local_repos.append(repo)
+                else:
+                    msger.warning('No such repo path:%s' % repo)
             else:
                 remotes.append(repo)
 

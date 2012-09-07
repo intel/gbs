@@ -44,6 +44,9 @@ class SafeURL(str):
     @property
     def full(self):
         '''return the full url with user and password'''
+        if self.is_local():
+            return self
+
         userinfo = self._get_userinfo()
         hostport = self._get_hostport(self.components)
 
@@ -55,6 +58,10 @@ class SafeURL(str):
         new_components = list(self.components)
         new_components[1] = login
         return urlparse.urlunsplit(new_components)
+
+    def is_local(self):
+        'return True is it is local path'
+        return self.startswith('/')
 
     def pathjoin(self, *args):
         '''treat self as path and urljoin'''

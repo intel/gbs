@@ -25,7 +25,6 @@ import subprocess
 import tempfile
 import glob
 import shutil
-import base64
 import pwd
 
 from gitbuildsys import msger, utils, runner, errors
@@ -33,7 +32,6 @@ from gitbuildsys.conf import configmgr
 from gitbuildsys.safe_url import SafeURL
 from gitbuildsys.cmd_export import export_sources
 
-from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 import gbp.rpm as rpm
 from gbp.errors import GbpError
@@ -170,57 +168,6 @@ def get_env_proxies():
     return proxies
 
 
-def get_repos_conf():
-    """
-    Make list of urls using repox.url, repox.user and repox.passwd
-    configuration file parameters from 'build' section.
-    Validate configuration parameters.
-    """
-
-    repos = {}
-    # get repo settings form build section
-    for opt in configmgr.options('build'):
-        if opt.startswith('repo'):
-            try:
-                key, name = opt.split('.')
-            except ValueError:
-                raise errors.ConfigError("invalid repo option: %s" % opt)
-
-            if name not in ('url', 'user', 'passwdx'):
-                raise errors.ConfigError("invalid repo option: %s" % opt)
-
-            if key not in repos:
-                repos[key] = {}
-
-            if name in repos[key]:
-                raise errors.ConfigError('Duplicate entry %s' % opt)
-
-            value = configmgr.get(opt, 'build')
-            if name == 'passwdx':
-                try:
-                    value = base64.b64decode(value).decode('bz2')
-                except (TypeError, IOError), err:
-                    raise errors.ConfigError('Error decoding %s: %s' % \
-                                             (opt, err))
-                repos[key]['passwd'] = value
-            else:
-                repos[key][name] = value
-
-    result = []
-    for key, item in repos.iteritems():
-        if 'url' not in item:
-            raise errors.ConfigError("Url is not specified for %s" % key)
-
-        try:
-            url = SafeURL(item['url'], item.get('user'), item.get('passwd'))
-        except ValueError, e:
-            raise errors.ConfigError('%s for %s' % (str(e), key))
-
-        result.append(url)
-
-    return result
-
-
 def do(opts, args):
 
     workdir = os.getcwd()
@@ -262,7 +209,7 @@ def do(opts, args):
 
     build_cmd  = configmgr.get('build_cmd', 'build')
     userid     = pwd.getpwuid(os.getuid())[0]
-    tmpdir     = os.path.join(configmgr.get('tmpdir', 'general'),  "%s-gbs" % userid)
+    tmpdir = os.path.join(configmgr.get('tmpdir', 'general'), "%s-gbs" % userid)
     build_root = os.path.join(tmpdir, 'gbs-buildroot.%s' % buildarch)
     if opts.buildroot:
         build_root = opts.buildroot
@@ -293,7 +240,7 @@ def do(opts, args):
         if opts.skip_conf_repos:
             repos = []
         else:
-            repos = get_repos_conf()
+            repos = configmgr.get_current_profile().get_repos()
 
         if opts.repositories:
             repos.extend([ SafeURL(i) for i in opts.repositories ])
@@ -316,7 +263,8 @@ def do(opts, args):
             distconf = opts.dist
         else:
             if repoparser.buildconf is None:
-                msger.warning('failed to get build conf, use default build conf')
+                msger.warning('failed to get build conf, '
+                              'use default build conf')
                 distconf = configmgr.get('distconf', 'build')
             else:
                 shutil.copy(repoparser.buildconf, tmpdir)

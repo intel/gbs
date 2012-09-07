@@ -24,12 +24,11 @@ import glob
 
 from gitbuildsys import msger, errors, utils
 
-from gitbuildsys.conf import configmgr
+from gitbuildsys.conf import configmgr, encode_passwd
 from gitbuildsys.oscapi import OSC, OSCError
 from gitbuildsys.cmd_export import export_sources
 
 import gbp.rpm
-from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 from gbp.errors import GbpError
 
@@ -45,9 +44,6 @@ user=%(user)s
 passx=%(passwdx)s
 """
 
-APISERVER   = configmgr.get('build_server', 'remotebuild')
-USER        = configmgr.get('user', 'remotebuild')
-PASSWDX     = configmgr.get('passwdx', 'remotebuild')
 
 def do(opts, args):
 
@@ -69,7 +65,8 @@ def do(opts, args):
     else:
         msger.error('Invalid arguments, see gbs remotebuild -h for more info')
 
-    if not USER:
+    apiurl = configmgr.get_current_profile().get_api()
+    if not apiurl or not apiurl.user:
         msger.error('empty user is not allowed for remotebuild, '\
                     'please add user/passwd to gbs conf, and try again')
 
@@ -109,7 +106,7 @@ def do(opts, args):
 
     if opts.target_obsprj is None:
         target_prj = configmgr.get('target_prj', 'remotebuild') or \
-            "home:%s:gbs:%s" % (USER, base_prj)
+            "home:%s:gbs:%s" % (apiurl.user, base_prj)
     else:
         target_prj = opts.target_obsprj
 
@@ -117,9 +114,9 @@ def do(opts, args):
     oscrc = OSCRC_TEMPLATE % {
                 "http_debug": 1 if msger.get_loglevel() == 'debug' else 0,
                 "debug": 1 if msger.get_loglevel() == 'verbose' else 0,
-                "apiurl": APISERVER,
-                "user": USER,
-                "passwdx": PASSWDX,
+                "apiurl": apiurl,
+                "user": apiurl.user,
+                "passwdx": encode_passwd(apiurl.passwd),
             }
 
     tmpdir     = configmgr.get('tmpdir', 'general')
@@ -129,7 +126,7 @@ def do(opts, args):
     tmpf = utils.Temp(dirn=exportdir, prefix='.oscrc', content=oscrc)
     oscrcpath = tmpf.path
 
-    api = OSC(APISERVER, oscrc=oscrcpath)
+    api = OSC(apiurl, oscrc=oscrcpath)
 
     try:
         if opts.buildlog:
@@ -173,9 +170,10 @@ def do(opts, args):
             # FIXME: How do you know that a certain user does not have
             # permissions to create any project, anywhewre?
             if opts.target_obsprj and \
-                   not target_prj.startswith('home:%s:' % USER):
-                msger.error('no permission to create project %s, only sub '\
-                        'projects of home:%s are allowed ' % (target_prj, USER))
+                   not target_prj.startswith('home:%s:' % apiurl.user):
+                msger.error('no permission to create project %s, only sub '
+                            'projects of home:%s are '
+                            'allowed ' % (target_prj, apiurl.user))
 
             msger.info('copying settings of %s to %s' % (base_prj, target_prj))
             api.copy_project(base_prj, target_prj)
@@ -216,4 +214,4 @@ def do(opts, args):
     msger.info('local changes submitted to build server successfully')
     msger.info('follow the link to monitor the build progress:\n'
                '  %s/package/show?package=%s&project=%s' \
-               % (APISERVER.replace('api', 'build'), package, target_prj))
+               % (apiurl.replace('api', 'build'), package, target_prj))
