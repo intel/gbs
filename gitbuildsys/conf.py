@@ -18,16 +18,69 @@
 
 from __future__ import with_statement
 import os
+import re
+import ast
 import base64
 from ConfigParser import SafeConfigParser, NoSectionError, NoOptionError, \
                          MissingSectionHeaderError
 
 from gitbuildsys import msger, errors
 
+
+class SectionPattern(object):
+    '''Pattern of section that support [section "name"] and [section].
+    1. If there is white-space in section header, it must obey the format like:
+        section_type white_spaces section_name,
+    section_name could be any string.
+    2. otherwise section name is the whole string in brackets
+    '''
+
+    SECTCRE = re.compile(
+        r'\['                            # [
+        r'(?P<header>[^] \t]+)'          # section name without any white-space
+            r'([ \t]+'                   # or
+            r'(?P<name>[^]]+)'           # section type and section name
+            r')?'                        # this section name is optional
+        r'\]'                            # ]
+        )
+
+    class MatchObject(object):
+        '''Match object for SectionPattern'''
+
+        def __init__(self, match):
+            self.match = match
+
+        def group(self, _group1):
+            '''return a tuple(type, name) if section has a name,
+            otherwise return a string as section name
+            '''
+            type_ = self.match.group('header')
+            name = self.match.group('name')
+            if not name:
+                return type_
+
+            name = self.evalute_string(name)
+            return type_, name
+
+        @staticmethod
+        def evalute_string(string):
+            '''safely evaluate string'''
+            if string.startswith('"') or string.startswith("'"):
+                return ast.literal_eval(string)
+            return string
+
+    def match(self, string):
+        '''return MatchObject if string match the pattern'''
+        match = self.SECTCRE.match(string)
+        return self.MatchObject(match) if match else match
+
+
 class BrainConfigParser(SafeConfigParser):
     """Standard ConfigParser derived class which can reserve most of the
     comments, indents, and other user customized stuff inside the ini file.
     """
+
+    SECTCRE = SectionPattern()
 
     def read(self, filenames):
         """Limit the read() only support one input file. It's enough for
@@ -340,10 +393,10 @@ distconf = $build__distconf
             return self.DEFAULTS[section][opt]
 
         if not sect_found:
-            raise errors.ConfigError('no section %s' % section)
+            raise errors.ConfigError('no section %s' % str(section))
         else:
             raise errors.ConfigError('no opt: %s in section %s' \
-                                     % (opt, section))
+                                     % (opt, str(section)))
 
     def check_opt(self, opt, section='general'):
         if section in self.DEFAULTS and \
