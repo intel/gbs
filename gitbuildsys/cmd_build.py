@@ -296,7 +296,7 @@ def do(opts, args):
             repos = get_repos_conf()
 
         if opts.repositories:
-            repos.extend([ SafeURL(repo) for repo in opts.repositories ])
+            repos.extend([ SafeURL(i) for i in opts.repositories ])
         if not repos:
             msger.error('No package repository specified.')
 
