@@ -271,6 +271,10 @@ class RepoParser(object):
         if arch_items is not None:
             meta['archs'] = [ arch.text.strip()
                              for arch in arch_items.findall('arch') ]
+        id_item = root.find('id')
+        if id_item is not None:
+            meta['id'] = id_item.text.strip()
+
         return meta
 
     def build_repos_from_buildmeta(self, baseurl, meta):
@@ -325,7 +329,11 @@ class RepoParser(object):
                                                  meta['buildconf'])
         fname = self.fetch(buildconf_url)
         if fname:
-            self.buildconf = fname
+            release, buildid = meta['id'].split('_')
+            release = release.replace('-','')
+            target_conf = os.path.join(os.path.dirname(fname), '%s.conf' % release)
+            os.rename(fname, target_conf)
+            self.buildconf = target_conf
 
     def parse(self, remotes):
         '''parse each remote repo, try to fetch build.xml and build.conf'''
