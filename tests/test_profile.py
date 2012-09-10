@@ -24,6 +24,7 @@ from test_config import Fixture
 
 def get_profile():
     '''get current profile to test'''
+    reload(gitbuildsys.conf)
     return gitbuildsys.conf.configmgr.get_current_profile()
 
 

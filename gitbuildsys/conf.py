@@ -101,18 +101,9 @@ class BrainConfigParser(SafeConfigParser):
 
     SECTCRE = SectionPattern()
 
-    def read(self, filenames):
-        """Limit the read() only support one input file. It's enough for
-        current case.
-        If the input list has multiple values, use the last one.
-        """
-
-        if not isinstance(filenames, basestring) and len(filenames) > 1:
-            msger.warning('Will not support multiple config files, '
-                          'only read in the last one.')
-            filenames = filenames[-1:]
-
-        return SafeConfigParser.read(self, filenames)
+    def read_one(self, filename):
+        """only support one input file"""
+        return SafeConfigParser.read(self, filename)
 
     def _read(self, fptr, fname):
         """Parse a sectioned setup file.
@@ -311,7 +302,7 @@ distconf = $build__distconf
         for fpath in fpaths:
             cfgparser = BrainConfigParser()
             try:
-                cfgparser.read(fpath)
+                cfgparser.read_one(fpath)
             except MissingSectionHeaderError, err:
                 raise errors.ConfigError('config file error:%s' % err)
             self._cfgparsers.append(cfgparser)
@@ -430,13 +421,6 @@ distconf = $build__distconf
             raise errors.ConfigError('no opt: %s in section %s' \
                                      % (opt, str(section)))
 
-    def check_opt(self, opt, section='general'):
-        if section in self.DEFAULTS and \
-           opt in self.DEFAULTS[section]:
-            return True
-        else:
-            return False
-
     def options(self, section='general'):
         'merge and return options of certain section from multi-levels'
         sect_found = False
@@ -460,34 +444,13 @@ distconf = $build__distconf
     def get(self, opt, section='general'):
         'get item value. return plain text of password if item is passwd'
         if opt == 'passwd':
-            opt = 'passwdx'
-            val = self._get(opt, section)
-            if val:
-                try:
-                    return decode_passwdx(val)
-                except (TypeError, IOError), err:
-                    raise errors.ConfigError('passwdx:%s' % err)
-            else:
-                return val
+            val = self._get('passwdx', section)
+            try:
+                return decode_passwdx(val)
+            except (TypeError, IOError), err:
+                raise errors.ConfigError('passwdx:%s' % err)
         else:
             return self._get(opt, section)
-
-    def set(self, opt, val, section='general'):
-        if opt.endswith('passwd'):
-            val = encode_passwd(val)
-            opt += 'x'
-
-        for cfgparser in self._cfgparsers:
-            if cfgparser.has_option(section, opt):
-                return cfgparser.set(section, opt, val)
-
-        # Option not found, add a new key to the first cfg file that has
-        # the section
-        for cfgparser in self._cfgparsers:
-            if cfgparser.has_section(section):
-                return cfgparser.set(section, opt, val)
-
-        raise errors.ConfigError('invalid section %s' % (section))
 
     def update(self):
         'update changed values into files on disk'

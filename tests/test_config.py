@@ -19,12 +19,11 @@
 """Functional tests for GBS config"""
 
 import os
-import functools
 import unittest
 
 from mock import patch
 
-from gitbuildsys import errors
+from gitbuildsys.errors import ConfigError
 import gitbuildsys.conf
 
 
@@ -77,26 +76,9 @@ class Fixture(object):
             patch('gitbuildsys.conf.os.path.abspath', self.fake_abspath),
             patch('ConfigParser.open', self.fake_open, create=True),
             ]
-
-        @functools.wraps(func)
-        def wrapper(*args, **kw):
-            '''setup mock objects and tear down them finally'''
-            for patcher in reversed(patchers):
-                patcher.start()
-
-            # configmgr is a global variable, reload to recreate it
-            # otherwise fixtures only take effect in the first time
-            reload(gitbuildsys.conf)
-
-            try:
-                return func(*args, **kw)
-            except:
-                raise
-            finally:
-                for patcher in patchers:
-                    patcher.stop()
-
-        return wrapper
+        for patcher in patchers:
+            func = patcher(func)
+        return func
 
 
 class ConfigGettingTest(unittest.TestCase):
@@ -105,18 +87,21 @@ class ConfigGettingTest(unittest.TestCase):
     @staticmethod
     def get(section, option):
         '''get section.option from config'''
+        # configmgr is a global variable, reload to recreate it
+        # otherwise fixtures only take effect in the first time
+        reload(gitbuildsys.conf)
         return gitbuildsys.conf.configmgr.get(option, section)
 
     @Fixture(project='project1.ini')
     def test_no_such_section(self):
         '''test no such section'''
-        self.assertRaises(errors.ConfigError,
+        self.assertRaises(ConfigError,
                           self.get, 'not_exists_section', 'key')
 
     @Fixture(project='project1.ini')
     def test_no_such_option(self):
         '''test no such option'''
-        self.assertRaises(errors.ConfigError,
+        self.assertRaises(ConfigError,
                           self.get, 'section', 'not_exists_option')
 
     @Fixture(project='project1.ini')
@@ -152,14 +137,24 @@ class ConfigGettingTest(unittest.TestCase):
     @Fixture(project='project1.ini')
     def test_no_such_named_section(self):
         '''test no such section'''
-        self.assertRaises(errors.ConfigError,
+        self.assertRaises(ConfigError,
                           self.get, ('profile', 'NOT_EXISTS'), 'key')
 
     @Fixture(project='project1.ini')
     def test_no_such_option_in_named_section(self):
         '''test no such section'''
-        self.assertRaises(errors.ConfigError,
+        self.assertRaises(ConfigError,
                           self.get, ('profile', 'rsa'), 'not_exists_option')
+
+    @Fixture(home='home1.ini')
+    def test_default_value(self):
+        'test get hardcode default value '
+        self.assertEquals('/var/tmp', self.get('general', 'tmpdir'))
+
+    @Fixture(home='without_section_header.ini')
+    def test_invalid_ini(self):
+        'test invalid ini'
+        self.assertRaises(ConfigError, reload, gitbuildsys.conf)
 
 
 if __name__ == '__main__':
