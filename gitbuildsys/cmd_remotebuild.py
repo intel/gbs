@@ -66,8 +66,11 @@ def do(opts, args):
         msger.error('Invalid arguments, see gbs remotebuild -h for more info')
 
     apiurl = configmgr.get_current_profile().get_api()
-    if not apiurl or not apiurl.user:
-        msger.error('empty user is not allowed for remotebuild, '\
+    if not apiurl:
+        msger.error('no obs api found, please add it to gbs conf and try again')
+
+    if not apiurl.user:
+        msger.error('empty user is not allowed for remotebuild, '
                     'please add user/passwd to gbs conf, and try again')
 
     if opts.commit and opts.include_all:
@@ -110,13 +113,14 @@ def do(opts, args):
     else:
         target_prj = opts.target_obsprj
 
+    api_passwd = apiurl.passwd if apiurl.passwd else ''
     # Create temporary oscrc
     oscrc = OSCRC_TEMPLATE % {
                 "http_debug": 1 if msger.get_loglevel() == 'debug' else 0,
                 "debug": 1 if msger.get_loglevel() == 'verbose' else 0,
                 "apiurl": apiurl,
                 "user": apiurl.user,
-                "passwdx": encode_passwd(apiurl.passwd),
+                "passwdx": encode_passwd(api_passwd),
             }
 
     tmpdir     = configmgr.get('tmpdir', 'general')

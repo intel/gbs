@@ -243,7 +243,14 @@ def do(opts, args):
             repos = configmgr.get_current_profile().get_repos()
 
         if opts.repositories:
-            repos.extend([ SafeURL(i) for i in opts.repositories ])
+            for i in opts.repositories:
+                try:
+                    opt_repo = SafeURL(i)
+                except ValueError, err:
+                    msger.warning('Invalid repo %s: %s' % (i, str(err)))
+                else:
+                    repos.append(opt_repo)
+
         if not repos:
             msger.error('No package repository specified.')
 
