@@ -54,7 +54,7 @@ def is_native_pkg(repo, opts):
         upstream_branch = configmgr.get('upstream_branch', 'general')
     return not repo.has_branch(upstream_branch)
 
-def create_gbp_export_args(repo, commit, export_dir, spec, opts,
+def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
                            force_native=False):
     """
     Construct the cmdline argument list for git-buildpackage export
@@ -74,6 +74,7 @@ def create_gbp_export_args(repo, commit, export_dir, spec, opts,
             "--git-ignore-new", "--git-builder=osc",
             "--git-upstream-branch=upstream",
             "--git-export-dir=%s" % export_dir,
+            "--git-tmp-dir=%s" % tmp_dir,
             "--git-packaging-dir=packaging",
             "--git-spec-file=%s" % spec,
             "--git-export=%s" % commit,
@@ -95,7 +96,11 @@ def export_sources(repo, commit, export_dir, spec, opts):
     """
     Export packaging files using git-buildpackage
     """
-    gbp_args = create_gbp_export_args(repo, commit, export_dir, spec, opts)
+    tmp = utils.Temp(prefix='gbp_', dirn=configmgr.get('tmpdir', 'general'),
+                            directory=True)
+
+    gbp_args = create_gbp_export_args(repo, commit, export_dir, tmp.path,
+                                      spec, opts)
     try:
         ret = gbp_build(gbp_args)
         if ret and not is_native_pkg(repo, opts):
@@ -111,7 +116,8 @@ def export_sources(repo, commit, export_dir, spec, opts):
             msger.info("Falling back to the old method of generating one "\
                        "monolithic source archive")
             gbp_args = create_gbp_export_args(repo, commit, export_dir,
-                                              spec, opts, force_native=True)
+                                              tmp.path, spec, opts,
+                                              force_native=True)
             ret = gbp_build(gbp_args)
         if ret:
             msger.error("Failed to export packaging files from git tree")
