@@ -240,7 +240,7 @@ def do(opts, args):
         if opts.skip_conf_repos:
             repos = []
         else:
-            repos = configmgr.get_current_profile().get_repos()
+            repos = [i.url for i in configmgr.get_current_profile().repos]
 
         if opts.repositories:
             for i in opts.repositories:

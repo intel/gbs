@@ -18,8 +18,11 @@
 """Functional tests for profile style of config"""
 import unittest
 
+from mock import patch, MagicMock, Mock
+
 import gitbuildsys.conf
 from test_config import Fixture
+from test_passwdx import FakeFile
 
 
 def get_profile():
@@ -34,19 +37,19 @@ class ProfileStyleTest(unittest.TestCase):
     @Fixture(home='profile.ini')
     def test_profile_api(self):
         'test get obs api'
-        self.assertEquals('https://api.tz/path', get_profile().get_api())
+        self.assertEquals('https://api.tz/path', get_profile().obs.url)
 
     @Fixture(home='profile.ini')
     def test_api_inherit_auth(self):
         'test api can inherit auto from parent profile section'
         self.assertEquals('https://Alice:secret@api.tz/path',
-                          get_profile().get_api().full)
+                          get_profile().obs.url.full)
 
     @Fixture(home='profile_only_has_api.ini')
     def test_api_auth_can_be_overwrite(self):
         'test api auth can be overwrite'
         self.assertEquals('https://Bob:classified@api.tz/path',
-                          get_profile().get_api().full)
+                          get_profile().obs.url.full)
 
     @Fixture(home='profile.ini')
     def test_profile_repos_in_order(self):
@@ -55,46 +58,58 @@ class ProfileStyleTest(unittest.TestCase):
                            'https://repo/ia32/non-oss',
                            'https://repo/ia32/base',
                            '/local/path'],
-                          get_profile().get_repos())
+                          [i.url for i in get_profile().repos])
 
     @Fixture(home='profile.ini')
     def test_repo_inherit_auth(self):
         'test repo can inherit auth from parent section'
         self.assertEquals('https://Alice:secret@repo/ia32/main',
-                          get_profile().get_repos()[0].full)
+                          get_profile().repos[0].url.full)
 
     @Fixture(home='profile.ini')
     def test_repo_overwrite_auth(self):
         'test repo auth can be overwrite'
         self.assertEquals('https://Bob:classified@repo/ia32/base',
-                          get_profile().get_repos()[2].full)
+                          get_profile().repos[2].url.full)
 
     @Fixture(home='no_such_profile_section_name.ini')
     def test_no_such_profile(self):
         'test get a empty profile when name does not exist'
         profile = get_profile()
-        self.assertEquals(None, profile.get_api())
-        self.assertEquals([], profile.get_repos())
+        self.assertEquals(None, profile.obs)
+        self.assertEquals([], profile.repos)
 
     @Fixture(home='profile.ini')
     def test_local_repo_need_not_auth(self):
         '''test local path needn't auth info'''
-        self.assertEquals('/local/path', get_profile().get_repos()[3].full)
+        self.assertEquals('/local/path', get_profile().repos[3].url.full)
+
+    @Fixture(home='profile.ini')
+    def test_obs_base_project(self):
+        'test read base project from conf'
+        self.assertEquals('base', get_profile().obs.base)
+
+    @Fixture(home='profile.ini')
+    def test_obs_target_project(self):
+        'test read target project from conf'
+        self.assertEquals('target', get_profile().obs.target)
 
 
+@patch('gitbuildsys.conf.open', MagicMock(), create=True)
+@patch('gitbuildsys.conf.os.rename', Mock())
 class SubcommandStyleTest(unittest.TestCase):
     '''test for subcommand oriented config'''
 
     @Fixture(home='subcommand.ini')
     def test_api(self):
         'test obs api'
-        self.assertEquals('https://api/build/server', get_profile().get_api())
+        self.assertEquals('https://api/build/server', get_profile().obs.url)
 
     @Fixture(home='subcommand.ini')
     def test_api_auth(self):
         'test api auth'
         self.assertEquals('https://Alice:secret@api/build/server',
-                          get_profile().get_api().full)
+                          get_profile().obs.url.full)
 
     @Fixture(home='subcommand.ini')
     def test_repos_in_order(self):
@@ -102,13 +117,59 @@ class SubcommandStyleTest(unittest.TestCase):
         self.assertEquals(['https://repo1/path',
                            'https://repo2/path',
                            '/local/path/repo'],
-                          get_profile().get_repos())
+                          [i.url for i in get_profile().repos])
 
     @Fixture(home='subcommand.ini')
     def test_repo_auth(self):
         'test repo auth'
         self.assertEquals('https://Alice:secret@repo1/path',
-                          get_profile().get_repos()[0].full)
+                          get_profile().repos[0].url.full)
+
+
+
+@patch('gitbuildsys.conf.open', create=True)
+class ConvertTest(unittest.TestCase):
+    'Test convert subcommand to profile'
+
+    @Fixture(home='subcommand.ini')
+    def test_convert(self, fake_open):
+        'test convert'
+        conf = FakeFile()
+        fake_open.return_value = conf
+
+        get_profile()
+
+        self.assertEquals(conf.getvalue(), '''[general]
+profile = profile.current
+
+[obs.remotebuild]
+url = https://api/build/server
+user = Alice
+passwdx = QlpoOTFBWSZTWYfNdxYAAAIBgAoAHAAgADDNAMNEA24u5IpwoSEPmu4s
+base_prj = Main
+target_prj = Target
+
+[repo.repo1]
+url = https://repo1/path
+user = Alice
+passwdx = QlpoOTFBWSZTWYfNdxYAAAIBgAoAHAAgADDNAMNEA24u5IpwoSEPmu4s
+
+[repo.repo2]
+url = https://repo2/path
+user = Alice
+passwdx = QlpoOTFBWSZTWYfNdxYAAAIBgAoAHAAgADDNAMNEA24u5IpwoSEPmu4s
+
+[repo.repo3]
+url = /local/path/repo
+
+[profile.current]
+obs = obs.remotebuild
+repos = repo.repo1, repo.repo2, repo.repo3
+
+''')
+
+
+
 
 
 if __name__ == '__main__':

@@ -119,33 +119,6 @@ class ConfigGettingTest(unittest.TestCase):
         '''value can be overwrite if name is the same'''
         self.assertEqual('projv1', self.get('section', 'common_key'))
 
-    @Fixture(project='project1.ini')
-    def test_get_named_section(self):
-        '''get value from named section'''
-        self.assertEquals('projv4', self.get(('profile', 'rsa'), 'proj_only'))
-
-    @Fixture(home='home1.ini', project='project1.ini')
-    def test_inherit_named_section(self):
-        '''value can be inherit from named section correctly'''
-        self.assertEquals('homev4', self.get(('profile', 'rsa'), 'home_only'))
-
-    @Fixture(home='home1.ini', project='project1.ini')
-    def test_overwrite_named_section(self):
-        '''value can be overwrite from named section correctly'''
-        self.assertEquals('projv3', self.get(('profile', 'rsa'), 'common'))
-
-    @Fixture(project='project1.ini')
-    def test_no_such_named_section(self):
-        '''test no such section'''
-        self.assertRaises(ConfigError,
-                          self.get, ('profile', 'NOT_EXISTS'), 'key')
-
-    @Fixture(project='project1.ini')
-    def test_no_such_option_in_named_section(self):
-        '''test no such section'''
-        self.assertRaises(ConfigError,
-                          self.get, ('profile', 'rsa'), 'not_exists_option')
-
     @Fixture(home='home1.ini')
     def test_default_value(self):
         'test get hardcode default value '

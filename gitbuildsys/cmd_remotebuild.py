@@ -65,9 +65,11 @@ def do(opts, args):
     else:
         msger.error('Invalid arguments, see gbs remotebuild -h for more info')
 
-    apiurl = configmgr.get_current_profile().get_api()
-    if not apiurl:
+    obsconf = configmgr.get_current_profile().obs
+    if not obsconf or not obsconf.url:
         msger.error('no obs api found, please add it to gbs conf and try again')
+
+    apiurl = obsconf.url
 
     if not apiurl.user:
         msger.error('empty user is not allowed for remotebuild, '
@@ -103,12 +105,12 @@ def do(opts, args):
     package = spec.name
 
     if opts.base_obsprj is None:
-        base_prj = configmgr.get('base_prj', 'remotebuild')
+        base_prj = obsconf.base or 'Tizen:Main'
     else:
         base_prj = opts.base_obsprj
 
     if opts.target_obsprj is None:
-        target_prj = configmgr.get('target_prj', 'remotebuild') or \
+        target_prj = obsconf.target or \
             "home:%s:gbs:%s" % (apiurl.user, base_prj)
     else:
         target_prj = opts.target_obsprj
