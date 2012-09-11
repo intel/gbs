@@ -114,7 +114,7 @@ def export_sources(repo, commit, export_dir, spec, opts):
                                               spec, opts, force_native=True)
             ret = gbp_build(gbp_args)
         if ret:
-            msger.error("Failed to get export packaging files from git tree")
+            msger.error("Failed to export packaging files from git tree")
     except GitRepositoryError, excobj:
         msger.error("Repository error: %s" % excobj)
 
