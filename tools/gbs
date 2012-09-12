@@ -428,6 +428,15 @@ class Gbs(cmdln.Cmdln):
         from gitbuildsys import cmd_changelog as cmd
         cmd.do(opts, args)
 
+    @cmdln.hide()
+    def do_man(self, argv):
+        """${cmd_name}: generates a man page
+
+        usage:
+            ${name} man
+        """
+        return cmdln.Cmdln.do_man(self, argv)
+
 
 if __name__ == '__main__':
     try:
