@@ -2,15 +2,12 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
-
-include /usr/share/dpatch/dpatch.make
-
 build: build-stamp
-build-stamp: patch-stamp
+build-stamp:
 	dh_testdir
 	python setup.py build
 
-clean: unpatch
+clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp

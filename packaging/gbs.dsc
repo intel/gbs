@@ -5,6 +5,6 @@ Binary: gbs
 Maintainer: Jian-feng Ding <jian-feng.ding@intel.com>
 Architecture: all
 Standards-Version: 3.7.1
-Build-Depends: debhelper (>= 4.0.0), python-dev, dpatch, cdbs
+Build-Depends: debhelper (>= 4.0.0), python-dev
 Files:
- eb764ded2164913c0db9be45fa59ea6e 2456014 gbs_0.9.tar.gz
+ a7bb9873246861f5e2bdeee61e69b9e9 2450871 gbs_0.9.tar.gz
