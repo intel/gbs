@@ -129,6 +129,11 @@ class ConfigGettingTest(unittest.TestCase):
         'test invalid ini'
         self.assertRaises(ConfigError, reload, gitbuildsys.conf)
 
+    @Fixture(home='invalid_continuation_line.ini')
+    def test_invalid_continuation_line(self):
+        'test invalid cointinuation line'
+        self.assertRaises(ConfigError, reload, gitbuildsys.conf)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -25,7 +25,7 @@ import ast
 import base64
 import shutil
 from ConfigParser import SafeConfigParser, NoSectionError, NoOptionError, \
-                         MissingSectionHeaderError
+                         MissingSectionHeaderError, Error
 
 from gitbuildsys import msger, errors
 from gitbuildsys.safe_url import SafeURL
@@ -252,7 +252,7 @@ url = http://download.tizen.org/snapshots/trunk/common/latest/
             cfgparser = BrainConfigParser()
             try:
                 cfgparser.read_one(fpath)
-            except MissingSectionHeaderError, err:
+            except Error, err:
                 raise errors.ConfigError('config file error:%s' % err)
             self._cfgparsers.append(cfgparser)
         self._check_passwd()
