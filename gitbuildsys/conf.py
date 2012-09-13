@@ -188,11 +188,6 @@ class ConfigMgr(object):
                 'upstream_tag': 'upstream/%(upstreamversion)s',
                 'squash_patches_until': '',
             },
-            'remotebuild': {
-                'build_server': 'https://api.tizen.org',
-                'user':         '',
-                'passwd':       '',
-            },
             'build': {
                 'build_cmd':    '/usr/bin/build',
                 'distconf':     '/usr/share/gbs/tizen-1.0.conf',
@@ -358,6 +353,13 @@ url = http://download.tizen.org/snapshots/trunk/common/latest/
             raise errors.ConfigError('invalid section %s' % (section))
 
         return options
+
+    def has_section(self, section):
+        'indicate whether a section exists'
+        for parser in self._cfgparsers:
+            if parser.has_section(section):
+                return True
+        return False
 
     def get(self, opt, section='general'):
         'get item value. return plain text of password if item is passwd'
@@ -552,8 +554,10 @@ class BizConfigManager(ConfigMgr):
     def _build_profile_by_name(self, name):
         '''return profile object by a given section'''
         if not name.startswith('profile.'):
-            raise msger.error('profile section name must start '
-                              'with "profile.": %s' % name)
+            raise errors.ConfigError('section name specified by general.profile '
+                'must start with string "profile.": %s' % name)
+        if not self.has_section(name):
+            raise errors.ConfigError('no such section: %s' % name)
 
         user = self.get_optional_item(name, 'user')
         password = self.get_optional_item(name, 'passwd')
@@ -563,8 +567,8 @@ class BizConfigManager(ConfigMgr):
         obs = self.get_optional_item(name, 'obs')
         if obs:
             if not obs.startswith('obs.'):
-                msger.error('obs section name should start '
-                            'with "obs.": %s' % obs)
+                raise errors.ConfigError('obs section name should start '
+                                         'with string "obs.": %s' % obs)
 
             obsconf = OBSConf(profile, obs,
                               self._get_url_options(obs),
@@ -577,8 +581,8 @@ class BizConfigManager(ConfigMgr):
             for repo in repos.split(','):
                 repo = repo.strip()
                 if not repo.startswith('repo.'):
-                    msger.warning('repo section name should start '
-                                  'with "repo.": %s' % repo)
+                    msger.warning('ignore %s, repo section name should start '
+                                  'with string "repo."' % repo)
                     continue
 
                 repoconf = RepoConf(profile, repo,
@@ -628,19 +632,20 @@ class BizConfigManager(ConfigMgr):
         profile = Profile('profile.current', None, None)
 
         sec = 'remotebuild'
-        addr = self.get('build_server', sec)
-        user = self.get_optional_item(sec, 'user')
-        password = self.get_optional_item(sec, 'passwd')
+        addr = self.get_optional_item(sec, 'build_server')
+        if addr:
+            user = self.get_optional_item(sec, 'user')
+            password = self.get_optional_item(sec, 'passwd')
 
-        try:
-            url = SafeURL(addr, user, password)
-        except ValueError, err:
-            raise errors.ConfigError('%s for %s' % (str(err), addr))
+            try:
+                url = SafeURL(addr, user, password)
+            except ValueError, err:
+                raise errors.ConfigError('%s for %s' % (str(err), addr))
 
-        obsconf = OBSConf(profile, 'obs.%s' % sec, url,
-                          self.get_optional_item('remotebuild', 'base_prj'),
-                          self.get_optional_item('remotebuild', 'target_prj'))
-        profile.set_obs(obsconf)
+            obsconf = OBSConf(profile, 'obs.%s' % sec, url,
+                              self.get_optional_item('remotebuild', 'base_prj'),
+                              self.get_optional_item('remotebuild', 'target_prj'))
+            profile.set_obs(obsconf)
 
         repos = self._parse_build_repos()
         for key, item in repos:

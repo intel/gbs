@@ -21,6 +21,7 @@ import unittest
 from mock import patch, MagicMock, Mock
 
 import gitbuildsys.conf
+from gitbuildsys.errors import ConfigError
 from test_config import Fixture
 from test_passwdx import FakeFile
 
@@ -74,8 +75,14 @@ class ProfileStyleTest(unittest.TestCase):
 
     @Fixture(home='no_such_profile_section_name.ini')
     def test_no_such_profile(self):
-        'test get a empty profile when name does not exist'
+        'test profile name does not exist'
+        self.assertRaises(ConfigError, get_profile)
+
+    @Fixture(home='empty_profile.ini')
+    def test_empty_profile(self):
+        'test get a empty profile'
         profile = get_profile()
+
         self.assertEquals(None, profile.obs)
         self.assertEquals([], profile.repos)
 
