@@ -21,9 +21,11 @@ from StringIO import StringIO
 
 from mock import patch
 
-from test_config import Fixture
 import gitbuildsys.conf
+from gitbuildsys.conf import BrainConfigParser
 from gitbuildsys.errors import ConfigError
+
+from test_config import Fixture
 
 
 class FakeFile(object):
@@ -38,6 +40,13 @@ class FakeFile(object):
 
     def close(self):
         'do not close buffer, then call getvalue() to retrieve the content'
+
+    def __exit__(self, *_args):
+        'mock with statement'
+
+    def __enter__(self):
+        'mock with statement'
+        return self
 
     def getvalue(self):
         'get content of fake file'
@@ -70,8 +79,12 @@ repo1.passwdx = QlpoOTFBWSZTWYfNdxYAAAIBgAoAHAAgADDNAMNEA24u5IpwoSEPmu4s
     def test_two_files(self, fake_open):
         'test passwdx set back to two files'
         confs = [FakeFile(), FakeFile()]
-        bak = confs[:]
-        fake_open.side_effect = lambda *args, **kw: bak.pop()
+        def side_effect(name, _mode):
+            'fake open'
+            if name == '~/.gbs.conf':
+                return confs[0]
+            return confs[1]
+        fake_open.side_effect = side_effect
 
         reload(gitbuildsys.conf)
 
@@ -105,8 +118,10 @@ repo1.passwdx = QlpoOTFBWSZTWYfNdxYAAAIBgAoAHAAgADDNAMNEA24u5IpwoSEPmu4s
         self.assertEquals('secret', pwd)
 
     @Fixture(home='plain_passwd.ini')
-    def test_get_passwd(self, _fake_open):
+    def test_get_passwd(self, fake_open):
         'test get decode passwd'
+        fake_open.return_value = FakeFile()
+
         reload(gitbuildsys.conf)
 
         pwd = gitbuildsys.conf.configmgr.get('passwd', 'remotebuild')
@@ -127,6 +142,31 @@ repo1.passwdx = QlpoOTFBWSZTWYfNdxYAAAIBgAoAHAAgADDNAMNEA24u5IpwoSEPmu4s
 
         pwd = gitbuildsys.conf.configmgr.get('passwd', 'remotebuild')
         self.assertEquals('', pwd)
+
+
+@patch('gitbuildsys.conf.os.chmod')
+@patch('gitbuildsys.conf.open', create=True)
+class AutoGenerateTest(unittest.TestCase):
+    'test auto generation if no conf was found'
+
+    @Fixture()
+    def test_auto_generate_conf(self, fake_open, _fake_chmod):
+        'test auto generate conf should contain obs and repos'
+        conf = FakeFile()
+        fake_open.return_value = conf
+
+        reload(gitbuildsys.conf)
+
+        parser = BrainConfigParser()
+        parser.readfp(StringIO(conf.getvalue()))
+
+        name = parser.get('general', 'profile')
+        obs = parser.get(name, 'obs')
+        repos = parser.get(name, 'repos')
+
+        self.assertTrue(parser.has_section(obs))
+        for repo in repos.split(','):
+            self.assertTrue(parser.has_section(repo.strip()))
 
 
 if __name__ == '__main__':
