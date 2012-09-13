@@ -23,6 +23,7 @@ from __future__ import with_statement
 import os
 import ast
 import base64
+import shutil
 from ConfigParser import SafeConfigParser, NoSectionError, NoOptionError, \
                          MissingSectionHeaderError
 
@@ -523,7 +524,7 @@ class BizConfigManager(ConfigMgr):
             with open(tmp.path, 'w') as fhandler:
                 dump_general(fhandler)
                 profile.dump(fhandler)
-            os.rename(tmp.path, os.path.expanduser(fname))
+            shutil.move(tmp.path, os.path.expanduser(fname))
         except IOError, err:
             raise errors.ConfigError(err)
 
