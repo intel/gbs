@@ -230,8 +230,11 @@ def do(opts, args):
     if subprocess.call(cmd):
         msger.error('rpmbuild fails')
     else:
-        localrepofmt = '%s/local/repos/%s'
-        repodir = localrepofmt % (build_root, 'tizen/')
-        msger.info('Local repo can be found here:'\
+        dist = [opt[len('--dist='):] for opt in cmd \
+                                     if opt.startswith('--dist=')][0]
+        repodir = os.path.join(build_root, 'local', 'repos', dist)
+        msger.info('generated RPM packages can be found from local repo:'\
                    '\n     %s' % repodir)
+        msger.info('build roots located in:\n     %s' % \
+                   os.path.join(build_root, 'local', 'scratch.{arch}.*'))
         msger.info('Done')
