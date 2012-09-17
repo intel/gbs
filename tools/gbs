@@ -250,12 +250,15 @@ class Gbs(cmdln.Cmdln):
                   action='store_true',
                   default=False,
                   dest='overwrite',
-                  help='overwrite existing binaries')
+                  help='overwrite existing binaries and build them anyway')
     @cmdln.option('--incremental',
                   action='store_true',
                   default=False,
                   dest='incremental',
-                  help='build a package from the local git tree incremental.')
+                  help='build a package from the local git tree incremental.' \
+                       'If the build fails, changes can be done directly to ' \
+                       'the source and build can continue from where it ' \
+                       'stopped')
     @cmdln.option('--debug',
                   action='store_true',
                   default=False,
@@ -264,8 +267,10 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--binary-list',
                   default=None,
                   dest='binary_list',
-                  help='specify binary list file, all packages listed in '\
-                       'this files will be selected to be built')
+                  help='specify a binary list file. Packages listed in '\
+                       'this file will be selected to be built. The format '\
+                       'of binary-list file is one package for one line, '\
+                       'and only binary RPM name is accepted')
     @cmdln.option('--threads',
                   default=1,
                   dest='threads',
@@ -275,12 +280,14 @@ class Gbs(cmdln.Cmdln):
                   default=None,
                   type="string",
                   dest='exclude',
-                  help='specify excluded packages list')
+                  help='specify a package to be excluded to be built')
     @cmdln.option('--exclude-from-file',
                   default=None,
                   dest='exclude_from_file',
-                  help='specify exclude package list file, packages listed '\
-                       'in this file will be skipped')
+                  help='specify an exclude package list text file, the '\
+                       'format is one package in one line, and only binary '\
+                       'RPM package name is accepted. Packages listed in '\
+                       'this file will be skipped to be built.')
     @cmdln.option('--keepgoing',
                   action='store_true',
                   default=False,
