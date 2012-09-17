@@ -442,6 +442,10 @@ class Gbs(cmdln.Cmdln):
                   default='i586',
                   dest='arch',
                   help='specify the build root arch')
+    @cmdln.option('-B', '--buildroot',
+                  default=None,
+                  dest='buildroot',
+                  help='specify build root directory to chroot')
     def do_chroot(self, subcmd, opts, *args):
         """${cmd_name}: chroot to build root
 

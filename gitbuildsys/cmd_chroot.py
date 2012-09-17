@@ -20,6 +20,7 @@
 """
 import os
 import subprocess
+import pwd
 
 from gitbuildsys import msger
 from gitbuildsys.conf import configmgr
@@ -30,9 +31,13 @@ def do(opts, _args):
         arch = 'i686'
     else:
         arch = opts.arch
-    userid     = configmgr.get('user', 'remotebuild')
-    tmpdir     = configmgr.get('tmpdir', 'general')
-    build_root = os.path.join(tmpdir, userid, 'gbs-buildroot.%s' % arch)
+    if opts.buildroot:
+        build_root = opts.buildroot
+    else:
+        userid     = pwd.getpwuid(os.getuid())[0]
+        tmpdir = os.path.join(configmgr.get('tmpdir', 'general'), "%s-gbs" %\
+                              userid)
+        build_root = os.path.join(tmpdir, 'gbs-buildroot.%s' % arch)
     running_lock = '%s/not-ready' % build_root
     if os.path.exists(running_lock) or not os.path.exists(build_root):
         msger.error('build root %s is not ready' % build_root)
