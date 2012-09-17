@@ -20,6 +20,7 @@
 """
 
 import os
+import re
 import shutil
 import errno
 
@@ -54,6 +55,10 @@ def is_native_pkg(repo, opts):
         upstream_branch = configmgr.get('upstream_branch', 'general')
     return not repo.has_branch(upstream_branch)
 
+def transform_var_format_from_shell_to_python(whole):
+    '''replace string like ${xxx} with %(xxx)s'''
+    return re.sub(r'\$\{([^}]+)\}', r'%(\1)s', whole)
+
 def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
                            force_native=False):
     """
@@ -67,6 +72,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
         upstream_tag = opts.upstream_tag
     else:
         upstream_tag = configmgr.get('upstream_tag', 'general')
+        upstream_tag = transform_var_format_from_shell_to_python(upstream_tag)
     msger.debug("Using upstream branch: %s" % upstream_branch)
     msger.debug("Using upstream tag format: '%s'" % upstream_tag)
 

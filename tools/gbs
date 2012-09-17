@@ -159,7 +159,7 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--upstream-tag',
                   default=None,
                   dest='upstream_tag',
-                  help="Upstream tag format, e.g. 'v%(upstreamversion)s'")
+                  help="Upstream tag format, e.g. 'v${upstreamversion}'")
     @cmdln.option('--squash-patches-until',
                   default=None,
                   dest='squash_patches_until',
@@ -404,7 +404,7 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--upstream-tag',
                   default=None,
                   dest='upstream_tag',
-                  help="Upstream tag format, e.g. 'v%(upstreamversion)s'")
+                  help="Upstream tag format, e.g. 'v${upstreamversion}'")
     @cmdln.option('--squash-patches-until',
                   default=None,
                   dest='squash_patches_until',
@@ -512,7 +512,7 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--upstream-tag',
                   default=None,
                   dest='upstream_tag',
-                  help="Upstream tag format, e.g. 'v%(upstreamversion)s'")
+                  help="Upstream tag format, e.g. 'v${upstreamversion}'")
     @cmdln.option('--squash-patches-until',
                   default=None,
                   dest='squash_patches_until',

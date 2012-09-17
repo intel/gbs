@@ -134,6 +134,11 @@ class ConfigGettingTest(unittest.TestCase):
         'test invalid cointinuation line'
         self.assertRaises(ConfigError, reload, gitbuildsys.conf)
 
+    @Fixture(home='interpolation.ini')
+    def test_interpolation(self):
+        'test interpolation is supported'
+        self.assertEquals('abc/def', self.get('remote', 'target'))
+
 
 if __name__ == '__main__':
     unittest.main()
