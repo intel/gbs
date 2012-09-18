@@ -24,7 +24,7 @@ import os
 import ast
 import base64
 import shutil
-from ConfigParser import SafeConfigParser, NoSectionError, NoOptionError, \
+from ConfigParser import SafeConfigParser, NoSectionError, \
                          MissingSectionHeaderError, Error
 
 from gitbuildsys import msger, errors
@@ -185,7 +185,7 @@ class ConfigMgr(object):
                 'tmpdir': '/var/tmp',
                 'editor': '',
                 'upstream_branch': 'upstream',
-                'upstream_tag': 'upstream/%(upstreamversion)s',
+                'upstream_tag': 'upstream/${upstreamversion}',
                 'squash_patches_until': '',
             },
             'build': {
@@ -233,6 +233,15 @@ url = http://download.tizen.org/snapshots/trunk/common/latest/
         self._cfgparsers = []
         self.reset_from_conf(fpath)
 
+    def _create_default_parser(self):
+        'create a default parser that handle DEFAULTS values'
+        parser = BrainConfigParser()
+        for sec, options in self.DEFAULTS.iteritems():
+            parser.add_section(sec)
+            for key, val in options.iteritems():
+                parser.set(sec, key, val)
+        return parser
+
     def reset_from_conf(self, fpath):
         'reset all config values by files passed in'
         if fpath:
@@ -255,6 +264,8 @@ url = http://download.tizen.org/snapshots/trunk/common/latest/
             except Error, err:
                 raise errors.ConfigError('config file error:%s' % err)
             self._cfgparsers.append(cfgparser)
+        self._cfgparsers.append(self._create_default_parser())
+
         self._check_passwd()
 
     @staticmethod
@@ -316,23 +327,12 @@ url = http://download.tizen.org/snapshots/trunk/common/latest/
 
     def _get(self, opt, section='general'):
         'get value from multi-levels of config file'
-        sect_found = False
         for cfgparser in self._cfgparsers:
             try:
                 return cfgparser.get(section, opt)
-            except NoSectionError:
+            except Error, err:
                 pass
-            except NoOptionError:
-                sect_found = True
-
-        if section in self.DEFAULTS and opt in self.DEFAULTS[section]:
-            return self.DEFAULTS[section][opt]
-
-        if not sect_found:
-            raise errors.ConfigError('no section %s' % str(section))
-        else:
-            raise errors.ConfigError('no opt: %s in section %s' \
-                                     % (opt, str(section)))
+        raise errors.ConfigError(err)
 
     def options(self, section='general'):
         'merge and return options of certain section from multi-levels'
@@ -342,15 +342,11 @@ url = http://download.tizen.org/snapshots/trunk/common/latest/
             try:
                 options.update(cfgparser.options(section))
                 sect_found = True
-            except NoSectionError:
+            except Error, err:
                 pass
 
-        if section in self.DEFAULTS:
-            options.update(self.DEFAULTS[section].keys())
-            sect_found = True
-
         if not sect_found:
-            raise errors.ConfigError('invalid section %s' % (section))
+            raise errors.ConfigError(err)
 
         return options
 
