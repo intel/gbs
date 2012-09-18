@@ -302,7 +302,7 @@ def verbose(msg):
     _general_print(head, INFO_COLOR, msg, level = 'verbose')
 
 def warning(msg):
-    head, msg = _split_msg('warn', msg)
+    head, msg = _split_msg('warning', msg)
     _color_perror(head, WARN_COLOR, msg)
 
 def debug(msg):
