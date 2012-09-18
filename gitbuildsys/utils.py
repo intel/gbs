@@ -144,6 +144,19 @@ class TempCopy(object):
             os.unlink(self.name)
 
 
+class AuthFailed(errors.UrlError):
+    'authenticated or authorization failed: 401, 403'
+
+class PageNotFound(errors.UrlError):
+    'page not found error: 404'
+
+class CallbackAborted(errors.UrlError):
+    'break when fetching url'
+
+class TimeoutError(errors.UrlError):
+    'timeout when fetching url'
+
+
 class URLGrabber(object):
     '''grab an url and save to local file'''
 
@@ -195,19 +208,20 @@ class URLGrabber(object):
             curl.perform()
         except pycurl.error, err:
             msger.debug('fetching error:%s' % str(err))
-            errcode = err.args[0]
+
+            errcode, errmsg = err.args
+            http_code = curl.getinfo(pycurl.HTTP_CODE)
+
             if errcode == pycurl.E_OPERATION_TIMEOUTED:
-                raise errors.UrlError('timeout on %s: %s' % (curl.url, err))
-            elif errcode == pycurl.E_FILESIZE_EXCEEDED:
-                raise errors.UrlError('max download size exceeded on %s'\
-                                           % curl.url)
+                raise TimeoutError(err)
             elif errcode == pycurl.E_ABORTED_BY_CALLBACK:
-                # callback aborted means SIGINT had been received, raising
-                # KeyboardInterrupt can stop all downloads
-                raise KeyboardInterrupt(err)
+                raise CallbackAborted(err)
+            elif http_code in (401, 403):
+                raise AuthFailed(err)
+            elif http_code == 404:
+                raise PageNotFound(err)
             else:
-                errmsg = 'pycurl error %s - "%s"' % (errcode, str(err.args[1]))
-                raise errors.UrlError(errmsg)
+                raise errors.UrlError('URL error %s: "%s"' % (errcode, errmsg))
         finally:
             signal.signal(signal.SIGINT, original_handler)
 
@@ -295,7 +309,7 @@ class RepoParser(object):
 
         try:
             self.urlgrabber.grab(url, fname, url.user, url.passwd)
-        except errors.UrlError:
+        except PageNotFound:
             return
 
         return fname
@@ -337,19 +351,19 @@ class RepoParser(object):
 
     def parse(self, remotes):
         '''parse each remote repo, try to fetch build.xml and build.conf'''
-
-        for repo in remotes:
+        def deal_with_one_repo(repo):
+            'deal with one repo url'
             if self.is_standard_repo(repo):
                 self.standardrepos.append(repo)
 
                 if self.buildconf:
-                    continue
+                    return
 
                 latest_repo_url = repo.pathjoin('../../../../')
                 meta = self._fetch_build_meta(latest_repo_url)
                 if meta:
                     self._fetch_build_conf(latest_repo_url, meta)
-                continue
+                return
 
             # Check if it's repo with builddata/build.xml exist
             meta = self._fetch_build_meta(repo)
@@ -357,6 +371,17 @@ class RepoParser(object):
                 # Generate repos from build.xml
                 self.build_repos_from_buildmeta(repo, meta)
                 self._fetch_build_conf(repo, meta)
+
+        for repo in remotes:
+            try:
+                deal_with_one_repo(repo)
+            except AuthFailed, err:
+                msger.warning('authenticate failed, ignore %s' % repo)
+            except TimeoutError, err:
+                msger.warning("connect timeout to %s, maybe it's caused "
+                              "by proxy settings, please check." % repo)
+            except CallbackAborted, err:
+                raise KeyboardInterrupt(err)
 
     @staticmethod
     def split_out_local_repo(repos):
@@ -377,7 +402,6 @@ class RepoParser(object):
 
     def get_repos_by_arch(self, arch):
         '''get repos by arch'''
-
         repos = self.localrepos + self.standardrepos # local repos first
 
         if arch in ['ia32', 'i686', 'i586']:
@@ -385,7 +409,19 @@ class RepoParser(object):
         if self.repourls and arch in self.repourls:
             repos.extend(self.repourls[arch])
 
-        return repos
+        def filter_valid_repo(repos):
+            'filter valid remote and local repo'
+            rets = []
+            for url in repos:
+                if not url.startswith('http://') and \
+                    not url.startswith('https://') and \
+                    not (url.startswith('/') and os.path.exists(url)):
+                    msger.warning('ignore invalid repo url: %s' % url)
+                else:
+                    rets.append(url)
+            return rets
+
+        return filter_valid_repo(repos)
 
 
 def git_status_checker(git, opts):

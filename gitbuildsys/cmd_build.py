@@ -20,7 +20,6 @@
 """
 
 import os
-import re
 import subprocess
 import tempfile
 import glob
@@ -257,14 +256,9 @@ def do(opts, args):
         repoparser = utils.RepoParser(repos, cachedir)
         repourls = repoparser.get_repos_by_arch(buildarch)
         if not repourls:
-            msger.error('no repositories found for arch: %s under the '\
-                        'following repos:\n      %s' % \
-                        (buildarch, '\n'.join(repos)))
-        for url in repourls:
-            if not  re.match('https?://.*', url) and \
-               not (url.startswith('/') and os.path.exists(url)):
-                msger.error("Invalid repo url: %s" % url)
-            cmd += ['--repository=%s' % url.full]
+            msger.error('no available repositories found for arch %s under the '
+                        'following repos:\n%s' % (buildarch, '\n'.join(repos)))
+        cmd += [('--repository=%s' % url.full) for url in repourls]
 
         if opts.dist:
             distconf = opts.dist
