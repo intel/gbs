@@ -20,24 +20,15 @@
 """
 import os
 import subprocess
-import pwd
 
-from gitbuildsys import msger
-from gitbuildsys.conf import configmgr
+from gitbuildsys import msger, errors
 
-def do(opts, _args):
+def do(opts, args):
 
-    if opts.arch in ['ia32', 'i686', 'i586', 'i386']:
-        arch = 'i686'
-    else:
-        arch = opts.arch
-    if opts.buildroot:
-        build_root = opts.buildroot
-    else:
-        userid     = pwd.getpwuid(os.getuid())[0]
-        tmpdir = os.path.join(configmgr.get('tmpdir', 'general'), "%s-gbs" %\
-                              userid)
-        build_root = os.path.join(tmpdir, 'gbs-buildroot.%s' % arch)
+    if len(args) != 1:
+        raise errors.Usage('no build root directory specified')
+
+    build_root = os.path.abspath(args[0])
     running_lock = '%s/not-ready' % build_root
     if os.path.exists(running_lock) or not os.path.exists(build_root):
         msger.error('build root %s is not ready' % build_root)
@@ -47,6 +38,7 @@ def do(opts, _args):
     if opts.root:
         user = 'root'
     cmd = ['sudo', 'chroot', build_root, 'su', user]
+
     try:
         subprocess.call(['sudo', 'cp', '/etc/resolv.conf', build_root + \
                          '/etc/resolv.conf'])

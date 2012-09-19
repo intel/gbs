@@ -198,7 +198,10 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('-B', '--buildroot',
                   default=None,
                   dest='buildroot',
-                  help='specify build root to setup chroot environment')
+                  help='specify build root to setup chroot environment. '\
+                       'By default, ~/GBS-ROOT/ will be used, and if no ' \
+                       '-B option, but TIZEN_BUILD_ROOT env exists, then '\
+                       '${TIZEN_BUILD_ROOT} will used as build root')
     @cmdln.option('-A', '--arch',
                   default=None,
                   dest='arch',
@@ -353,19 +356,15 @@ class Gbs(cmdln.Cmdln):
                   default=False,
                   dest='root',
                   help='chroot as root instead of abuild by default')
-    @cmdln.option('-A', '--arch',
-                  default='i586',
-                  dest='arch',
-                  help='specify the build root arch')
-    @cmdln.option('-B', '--buildroot',
-                  default=None,
-                  dest='buildroot',
-                  help='specify build root directory to chroot')
     def do_chroot(self, subcmd, opts, *args):
         """${cmd_name}: chroot to build root
 
         Usage:
-            gbs chroot [options]
+            gbs chroot [options] <build root dir>
+
+        Note: The default location of build root located at:
+        ~/GBS-ROOT/local/scratch.{arch}.*, which will be different
+        if -B option specified while running gbs build
 
         ${cmd_option_list}
         """
