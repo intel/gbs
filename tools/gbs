@@ -181,7 +181,7 @@ class Gbs(cmdln.Cmdln):
         from gitbuildsys import cmd_export as cmd
         cmd.do(opts, args)
 
-    @cmdln.alias('build-experimental')
+    @cmdln.alias('lb')
     @cmdln.option('-D', '--dist',
                   default=None,
                   dest='dist',
@@ -237,6 +237,21 @@ class Gbs(cmdln.Cmdln):
                   dest='include_all',
                   help='uncommitted changes and untracked files would be '\
                        'included while generating tar ball')
+    @cmdln.option('--upstream-branch',
+                  default=None,
+                  dest='upstream_branch',
+                  help='upstream branch')
+    @cmdln.option('--upstream-tag',
+                  default=None,
+                  dest='upstream_tag',
+                  help="upstream tag format, e.g. 'v${upstreamversion}'")
+    @cmdln.option('--squash-patches-until',
+                  default=None,
+                  dest='squash_patches_until',
+                  help="when generating patches, squash patches up to given "\
+                       "commit-ish into one monolithic diff file. Format is "\
+                       "the commit-ish optionally followed by a colon and "\
+                       "diff filename base.")
 
     # depanneur special options
     @cmdln.option('--clean-once',
@@ -304,14 +319,14 @@ class Gbs(cmdln.Cmdln):
                        'spec to be refereneced using the %configure, %reconfigre '\
                        'and %autogen macros')
 
-    def do_build_experimental(self, _subcmd, opts, *args):
-        """${cmd_name}: experimental version of local build package
+    def do_build(self, _subcmd, opts, *args):
+        """${cmd_name}: local build package
 
         Usage:
-            gbs build-experimental -R repository [options] [package git dir]
+            gbs build -R repository [options] [package git dir]
 
             [package git dir] is optional, if not specified, current dir would
-            be used.
+            be used, and all packages in this dir would be scheduled to be built.
 
         Examples:
             $ mkdir tizen-packages
@@ -325,113 +340,6 @@ class Gbs(cmdln.Cmdln):
             $ gbs localbuild -A i586 --threads=4 --binary-list=/path/to/pkgs.list
             $ cd package1/
             $ gbs localbuild -A i586 --incremental # only support build one package
-
-        ${cmd_option_list}
-        """
-
-        from gitbuildsys import cmd_localbuild as cmd
-        cmd.do(opts, args)
-    @cmdln.alias('lb')
-    @cmdln.option('-D', '--dist',
-                  default=None,
-                  dest='dist',
-                  help='specify distribution configuration file, which should ' \
-                       'be a full path')
-    @cmdln.option('-R', '--repository',
-                  action="callback",
-                  default=None,
-                  type='string',
-                  dest='repositories',
-                  callback=handle_repository,
-                  help='specify package repositories, only rpm-md format ' \
-                       'is supported')
-    @cmdln.option('-B', '--buildroot',
-                  default=None,
-                  dest='buildroot',
-                  help='specify build root to setup chroot environment')
-    @cmdln.option('-A', '--arch',
-                  default=None,
-                  dest='arch',
-                  help='build target arch ')
-    @cmdln.option('-C', '--clean',
-                  action='store_true',
-                  default=False,
-                  dest='clean',
-                  help='delete old build root before initialization')
-    @cmdln.option('--noinit',
-                  action='store_true',
-                  default=False,
-                  dest='noinit',
-                  help='skip initialization of build root and start ' \
-                       'with build immediately')
-    @cmdln.option('--ccache',
-                  action="store_true",
-                  default=False,
-                  dest='ccache',
-                  help='use ccache to speed up rebuilds')
-    @cmdln.option('--skip-conf-repos',
-                  action="store_true",
-                  default=False,
-                  dest='skip_conf_repos',
-                  help='skip repositories mentioned in config file')
-    @cmdln.option('-c', '--commit',
-                  default=None,
-                  dest='commit',
-                  help='specify a commit ID to build')
-    @cmdln.option('--spec',
-                  default=None,
-                  dest='spec',
-                  help='specify a spec file to use')
-    @cmdln.option('--extra-packs',
-                  default=None,
-                  dest='extra_packs',
-                  help='specify extra packages to install to build root '\
-                       'multiple packages can be separated by comma')
-    @cmdln.option('--include-all',
-                  action='store_true',
-                  default=False,
-                  dest='include_all',
-                  help='uncommitted changes and untracked files would be '\
-                       'included while generating tar ball')
-    @cmdln.option('--out',
-                  default=None,
-                  dest='out',
-                  help='output directory for RPMs')
-    @cmdln.option('--upstream-branch',
-                  default=None,
-                  dest='upstream_branch',
-                  help='Upstream branch')
-    @cmdln.option('--upstream-tag',
-                  default=None,
-                  dest='upstream_tag',
-                  help="Upstream tag format, e.g. 'v${upstreamversion}'")
-    @cmdln.option('--squash-patches-until',
-                  default=None,
-                  dest='squash_patches_until',
-                  help="When generating patches, squash patches up to given "\
-                       "commit-ish into one monolithic diff file. Format is "\
-                       "the commit-ish optionally followed by a colon and "\
-                       "diff filename base.")
-    def do_build(self, _subcmd, opts, *args):
-        """${cmd_name}: local build package
-
-        Usage:
-            gbs build -R repository -A ARCH [options] [package git dir]
-
-            [package git dir] is optional, if not specified, current dir would
-            be used.
-
-        Examples:
-            gbs build -R http://example1.org/packages/ \\
-                      -R http://example2.org/packages/ \\
-                      -A i586                          \\
-                      -D /usr/share/gbs/tizen-1.0.conf
-
-        Note:
-
-        If -D not specified, distconf key in ~/.gbs.conf would be used.
-        If distconf key is None, dist conf file would be got from OBS
-        project (Tizen:Main by default).
 
         ${cmd_option_list}
         """
