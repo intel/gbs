@@ -101,7 +101,8 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
                      "--git-patch-export-compress=100k",
                      "--git-force-create",
                      "--git-patch-export-squash-until=%s" %
-                            squash_patches_until])
+                            squash_patches_until,
+                     "--git-patch-export-ignore-path=^packaging/.*"])
         if repo.has_branch("pristine-tar"):
             args.extend(["--git-pristine-tar"])
 
