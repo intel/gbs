@@ -1,0 +1,156 @@
+* Tue Sep 18 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.10
+- Upgrade to gbs v0.10, which contains the following features:
+    * Re-designed gbs config format and parser to support multiple profile more flexible:
+      - Use profile oriented style of config
+      - Inherited config files supportted, three level support now: /etc/gbs.conf, ~/.gbs.conf
+        and $PWD/.gbs.conf
+    * integrate depanneur to gbs
+    * local full build support, including the following features:
+      - Multiple packages build
+      - Dependency build
+      - Parallel build
+      - Incremental build
+    * Patch/upstream tarball generation is enabled if "upstream" branch is found
+      - If "pristine-tar" branch is found, checkout the orig tarball using pristine-tar
+      - If "pristine-tar" branch is NOT found, generate the upstream tarball from a git tag matching the version
+      - If the "upstream" branch is NOT found, gbs/gbp uses the current logic
+    * If local repo specified, local repo is high priority when selecting packages
+    * Remove -A option for gbs chroot, and build root directory must be specified
+    * Code cleanup and refinements.
+    * bug fix.
+
+* Mon Aug 13 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.9
+- Upgrade to gbs v0.9, which contains the following features:
+  * Upgrade to gbs v0.9, which contains the following features:
+    * Re-designed gbs config format and parser to support multiple profile more flexible:
+      - Use profile oriented style of config
+      - Inherited config files supportted, three level support now: /etc/gbs.conf, ~/.gbs.conf
+        and $PWD/.gbs.conf
+    * integrate depanneur to gbs
+    * local full build support, including the following features:
+      - Multiple packages build
+      - Dependency build
+      - Parallel build
+      - Incremental build
+    * Patch/upstream tarball generation is enabled if "upstream" branch is found
+      - If "pristine-tar" branch is found, checkout the orig tarball using pristine-tar
+      - If "pristine-tar" branch is NOT found, generate the upstream tarball from a git tag matching the version
+      - If the "upstream" branch is NOT found, gbs/gbp uses the current logic
+    * If local repo specified, local repo is high priority when selecting packages
+    * Code cleanup and refinements.
+    * bug fix.
+
+* Mon Aug 13 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.9
+- Upgrade to gbs v0.9, which contains the following features:
+  - Fedora support
+  - update build to 2012-08-10 version, which including featurs:
+    - prefix each build log line with the second since build started
+    - other refinements
+  - --out for `gbs build` to copy generated RPMs to specified directory
+  - --source-rpm supported in export subcommand to generate source
+  - Introduce a Temp class to create/cleanup temp file and directory.
+  - Use more standard way to transfer repository user/pass to build scripts and hidden passwd in build.
+  - Code cleanup and refinements.
+  - bug fix.
+
+* Wed Aug  1 12 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.8.1
+- Upgrade to gbs v0.8.1, which contains the following features:
+  - new subcommand 'submit' added, which can be used for developers
+    to submit code to OBS for building
+
+* Thu Jul 12 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.8
+- Upgrade to gbs v0.8, which contains the following features:
+  - moving remotebuild temp build files to packaging dir
+  - moving build root to $tmpdir/$user/gbs-buildroot.$arch
+  - support building un-commit changes with --including-all opt
+  - support building special commit id or tag
+  - gbs chroot support, user can chroot to the buildroot, and make
+    build, it is useful for the big packages
+  - support custom location of configuration file, user can specify
+    different conf besides using ~/.gbs.conf using -c global option
+  - developer to be able to view 'gbs remotebuild' log and build 
+    status using gbs with --buildlog and status options
+  - --extra-packs supported for developer installing extra packages
+    to build root, for example: --extra-packs=zypper,vim , this is
+    very usefull for developer to make buildroot as a full development
+    envionment
+
+* Wed Jun 27 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.7.1
+- Upgrade to gbs v0.7.1, which contains the following features:
+  - download build conf from repos
+  - support new format of repo url, for example:
+    http://download.tizen.org/snapshots/trunk/latest/, which contains
+    builddata/build.xml metadata, and using this file different
+    archs repos can be built out, so user dont need update conf
+    if transfer build archs
+  - more error handling for conf module
+  - new -m option for gbs changelog to add new entry
+  - create one entry in gbs changelog
+
+* Wed Jun  6 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.7
+- Upgrade to gbs v0.7, which contains the following features:
+  - new subcommand support:
+    - gbs changelog   : generate changelog from git commits to
+      changelog file
+    - gbs submit : maintain the changelogs file, sanity check etc.
+    - gbs export : export git tree as tar ball, format of tar ball
+      is from spec file source tag
+  - bug fixing:
+  - enhancement:
+
+* Mon Jun  4 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.6.3
+- Update to gbs 0.6.3
+    - Add binfmt-support for arm build support fix arm build issue
+    - print the detail path of binaries RPM packages
+
+* Fri Jun  1 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.6.2
+- Add 0001-remove-extra-output-info.patch for gbs build
+- Add 0002-dont-need-sudo-before-gbs-build.patch
+
+* Sat May 12 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.6
+- Upgrade to gbs v0.6, which contains the following features:
+  - subcommand renamed:
+    - build => remotebuild
+    - localbuild => build
+  - Update tizen-1.0.conf to fix build issue for tizen.org repo
+  - Code clean up:
+    - remove useless data/build.sh
+    - remove _fall_to_shell related code
+  - Add --ccache and --incremental options for gbs 'build'
+  - fix default build server api issue.
+  - fix git archive issue for zip format
+  - more error handling support
+
+* Fri Apr 13 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.5
+- Upgrade to gbs v0.5, which contains the following features:
+  - arm local build supported on ubuntu 10.04/10.10
+  - use sudo to run localbuild to fix proxy issue while using
+    tsocks. examples: $ sudo tsocks gbs localbuild
+  - fix permission issue while parsing specfile.
+
+* Thu Apr  5 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.4
+- Upgrade to gbs v0.4, which contains the following features:
+  - gbs localbuild/build: more archive tar ball format support
+  - unittest added:
+    - gbs help unit test
+    - utils/guess_version for tar ball unit test
+    - spec file parser module unit test
+  - Add arch check for gbs local build
+  - Raise obs error if Base project is empty
+* Thu Mar 22 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.3
+- Upgrade to gbs v0.3, which contains the following features:
+  - gbs localbuild support
+  - gbs import support, which support importing src.rpm and spec
+  - gbs import_tar support
+  - gbs import-orig support, which can used to update packages
+  - more information can be avaliable from 'man gbs'
+
+* Fri Feb 10 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.2
+- Update to latest stable release version 2.0.
+  - New gbs build: build rpm package from git repository on OBS
+  - New build service module to interact with OBS
+  - New git module to wrap local git command
+
+* Thu Dec 01 2011 Jian-feng Ding <jian-feng.ding@intel.com> - 0.1
+- Initial import to tizen OBS
+

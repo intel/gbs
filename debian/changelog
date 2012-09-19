@@ -1,3 +1,26 @@
+gbs (0.10) unstable; urgency=high
+  * Upgrade to gbs v0.10, which contains the following features:
+    * Re-designed gbs config format and parser to support multiple profile more flexible:
+      - Use profile oriented style of config
+      - Inherited config files supportted, three level support now: /etc/gbs.conf, ~/.gbs.conf
+        and $PWD/.gbs.conf
+    * integrate depanneur to gbs
+    * local full build support, including the following features:
+      - Multiple packages build
+      - Dependency build
+      - Parallel build
+      - Incremental build
+    * Patch/upstream tarball generation is enabled if "upstream" branch is found
+      - If "pristine-tar" branch is found, checkout the orig tarball using pristine-tar
+      - If "pristine-tar" branch is NOT found, generate the upstream tarball from a git tag matching the version
+      - If the "upstream" branch is NOT found, gbs/gbp uses the current logic
+    * If local repo specified, local repo is high priority when selecting packages
+    * Remove -A option for gbs chroot, and build root directory must be specified
+    * Code cleanup and refinements.
+    * bug fix.
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Tue, 18 Sep  2012 10:56:15 +0800
+
 gbs (0.9) unstable; urgency=high
   * Upgrade to gbs v0.9, which contains the following features:
     * Fedora support
