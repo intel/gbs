@@ -337,11 +337,11 @@ def do(opts, args):
     if opts.commit:
         cmd += ['--commit=%s' % opts.commit]
     if opts.upstream_branch:
-        cmd += ['--upstream-branch']
+        cmd += ['--upstream-branch=%s' % opts.upstream_branch]
     if opts.upstream_tag:
-        cmd += ['--upstream-tag']
+        cmd += ['--upstream-tag=%s' % opts.upstream_tag]
     if opts.squash_patches_until:
-        cmd += ['--squash-patches-until']
+        cmd += ['--squash-patches-until=%s' % opts.squash_patches_until]
 
     msger.debug("running command: %s" % ' '.join(cmd))
     if subprocess.call(cmd):
