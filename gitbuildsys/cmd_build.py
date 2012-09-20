@@ -293,15 +293,16 @@ def do(opts, args):
                    (buildarch, ','.join(SUPPORTEDARCHS)))
 
     build_root = os.path.expanduser('~/GBS-ROOT/')
+    if 'TIZEN_BUILD_ROOT' in os.environ:
+        build_root = os.environ['TIZEN_BUILD_ROOT']
     if opts.buildroot:
         build_root = opts.buildroot
+    os.environ['TIZEN_BUILD_ROOT'] = build_root
 
     # get virtual env from system env first
     if 'VIRTUAL_ENV' not in os.environ:
         os.environ['VIRTUAL_ENV'] = '/'
 
-    if 'TIZEN_BUILD_ROOT' not in os.environ:
-        os.environ['TIZEN_BUILD_ROOT'] = build_root
 
     cmd = ['%s/usr/bin/depanneur' % os.environ['VIRTUAL_ENV']]
     cmd += ['--arch=%s' % buildarch]
