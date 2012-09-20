@@ -101,8 +101,9 @@ def prepare_repos_and_build_conf(opts, arch):
         distconf = opts.dist
     else:
         if repoparser.buildconf is None:
-            msger.warning('failed to get build conf, use default')
-            distconf = configmgr.get('distconf', 'build')
+            msger.error('failed to get build conf from repos, please '
+                        'use snapshot repo or specify build config using '
+                        '-D option')
         else:
             shutil.copy(repoparser.buildconf, tmpdir)
             distconf = os.path.join(tmpdir, os.path.basename(\
