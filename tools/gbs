@@ -45,10 +45,9 @@ def handle_project(option, opt_str, value, parser):
     setattr(parser.values, option.dest, value)
 
 class Gbs(cmdln.Cmdln):
-    """
-    Usage: gbs [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
+    """gbs - the command line tool for Tizen package developers
 
-    gbs - the command line tool for Tizen package developers
+    Usage: gbs [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
     Try 'gbs help SUBCOMAND' for help on a specific subcommand.
 
     ${command_list}
@@ -155,15 +154,15 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--upstream-branch',
                   default=None,
                   dest='upstream_branch',
-                  help='Upstream branch')
+                  help='upstream branch')
     @cmdln.option('--upstream-tag',
                   default=None,
                   dest='upstream_tag',
-                  help="Upstream tag format, e.g. 'v${upstreamversion}'")
+                  help="upstream tag format, e.g. 'v%(upstreamversion)s'")
     @cmdln.option('--squash-patches-until',
                   default=None,
                   dest='squash_patches_until',
-                  help="When generating patches, squash patches up to given "\
+                  help="when generating patches, squash patches up to given "\
                        "commit-ish into one monolithic diff file. Format is "\
                        "the commit-ish optionally followed by a colon and "\
                        "diff filename base.")
@@ -172,8 +171,6 @@ class Gbs(cmdln.Cmdln):
 
         Usage:
             gbs export
-
-        Note:
 
         ${cmd_option_list}
         """
@@ -247,7 +244,7 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--upstream-tag',
                   default=None,
                   dest='upstream_tag',
-                  help="upstream tag format, e.g. 'v${upstreamversion}'")
+                  help="upstream tag format, e.g. 'v%(upstreamversion)s'")
     @cmdln.option('--squash-patches-until',
                   default=None,
                   dest='squash_patches_until',
@@ -379,15 +376,15 @@ class Gbs(cmdln.Cmdln):
                   dest='target_obsprj',
                   type='string',
                   callback=handle_project,
-                  help='OBS project where package will be checked in' \
-                       '(default: home:<userid>:gbs:Tizen:Main)')
+                  help='OBS project where package will be checked in ' \
+                       '(default is home:<userid>:gbs:Tizen:Main)')
     @cmdln.option('-B', '--base-obsprj',
                   action='callback',
                   default=None,
                   dest='base_obsprj',
                   type='string',
                   callback=handle_project,
-                  help='OBS project to branch from (default: Tizen:Main)')
+                  help='OBS project to branch from (default is Tizen:Main)')
     @cmdln.option('--spec',
                   default=None,
                   dest='spec',
@@ -415,15 +412,15 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--upstream-branch',
                   default=None,
                   dest='upstream_branch',
-                  help='Upstream branch')
+                  help='upstream branch')
     @cmdln.option('--upstream-tag',
                   default=None,
                   dest='upstream_tag',
-                  help="Upstream tag format, e.g. 'v${upstreamversion}'")
+                  help="upstream tag format, e.g. 'v%(upstreamversion)s'")
     @cmdln.option('--squash-patches-until',
                   default=None,
                   dest='squash_patches_until',
-                  help="When generating patches, squash patches up to given "\
+                  help="when generating patches, squash patches up to given "\
                        "commit-ish into one monolithic diff file. Format is "\
                        "the commit-ish optionally followed by a colon and "\
                        "diff filename base.")
@@ -432,7 +429,7 @@ class Gbs(cmdln.Cmdln):
 
         Usage:
             gbs remotebuild [options] [package git dir] \
-    [--buildlog repo arch] [--status]
+[--buildlog repo arch] [--status]
 
             [package git dir] is optional, if not specified, current dir would
             be used.
@@ -442,6 +439,7 @@ class Gbs(cmdln.Cmdln):
           $ gbs remotebuild -B Test
           $ gbs remotebuild -B Test -T home:<userid>:gbs
           $ gbs remotebuild <package git directory>
+
         ${cmd_option_list}
         """
 
@@ -473,11 +471,11 @@ class Gbs(cmdln.Cmdln):
         Usage:
             gbs import [options] specfile | source rpm | tar ball
 
-
         Examples:
           $ gbs import /path/to/specfile/
           $ gbs import /path/to/src.rpm
           $ gbs import /path/to/tarball
+
         ${cmd_option_list}
         """
 
@@ -504,6 +502,7 @@ class Gbs(cmdln.Cmdln):
           $ gbs changelog
           $ gbs changelog --since=COMMIT_ID
           $ gbs changelog -m 'new upstream release 0.0.1'
+
         ${cmd_option_list}
         """
 
