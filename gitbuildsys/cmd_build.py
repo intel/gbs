@@ -99,6 +99,8 @@ def prepare_repos_and_build_conf(opts, arch):
 
     if opts.dist:
         distconf = opts.dist
+        if not os.path.exists(distconf):
+            msger.error('specified build conf %s does not exists' % distconf)
     else:
         if repoparser.buildconf is None:
             msger.error('failed to get build conf from repos, please '
