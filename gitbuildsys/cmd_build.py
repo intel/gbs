@@ -114,6 +114,10 @@ def prepare_repos_and_build_conf(opts, arch):
     if distconf is None:
         msger.error('No build config file specified, please specify in '\
                     '~/.gbs.conf or command line using -D')
+
+    # must use abspath here, because build command will also use this path
+    distconf = os.path.abspath(distconf)
+
     target_conf = os.path.basename(distconf).replace('-', '')
     os.rename(distconf, os.path.join(os.path.dirname(distconf), target_conf))
     dist = target_conf.rsplit('.', 1)[0]
