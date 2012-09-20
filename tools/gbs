@@ -331,15 +331,15 @@ class Gbs(cmdln.Cmdln):
         Examples:
             $ mkdir tizen-packages
             $ cp package1 package2 package3 ... tizen-packages/
-            $ gbs localbuild -A ia32 tizen-packages # build all packages under tizen-packages
+            $ gbs build -A ia32 tizen-packages # build all packages under tizen-packages
             $ cd tizen-packages/
-            $ gbs localbuild -A ia32 # build all packages under current dir
-            $ gbs localbuild -A ia32 --overwrite --include-all
-            $ gbs localbuild -A i586 --threads=2
-            $ gbs localbuild -A i586 --threads=2 --exclude=dlog --exclude=eglibc
-            $ gbs localbuild -A i586 --threads=4 --binary-list=/path/to/pkgs.list
+            $ gbs build -A ia32 # build all packages under current dir
+            $ gbs build -A ia32 --overwrite --include-all
+            $ gbs build -A i586 --threads=2
+            $ gbs build -A i586 --threads=2 --exclude=dlog --exclude=eglibc
+            $ gbs build -A i586 --threads=4 --binary-list=/path/to/pkgs.list
             $ cd package1/
-            $ gbs localbuild -A i586 --incremental # only support build one package
+            $ gbs build -A i586 --incremental # only support build one package
 
         ${cmd_option_list}
         """
