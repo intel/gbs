@@ -158,7 +158,9 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--upstream-tag',
                   default=None,
                   dest='upstream_tag',
-                  help="upstream tag format, e.g. 'v%(upstreamversion)s'")
+                  help="upstream tag format, '${upstreamversion}' is "\
+                       "expanded to the version in the spec file. "\
+                       "E.g. 'v${upstreamversion}'")
     @cmdln.option('--squash-patches-until',
                   default=None,
                   dest='squash_patches_until',
@@ -244,7 +246,9 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--upstream-tag',
                   default=None,
                   dest='upstream_tag',
-                  help="upstream tag format, e.g. 'v%(upstreamversion)s'")
+                  help="upstream tag format, '${upstreamversion}' is "\
+                       "expanded to the version in the spec file. "\
+                       "E.g. 'v${upstreamversion}'")
     @cmdln.option('--squash-patches-until',
                   default=None,
                   dest='squash_patches_until',
@@ -416,7 +420,9 @@ class Gbs(cmdln.Cmdln):
     @cmdln.option('--upstream-tag',
                   default=None,
                   dest='upstream_tag',
-                  help="upstream tag format, e.g. 'v%(upstreamversion)s'")
+                  help="upstream tag format, '${upstreamversion}' is "\
+                       "expanded to the version in the spec file. "\
+                       "E.g. 'v${upstreamversion}'")
     @cmdln.option('--squash-patches-until',
                   default=None,
                   dest='squash_patches_until',
