@@ -73,6 +73,33 @@ class ProfileStyleTest(unittest.TestCase):
         self.assertEquals('https://Bob:classified@repo/ia32/base',
                           get_profile().repos[2].url.full)
 
+    @Fixture(home='bug387_inherit_only_user.ini')
+    def test_inherit_only_user(self):
+        'test inherit only user from parent'
+        self.assertEquals('https://tester:secret@repo',
+                          get_profile().repos[0].url.full)
+        self.assertEquals('https://tester:secret@obs',
+                          get_profile().obs.url.full)
+
+    @Fixture(home='bug387_inherit_only_passwdx.ini')
+    def test_inherit_only_passwdx(self):
+        'test inherit only password from parent'
+        self.assertEquals('https://tester:secret@repo',
+                          get_profile().repos[0].url.full)
+        self.assertEquals('https://tester:secret@obs',
+                          get_profile().obs.url.full)
+
+    @Fixture(home='bug387_only_password_no_user.ini')
+    def test_only_password_no_user(self):
+        'test only password no user'
+        self.assertRaises(ConfigError, get_profile)
+
+    @Fixture(home='bug387_inline_auth_has_the_highest_priority.ini')
+    def test_inline_highest_priority(self):
+        'test inline auth has the highest priority'
+        self.assertEquals('https://this:inline-pwd@obs',
+                          get_profile().obs.url.full)
+
     @Fixture(home='no_such_profile_section_name.ini')
     def test_no_such_profile(self):
         'test profile name does not exist'

@@ -26,15 +26,6 @@ from gitbuildsys.safe_url import SafeURL
 class SafeURLTest(unittest.TestCase):
     '''Test SafeURL class'''
 
-    def test_duplicated_user(self):
-        '''raise ValueError if specify user twice'''
-        self.assertRaises(ValueError, SafeURL, 'http://Alice@server', 'Bob')
-
-    def test_duplicated_password(self):
-        '''raise ValueError if specify passwd twice'''
-        self.assertRaises(ValueError, SafeURL,
-                          'http://Alice:pp@server', None, 'password')
-
     def test_passwd_no_user(self):
         '''raise ValueError if only given password'''
         self.assertRaises(ValueError, SafeURL, 'http://:password@server')

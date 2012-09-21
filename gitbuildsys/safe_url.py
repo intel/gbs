@@ -99,12 +99,8 @@ class SafeURL(str):
     @staticmethod
     def _check_userinfo(user_inline, passwd_inline, user, passwd):
         '''returns the valid user and passwd'''
-
-        if user_inline and user or passwd_inline and passwd:
-            raise ValueError('Auth info specified twice')
-
-        user = user or user_inline
-        passwd = passwd or passwd_inline
+        user = user_inline or user
+        passwd = passwd_inline or passwd
 
         if not user and passwd:
             raise ValueError('No user is specified only password')

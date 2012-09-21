@@ -24,6 +24,7 @@ import os
 import ast
 import base64
 import shutil
+from collections import namedtuple
 from ConfigParser import SafeConfigParser, NoSectionError, \
                          MissingSectionHeaderError, Error
 
@@ -372,7 +373,8 @@ url = http://download.tizen.org/snapshots/trunk/common/latest/repos/main/ia32/pa
         else:
             return self._get(opt, section)
 
-    def update(self, cfgparsers):
+    @staticmethod
+    def update(cfgparsers):
         'update changed values into files on disk'
         for cfgparser in cfgparsers:
             try:
@@ -381,15 +383,24 @@ url = http://download.tizen.org/snapshots/trunk/common/latest/repos/main/ia32/pa
                 msger.warning('update config file error: %s' % err)
 
 
+URL = namedtuple('URL', 'url user password')
+
+
 class OBSConf(object):
     'Config items related to obs section'
 
     def __init__(self, parent, name, url, base, target):
         self.parent = parent
         self.name = name
-        self.url = url
         self.base = base
         self.target = target
+
+        user = url.user or parent.common_user
+        password = url.password or parent.common_password
+        try:
+            self.url = SafeURL(url.url, user, password)
+        except ValueError, err:
+            raise errors.ConfigError('%s for %s' % (str(err), url.url))
 
     def dump(self, fhandler):
         'dump ini to file object'
@@ -419,7 +430,13 @@ class RepoConf(object):
     def __init__(self, parent, name, url):
         self.parent = parent
         self.name = name
-        self.url = url
+
+        user = url.user or parent.common_user
+        password = url.password or parent.common_password
+        try:
+            self.url = SafeURL(url.url, user, password)
+        except ValueError, err:
+            raise errors.ConfigError('%s for %s' % (str(err), url.url))
 
     def dump(self, fhandler):
         'dump ini to file object'
@@ -447,22 +464,12 @@ class Profile(object):
         self.repos = []
         self.obs = None
 
-    def _update_url(self, url):
-        'update url by common auth info'
-        if not url.user:
-            url.user = self.common_user
-        if not url.passwd:
-            url.passwd = self.common_password
-        return url
-
     def add_repo(self, repoconf):
         '''add a repo to repo list of the profile'''
-        self._update_url(repoconf.url)
         self.repos.append(repoconf)
 
     def set_obs(self, obsconf):
         '''set OBS api of the profile'''
-        self._update_url(obsconf.url)
         self.obs = obsconf
 
     def dump(self, fhandler):
@@ -546,10 +553,7 @@ class BizConfigManager(ConfigMgr):
         url = self.get('url', section_id)
         user = self.get_optional_item(section_id, 'user')
         password = self.get_optional_item(section_id, 'passwd')
-        try:
-            return SafeURL(url, user, password)
-        except ValueError, err:
-            raise errors.ConfigError('%s for %s' % (str(err), url))
+        return URL(url, user, password)
 
     def _build_profile_by_name(self, name):
         '''return profile object by a given section'''
@@ -636,11 +640,7 @@ class BizConfigManager(ConfigMgr):
         if addr:
             user = self.get_optional_item(sec, 'user')
             password = self.get_optional_item(sec, 'passwd')
-
-            try:
-                url = SafeURL(addr, user, password)
-            except ValueError, err:
-                raise errors.ConfigError('%s for %s' % (str(err), addr))
+            url = URL(addr, user, password)
 
             obsconf = OBSConf(profile, 'obs.%s' % sec, url,
                               self.get_optional_item('remotebuild', 'base_prj'),
@@ -651,10 +651,7 @@ class BizConfigManager(ConfigMgr):
         for key, item in repos:
             if 'url' not in item:
                 raise errors.ConfigError("URL is not specified for %s" % key)
-            try:
-                url = SafeURL(item['url'], item.get('user'), item.get('passwd'))
-            except ValueError, err:
-                raise errors.ConfigError('%s for %s' % (str(err), item['url']))
+            url = URL(item['url'], item.get('user'), item.get('passwd'))
 
             repoconf = RepoConf(profile, 'repo.%s' % key, url)
             profile.add_repo(repoconf)
