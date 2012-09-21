@@ -120,9 +120,10 @@ def prepare_repos_and_build_conf(opts, arch):
     # must use abspath here, because build command will also use this path
     distconf = os.path.abspath(distconf)
 
-    target_conf = os.path.basename(distconf).replace('-', '')
-    os.rename(distconf, os.path.join(os.path.dirname(distconf), target_conf))
-    dist = target_conf.rsplit('.', 1)[0]
+    if not distconf.endswith('.conf') or '-' in os.path.basename(distconf):
+        msger.error("build config file must end with .conf, and can't "
+                    "contain '-'")
+    dist = os.path.basename(distconf)[:-len('.conf')]
     cmd_opts += ['--dist=%s' % dist]
     cmd_opts += ['--configdir=%s' % os.path.dirname(distconf)]
 
