@@ -119,7 +119,7 @@ def export_sources(repo, commit, export_dir, spec, opts):
                                       spec, opts)
     try:
         ret = gbp_build(gbp_args)
-        if ret and not is_native_pkg(repo, opts):
+        if ret == 2 and not is_native_pkg(repo, opts):
             # Try falling back to old logic of one monolithic tarball
             msger.warning("Generating upstream tarball and/or generating "\
                           "patches failed. GBS tried this as you have "\
