@@ -139,9 +139,7 @@ configuration file by yourself.  Just make sure it looks like as below:
   passwd  = <PASSWORD in plaintext> (will be updated w/ base64 encoded one)
 
   [build]
-  build_cmd = /usr/bin/build
   su-wrapper= sudo
-  distconf=/usr/share/gbs/tizen-1.0.conf
   repo1.url=
   repo1.user=
   repo1.passwd=
@@ -167,10 +165,6 @@ passwdx
 
 In the [build] section, the following values can be specified:
 
-build_cmd
-    build script path for building RPMs in a chroot environment
-distconf
-    Specify distribution configure file
 repox.url
     Specify the repo url used for gbs build
 repox.user
@@ -229,13 +223,13 @@ usage of subcommand `build` can be available using `gbs build --help`
       gbs build -R repository -A arch [options] [package git dir]
       [package git dir] is optional, if not specified, current dir would
       be used.
+
   Examples:
       gbs build -R http://example1.org/packages/ \
                 -R http://example2.org/packages/ \
                 -A i586                          \
                 -D /usr/share/gbs/tizen-1.0.conf
-  Note:
-  if -D not specified, distconf key in ~/.gbs.conf would be used.
+
   Options:
       -h, --help          show this help message and exit
       --noinit            Skip initialization of build root and start with build
@@ -261,27 +255,22 @@ Examples to run gbs build:
 
   $ gbs build -R http://example1.org/ -A i586 -D /usr/share/gbs/tizen-1.0.conf
 
-2) Use dist conf file specified in ~/.gbs.conf, if distconf key exist.
-::
-
-  $ gbs build -R http://example1.org/ -A i586
-
-3) Multi repos specified
+2) Multi repos specified
 ::
 
   $ gbs lb -R http://example1.org/  -R http://example2.org/  -A i586
 
-4) With --noinit option, Skip initialization of build root and start with build immediately
+3) With --noinit option, Skip initialization of build root and start with build immediately
 ::
 
   $ gbs build -R http://example1.org/ -A i586  --noinit
 
-5) Specify a package git directory, instead of running in git top directory
+4) Specify a package git directory, instead of running in git top directory
 ::
 
   $ gbs build -R http://example1.org/ -A i586  PackageKit
 
-6) Local repo example
+5) Local repo example
 ::
 
   $ gbs build -R /path/to/repo/dir/ -A i586

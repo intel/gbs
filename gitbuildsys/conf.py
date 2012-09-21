@@ -188,37 +188,41 @@ class ConfigMgr(object):
                 'upstream_tag': 'upstream/${upstreamversion}',
                 'squash_patches_until': '',
             },
-            'build': {
-                'build_cmd':    '/usr/bin/build',
-                'distconf':     '/usr/share/gbs/tizen-1.0.conf',
-            },
     }
 
     DEFAULT_CONF_TEMPLATE = '''[general]
+#Current profile name which should match a profile section name
 profile = profile.tizen
-tmpdir = /var/tmp
 
 [profile.tizen]
-; common authentication info for whole profile
+#Common authentication info for whole profile
 #user =
-; CAUTION: please use the key name "passwd" to reset plaintext password
+#CAUTION: please use the key name "passwd" to reset plaintext password
 #passwd =
 obs = obs.tizen
-; comma separated list of repositories
+#Comma separated list of repositories
 repos = repo.tizen_latest
-distconf = /usr/share/gbs/tizen-1.0.conf
+#repos = repo.tizen_main, repo.tizen_base
 
 [obs.tizen]
+#OBS API URL pointing to a remote OBS.
 url = https://api.tizen.org
-; optinal user/passwd, set if differ from proflie's user/passwd
+#Optional user and password, set if differ from profile's user and password
 #user =
 #passwd =
 
 [repo.tizen_latest]
-url = http://download.tizen.org/snapshots/trunk/common/latest/
-; optinal user/passwd, set if differ from proflie's user/passwd
+#Build against repo's URL
+url = http://download.tizen.org/snapshots/trunk/common/latest
+#Optional user and password, set if differ from profile's user and password
 #user =
-#passwdx =
+#passwd =
+
+[repo.tizen_base]
+url = http://download.tizen.org/snapshots/trunk/common/latest/repos/base/ia32/packages/
+
+[repo.tizen_main]
+url = http://download.tizen.org/snapshots/trunk/common/latest/repos/main/ia32/packages/
 '''
 
     # make the manager class as singleton
