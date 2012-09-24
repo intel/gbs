@@ -307,11 +307,11 @@ def do(opts, args):
     os.environ['TIZEN_BUILD_ROOT'] = build_root
 
     # get virtual env from system env first
-    if 'VIRTUAL_ENV' not in os.environ:
-        os.environ['VIRTUAL_ENV'] = '/'
+    if 'VIRTUAL_ENV' in os.environ:
+        cmd = ['%s/usr/bin/depanneur' % os.environ['VIRTUAL_ENV']]
+    else:
+        cmd = ['depanneur']
 
-
-    cmd = ['%s/usr/bin/depanneur' % os.environ['VIRTUAL_ENV']]
     cmd += ['--arch=%s' % buildarch]
 
     if opts.clean:
