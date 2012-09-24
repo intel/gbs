@@ -24,10 +24,12 @@ import subprocess
 import tempfile
 import shutil
 import pwd
+import re
 
 from gitbuildsys import msger, utils, runner, errors
 from gitbuildsys.conf import configmgr
 from gitbuildsys.safe_url import SafeURL
+from gitbuildsys.cmd_export import transform_var_format_from_shell_to_python
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
@@ -59,14 +61,14 @@ SUPPORTEDARCHS = [
             'armv7l',
           ]
 
+USERID = pwd.getpwuid(os.getuid())[0]
+TMPDIR = os.path.join(configmgr.get('tmpdir', 'general'), '%s-gbs' % USERID)
+
 def prepare_repos_and_build_conf(args, arch):
     '''generate repos and build conf options for depanneur'''
 
     cmd_opts = []
-    userid     = pwd.getpwuid(os.getuid())[0]
-    tmpdir     = os.path.join(configmgr.get('tmpdir', 'general'),
-                              '%s-gbs' % userid)
-    cache = utils.Temp(prefix=os.path.join(tmpdir, 'gbscache'),
+    cache = utils.Temp(prefix=os.path.join(TMPDIR, 'gbscache'),
                        directory=True)
     cachedir  = cache.path
     if not os.path.exists(cachedir):
@@ -107,8 +109,8 @@ def prepare_repos_and_build_conf(args, arch):
                         'use snapshot repo or specify build config using '
                         '-D option')
         else:
-            shutil.copy(repoparser.buildconf, tmpdir)
-            distconf = os.path.join(tmpdir, os.path.basename(\
+            shutil.copy(repoparser.buildconf, TMPDIR)
+            distconf = os.path.join(TMPDIR, os.path.basename(\
                                     repoparser.buildconf))
             msger.info('build conf has been downloaded at:\n      %s' \
                        % distconf)
@@ -293,11 +295,20 @@ def main(args):
         msger.error('arch %s not supported, supported archs are: %s ' % \
                    (buildarch, ','.join(SUPPORTEDARCHS)))
 
-    build_root = os.path.expanduser('~/GBS-ROOT/')
-    if 'TIZEN_BUILD_ROOT' in os.environ:
-        build_root = os.environ['TIZEN_BUILD_ROOT']
+    profile = configmgr.get_current_profile()
     if args.buildroot:
         build_root = args.buildroot
+    elif 'TIZEN_BUILD_ROOT' in os.environ:
+        build_root = os.environ['TIZEN_BUILD_ROOT']
+    elif profile.buildroot:
+        build_root = profile.buildroot
+    else:
+        build_root = configmgr.get('buildroot', 'general')
+    build_root = os.path.expanduser(build_root)
+    build_root = transform_var_format_from_shell_to_python(build_root)
+    sanitized_profile_name = re.sub("[^a-zA-Z0-9:._-]", "_", profile.name)
+    build_root = build_root % {'tmpdir': TMPDIR,
+                               'profile': sanitized_profile_name}
     os.environ['TIZEN_BUILD_ROOT'] = build_root
 
     # get virtual env from system env first

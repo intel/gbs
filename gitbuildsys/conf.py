@@ -188,6 +188,7 @@ class ConfigMgr(object):
                 'upstream_branch': 'upstream',
                 'upstream_tag': 'upstream/${upstreamversion}',
                 'squash_patches_until': '',
+                'buildroot':    '~/GBS-ROOT/',
             },
     }
 
@@ -463,6 +464,7 @@ class Profile(object):
         self.common_password = password
         self.repos = []
         self.obs = None
+        self.buildroot = None
 
     def add_repo(self, repoconf):
         '''add a repo to repo list of the profile'''
@@ -482,6 +484,8 @@ class Profile(object):
         if self.common_password:
             parser.set(self.name, 'passwdx',
                        encode_passwd(self.common_password))
+        if self.buildroot:
+            parser.set(self.name, 'buildroot', self.buildroot)
 
         if self.obs:
             parser.set(self.name, 'obs', self.obs.name)
@@ -592,6 +596,8 @@ class BizConfigManager(ConfigMgr):
                 repoconf = RepoConf(profile, repo,
                                     self._get_url_options(repo))
                 profile.add_repo(repoconf)
+
+        profile.buildroot = self.get_optional_item(name, 'buildroot')
 
         return profile
 
