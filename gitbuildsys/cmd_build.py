@@ -353,7 +353,8 @@ def do(opts, args):
         cmd += ['--squash-patches-until=%s' % opts.squash_patches_until]
 
     msger.debug("running command: %s" % ' '.join(cmd))
-    if subprocess.call(cmd):
+    retcode = os.system(' '.join(cmd))
+    if retcode != 0:
         msger.error('rpmbuild fails')
     else:
         dist = [opt[len('--dist='):] for opt in cmd \
