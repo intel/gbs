@@ -16,8 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-"""Implementation of subcmd: submit
-"""
+"""Implementation of subcmd: submit"""
 
 import os
 import time
@@ -27,31 +26,25 @@ from gitbuildsys import msger, errors
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
 
-def do(opts, args):
+def main(args):
+    """gbs submit entry point."""
 
-    workdir = os.getcwd()
-    if len(args) > 1:
-        msger.error('only one work directory can be specified in args.')
-    if len(args) == 1:
-        workdir = os.path.abspath(args[0])
-
-    if opts.msg is None:
-        raise errors.Usage('message for tag must be specified with -m option')
+    workdir = args.gitdir
 
     try:
         repo = RpmGitRepository(workdir)
-        commit = repo.rev_parse(opts.commit)
-        if opts.target:
-            target_branch = opts.target
+        commit = repo.rev_parse(args.commit)
+        if args.target:
+            target_branch = args.target
         else:
             target_branch = repo.get_branch()
     except GitRepositoryError, err:
         msger.error(str(err))
 
-    if not opts.target:
+    if not args.target:
         try:
             upstream = repo.get_upstream_branch(target_branch)
-            if upstream and upstream.startswith(opts.remote):
+            if upstream and upstream.startswith(args.remote):
                 target_branch = os.path.basename(upstream)
             else:
                 msger.warning('can\'t find upstream branch for current branch '\
@@ -67,14 +60,14 @@ def do(opts, args):
         tagname = 'submit/%s/%s' % (target_branch, time.strftime( \
                                     '%Y%m%d.%H%M%S', time.gmtime()))
         msger.info('creating tag: %s' % tagname)
-        repo.create_tag(tagname, msg=opts.msg, commit=commit, sign=opts.sign,
-                                                 keyid=opts.user_key)
+        repo.create_tag(tagname, msg=args.msg, commit=commit, sign=args.sign,
+                                                 keyid=args.user_key)
     except GitRepositoryError, err:
         msger.error('failed to create tag %s: %s ' % (tagname, str(err)))
 
     try:
         msger.info('pushing tag to remote server')
-        repo.push_tag(opts.remote, tagname)
+        repo.push_tag(args.remote, tagname)
     except GitRepositoryError, err:
         repo.delete_tag(tagname)
         msger.error('failed to push tag %s :%s' % (tagname, str(err)))

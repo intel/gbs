@@ -23,7 +23,7 @@ import imp
 
 from nose.tools import eq_
 
-GBS = imp.load_source("gbs", "./tools/gbs").Gbs().main
+GBS = imp.load_source("gbs", "./tools/gbs").main
 
 class TestHelp(unittest.TestCase):
     """Test help output of gbs commands"""
@@ -31,16 +31,20 @@ class TestHelp(unittest.TestCase):
     @staticmethod
     def test_subcommand_help():
         """Test running gbs help with all possible subcommands."""
-        for sub in [ "build", "lb", "remotebuild", "rb", "changelog",
+        for sub in [ "build", "lb", "remotebuild", "rb", "changelog", "ch",
                      "submit", "sr", "export", "ex", "import", "im",
-                     "chroot"]:
+                     "chroot", "chr"]:
 
-            eq_(GBS(argv=["gbs", "help", sub]), None)
-            eq_(GBS(argv=["gbs", sub, "--help"]), 0)
+            try:
+                print '>>>sub', sub
+                GBS(argv=["gbs", sub, "--help"])
+            except SystemExit, err:
+                eq_(err.code, 0)
 
     @staticmethod
     def test_help():
         """Test running gbs --help and gbs help."""
-        eq_(GBS(argv=["gbs", "--help"]), 0)        
-        eq_(GBS(argv=["gbs", "help"]), None)
-
+        try:
+            GBS(argv=["gbs", "--help"])
+        except SystemExit, err:
+            eq_(err.code, 0)

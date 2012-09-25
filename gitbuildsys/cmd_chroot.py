@@ -21,21 +21,20 @@
 import os
 import subprocess
 
-from gitbuildsys import msger, errors
+from gitbuildsys import msger
 
-def do(opts, args):
+def main(args):
+    """gbs chroot entry point."""
 
-    if len(args) != 1:
-        raise errors.Usage('no build root directory specified')
+    build_root = args.buildroot
 
-    build_root = os.path.abspath(args[0])
     running_lock = '%s/not-ready' % build_root
-    if os.path.exists(running_lock) or not os.path.exists(build_root):
+    if os.path.exists(running_lock):
         msger.error('build root %s is not ready' % build_root)
 
     msger.info('chroot %s' % build_root)
     user = 'abuild'
-    if opts.root:
+    if args.root:
         user = 'root'
     cmd = ['sudo', 'chroot', build_root, 'su', user]
 

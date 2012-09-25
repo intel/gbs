@@ -32,7 +32,7 @@ from gbp.git.repository import GitRepository
 
 from gitbuildsys import cmd_changelog
 
-GBS = imp.load_source("gbs", "./tools/gbs").Gbs().main
+GBS = imp.load_source("gbs", "./tools/gbs").main
 ENV = {}
 
 def setup_module():

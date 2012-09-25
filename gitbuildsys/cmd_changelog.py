@@ -79,10 +79,11 @@ def make_log_entries(commits, git_repo):
     return entries
 
 
-def do(opts, _args):
+def main(args):
+    """gbs changelog entry point."""
 
     try:
-        repo = RpmGitRepository('.')
+        repo = RpmGitRepository(args.gitdir)
     except GitRepositoryError, err:
         msger.error(str(err))
 
@@ -103,9 +104,9 @@ def do(opts, _args):
         else:
             msger.error("Found no changes nor spec files under packaging dir")
 
-    # get the commit start from the opts.since
-    if opts.since:
-        since = opts.since
+    # get the commit start from the args.since
+    if args.since:
+        since = args.since
     else:
         since = get_latest_rev(fn_changes)
 
@@ -114,8 +115,8 @@ def do(opts, _args):
         try:
             commitid_since = repo.rev_parse(since)
         except GitRepositoryError:
-            if opts.since:
-                msger.error("Invalid commit: %s" % (opts.since))
+            if args.since:
+                msger.error("Invalid commit: %s" % (since))
             else:
                 msger.error("Can't find last commit ID in the log, "\
                             "please specify it by '--since'")
@@ -126,9 +127,9 @@ def do(opts, _args):
     if not commits:
         msger.error("Nothing found between %s and HEAD" % commitid_since)
 
-    if opts.message:
+    if args.message:
         author = repo.get_author_info()
-        lines = ["- %s" % line for line in opts.message.split(os.linesep) \
+        lines = ["- %s" % line for line in args.message.split(os.linesep) \
                                             if line.strip()]
         new_entries = ["* %s %s <%s> %s" % \
                            (datetime.datetime.now().strftime("%a %b %d %Y"),

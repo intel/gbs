@@ -59,7 +59,7 @@ SUPPORTEDARCHS = [
             'armv7l',
           ]
 
-def prepare_repos_and_build_conf(opts, arch):
+def prepare_repos_and_build_conf(args, arch):
     '''generate repos and build conf options for depanneur'''
 
     cmd_opts = []
@@ -73,13 +73,13 @@ def prepare_repos_and_build_conf(opts, arch):
         os.makedirs(cachedir)
     msger.info('generate repositories ...')
 
-    if opts.skip_conf_repos:
+    if args.skip_conf_repos:
         repos = []
     else:
         repos = [i.url for i in configmgr.get_current_profile().repos]
 
-    if opts.repositories:
-        for i in opts.repositories:
+    if args.repositories:
+        for i in args.repositories:
             try:
                 opt_repo = SafeURL(i)
             except ValueError, err:
@@ -97,8 +97,8 @@ def prepare_repos_and_build_conf(opts, arch):
                     'following repos:\n%s' % (arch, '\n'.join(repos)))
     cmd_opts += [('--repository=%s' % url.full) for url in repourls]
 
-    if opts.dist:
-        distconf = opts.dist
+    if args.dist:
+        distconf = args.dist
         if not os.path.exists(distconf):
             msger.error('specified build conf %s does not exists' % distconf)
     else:
@@ -129,32 +129,32 @@ def prepare_repos_and_build_conf(opts, arch):
 
     return cmd_opts
 
-def prepare_depanneur_opts(opts):
+def prepare_depanneur_opts(args):
     '''generate extra options for depanneur'''
 
     cmd_opts = []
-    if opts.exclude:
-        cmd_opts += ['--exclude=%s' % i for i in opts.exclude]
-    if opts.exclude_from_file:
-        cmd_opts += ['--exclude-from-file=%s' % opts.exclude_from_file]
-    if opts.overwrite:
+    if args.exclude:
+        cmd_opts += ['--exclude=%s' % i for i in args.exclude]
+    if args.exclude_from_file:
+        cmd_opts += ['--exclude-from-file=%s' % args.exclude_from_file]
+    if args.overwrite:
         cmd_opts += ['--overwrite']
-    if opts.clean_once:
+    if args.clean_once:
         cmd_opts += ['--clean-once']
-    if opts.debug:
+    if args.debug:
         cmd_opts += ['--debug']
-    if opts.incremental:
+    if args.incremental:
         cmd_opts += ['--incremental']
-    if opts.keepgoing:
+    if args.keepgoing:
         cmd_opts += ['--keepgoing']
-    if opts.no_configure:
+    if args.no_configure:
         cmd_opts += ['--no-configure']
-    if opts.binary_list:
-        if not os.path.exists(opts.binary_list):
+    if args.binary_list:
+        if not os.path.exists(args.binary_list):
             msger.error('specified binary list file %s not exists' %\
-                        opts.binary_list)
-        cmd_opts += ['--binary=%s' % opts.binary_list]
-    cmd_opts += ['--threads=%s' % opts.threads]
+                        args.binary_list)
+        cmd_opts += ['--binary=%s' % args.binary_list]
+    cmd_opts += ['--threads=%s' % args.threads]
 
     return cmd_opts
 
@@ -266,19 +266,13 @@ def setup_qemu_emulator():
     return qemu_emulator
 
 
-def do(opts, args):
-    """
-    Main of build module
-    """
-    workdir = os.getcwd()
-    if len(args) > 1:
-        msger.error('only one work directory can be specified in args.')
-    if len(args) == 1:
-        workdir = os.path.abspath(args[0])
+def main(args):
+    """gbs build entry point."""
 
-    if opts.commit and opts.include_all:
+    if args.commit and args.include_all:
         raise errors.Usage('--commit can\'t be specified together with '\
                            '--include-all')
+    workdir = args.gitdir
 
     try:
         repo = RpmGitRepository(workdir)
@@ -287,8 +281,8 @@ def do(opts, args):
         pass
 
     hostarch = get_hostarch()
-    if opts.arch:
-        buildarch = opts.arch
+    if args.arch:
+        buildarch = args.arch
     else:
         buildarch = hostarch
         msger.info('No arch specified, using system arch: %s' % hostarch)
@@ -302,8 +296,8 @@ def do(opts, args):
     build_root = os.path.expanduser('~/GBS-ROOT/')
     if 'TIZEN_BUILD_ROOT' in os.environ:
         build_root = os.environ['TIZEN_BUILD_ROOT']
-    if opts.buildroot:
-        build_root = opts.buildroot
+    if args.buildroot:
+        build_root = args.buildroot
     os.environ['TIZEN_BUILD_ROOT'] = build_root
 
     # get virtual env from system env first
@@ -314,19 +308,19 @@ def do(opts, args):
 
     cmd += ['--arch=%s' % buildarch]
 
-    if opts.clean:
+    if args.clean:
         cmd += ['--clean']
 
     # check & prepare repos and build conf
-    cmd += prepare_repos_and_build_conf(opts, buildarch)
+    cmd += prepare_repos_and_build_conf(args, buildarch)
 
     cmd += ['--path=%s' % workdir]
 
-    if opts.ccache:
+    if args.ccache:
         cmd += ['--ccache']
 
-    if opts.extra_packs:
-        cmd += ['--extra-packs=%s' % opts.extra_packs]
+    if args.extra_packs:
+        cmd += ['--extra-packs=%s' % args.extra_packs]
 
     if hostarch != buildarch and buildarch in CHANGE_PERSONALITY:
         cmd = [ CHANGE_PERSONALITY[buildarch] ] + cmd
@@ -338,19 +332,19 @@ def do(opts, args):
             msger.error('%s' % exc)
 
     # Extra depanneur special command options
-    cmd += prepare_depanneur_opts(opts)
+    cmd += prepare_depanneur_opts(args)
 
     # Extra options for gbs export
-    if opts.include_all:
+    if args.include_all:
         cmd += ['--include-all']
-    if opts.commit:
-        cmd += ['--commit=%s' % opts.commit]
-    if opts.upstream_branch:
-        cmd += ['--upstream-branch=%s' % opts.upstream_branch]
-    if opts.upstream_tag:
-        cmd += ['--upstream-tag=%s' % opts.upstream_tag]
-    if opts.squash_patches_until:
-        cmd += ['--squash-patches-until=%s' % opts.squash_patches_until]
+    if args.commit:
+        cmd += ['--commit=%s' % args.commit]
+    if args.upstream_branch:
+        cmd += ['--upstream-branch=%s' % args.upstream_branch]
+    if args.upstream_tag:
+        cmd += ['--upstream-tag=%s' % args.upstream_tag]
+    if args.squash_patches_until:
+        cmd += ['--squash-patches-until=%s' % args.squash_patches_until]
 
     msger.debug("running command: %s" % ' '.join(cmd))
     retcode = os.system(' '.join(cmd))

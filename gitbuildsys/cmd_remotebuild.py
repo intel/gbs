@@ -45,27 +45,11 @@ passx=%(passwdx)s
 """
 
 
-def do(opts, args):
-
-    obs_repo = None
-    obs_arch = None
-
-    if len(args) == 0:
-        workdir = os.getcwd()
-    elif len(args) == 1:
-        workdir = os.path.abspath(args[0])
-    elif len(args) == 2 and opts.buildlog:
-        workdir = os.getcwd()
-        obs_repo = args[0]
-        obs_arch = args[1]
-    elif len(args) == 3 and opts.buildlog:
-        workdir = os.path.abspath(args[0])
-        obs_repo = args[1]
-        obs_arch = args[2]
-    else:
-        msger.error('Invalid arguments, see gbs remotebuild -h for more info')
+def main(args):
+    """gbs remotebuild entry point."""
 
     obsconf = configmgr.get_current_profile().obs
+
     if not obsconf or not obsconf.url:
         msger.error('no obs api found, please add it to gbs conf and try again')
 
@@ -75,25 +59,32 @@ def do(opts, args):
         msger.error('empty user is not allowed for remotebuild, '
                     'please add user/passwd to gbs conf, and try again')
 
-    if opts.commit and opts.include_all:
-        raise errors.Usage('--commit can\'t be specified together with '\
+    if args.commit and args.include_all:
+        raise errors.Usage('--commit can\'t be specified together with '
                            '--include-all')
+
+    obs_repo = args.repository
+    obs_arch = args.arch
+
+    if args.buildlog and None in (obs_repo, obs_arch):
+        msger.error('please specify arch(-A) and repository(-R)')
+
+    workdir = args.gitdir
 
     try:
         repo = RpmGitRepository(workdir)
     except GitRepositoryError, err:
         msger.error(str(err))
 
-    if not (opts.buildlog or opts.status):
-        utils.git_status_checker(repo, opts)
-    workdir = repo.path
+    if not (args.buildlog or args.status):
+        utils.git_status_checker(repo, args)
 
     # TODO: check ./packaging dir at first
     specs = glob.glob('%s/packaging/*.spec' % workdir)
     if not specs:
         msger.error('no spec file found under /packaging sub-directory')
 
-    specfile = utils.guess_spec(workdir, opts.spec)
+    specfile = utils.guess_spec(workdir, args.spec)
     # get 'name' and 'version' from spec file
     try:
         spec = gbp.rpm.parse_spec(specfile)
@@ -104,16 +95,13 @@ def do(opts, args):
         msger.error('can\'t get correct name.')
     package = spec.name
 
-    if opts.base_obsprj is None:
-        base_prj = obsconf.base or 'Tizen:Main'
-    else:
-        base_prj = opts.base_obsprj
+    base_prj = args.base_obsprj
 
-    if opts.target_obsprj is None:
+    if args.target_obsprj is None:
         target_prj = obsconf.target or \
             "home:%s:gbs:%s" % (apiurl.user, base_prj)
     else:
-        target_prj = opts.target_obsprj
+        target_prj = args.target_obsprj
 
     api_passwd = apiurl.passwd if apiurl.passwd else ''
     # Create temporary oscrc
@@ -135,7 +123,7 @@ def do(opts, args):
     api = OSC(apiurl, oscrc=oscrcpath)
 
     try:
-        if opts.buildlog:
+        if args.buildlog:
             archlist = []
             status = api.get_results(target_prj, package)
 
@@ -158,7 +146,7 @@ def do(opts, args):
 
             return 0
 
-        if opts.status:
+        if args.status:
             results = []
 
             status = api.get_results(target_prj, package)
@@ -175,7 +163,7 @@ def do(opts, args):
         if not api.exists(target_prj):
             # FIXME: How do you know that a certain user does not have
             # permissions to create any project, anywhewre?
-            if opts.target_obsprj and \
+            if args.target_obsprj and \
                    not target_prj.startswith('home:%s:' % apiurl.user):
                 msger.error('no permission to create project %s, only sub '
                             'projects of home:%s are '
@@ -194,17 +182,17 @@ def do(opts, args):
         msger.error(str(err))
 
     with utils.Workdir(workdir):
-        if opts.commit:
-            commit = opts.commit
-        elif opts.include_all:
+        if args.commit:
+            commit = args.commit
+        elif args.include_all:
             commit = 'WC.UNTRACKED'
         else:
             commit = 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
-        export_sources(repo, commit, exportdir, relative_spec, opts)
+        export_sources(repo, commit, exportdir, relative_spec, args)
 
     try:
-        commit_msg = repo.get_commit_info(opts.commit or 'HEAD')['subject']
+        commit_msg = repo.get_commit_info(args.commit or 'HEAD')['subject']
     except GitRepositoryError, exc:
         msger.error('failed to get commit info: %s' % exc)
 

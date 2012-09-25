@@ -30,7 +30,7 @@ from nose.tools import eq_, raises
 
 from gbp.git.repository import GitRepository
 
-GBS = imp.load_source("gbs", "./tools/gbs").Gbs
+GBS = imp.load_source("gbs", "./tools/gbs").main
 
 def with_data(fname):
     """
@@ -66,7 +66,6 @@ class TestImport(unittest.TestCase):
 
     def __init__(self, method):
         super(TestImport, self).__init__(method)
-        self.gbs = GBS().main
 
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix="test-gbs-import-")
@@ -81,7 +80,7 @@ class TestImport(unittest.TestCase):
     @with_data("ail-0.2.29-2.3.src.rpm")
     def test_import_srcrpm(self, srcrpm):
         """Test importing from source rpm."""
-        eq_(self.gbs(argv=["gbs", "import", srcrpm]), None)
+        eq_(GBS(argv=["gbs", "import", srcrpm]), None)
         repo = GitRepository("./ail")
         eq_(repo.get_local_branches(), ['master', 'upstream'])
         eq_(repo.get_tags(), ['upstream/0.2.29', 'vendor/0.2.29-2.3'])
@@ -89,8 +88,8 @@ class TestImport(unittest.TestCase):
     @with_data("bluez_unpacked")
     def test_import_spec(self, srcdir):
         """Test importing from spec."""
-        eq_(self.gbs(argv=["gbs", "import",
-                           os.path.join(srcdir, 'bluez.spec')]), None)
+        eq_(GBS(argv=["gbs", "import",
+                      os.path.join(srcdir, 'bluez.spec')]), None)
         repo = GitRepository("./bluez")
         eq_(repo.get_local_branches(), ['master', 'upstream'])
         eq_(repo.get_tags(), ['upstream/4.87', 'vendor/4.87-1'])
@@ -103,7 +102,7 @@ class TestImport(unittest.TestCase):
         # Create empty git repo
         repo = GitRepository.create("./repo_dir")
         os.chdir(repo.path)
-        eq_(self.gbs(argv=["gbs", "import", srcrpm]), None)
+        eq_(GBS(argv=["gbs", "import", srcrpm]), None)
         eq_(repo.get_local_branches(), ['master', 'upstream'])
         eq_(repo.get_tags(), ['upstream/0.2.29', 'vendor/0.2.29-2.5'])
 
@@ -112,9 +111,9 @@ class TestImport(unittest.TestCase):
     @with_data("app-core-1.2-19.3.src.rpm")
     def test_set_author_name_email(self, srcrpm):
         """Test --author-name and --author-email command line options."""
-        eq_(self.gbs(argv=["gbs", "import", "--author-name=test",
-                           "--author-email=test@otctools.jf.intel.com",
-                           srcrpm]), None)
+        eq_(GBS(argv=["gbs", "import", "--author-name=test",
+                      "--author-email=test@otctools.jf.intel.com",
+                      srcrpm]), None)
         repo = GitRepository("./app-core")
         eq_(repo.get_local_branches(), ['master', 'upstream'])
         eq_(repo.get_tags(), ['upstream/1.2', 'vendor/1.2-19.3'])
@@ -122,8 +121,8 @@ class TestImport(unittest.TestCase):
     @with_data("ail-0.2.29-2.3.src.rpm")
     def test_specify_upstream(self, srcrpm):
         """Test --upstream command line option."""
-        eq_(self.gbs(argv=["gbs", "import", "--upstream=upstream",
-                             srcrpm]), None)
+        eq_(GBS(argv=["gbs", "import", "--upstream=upstream",
+                      srcrpm]), None)
         repo = GitRepository("./ail")
         eq_(repo.get_local_branches(), ['master', 'upstream'])
         eq_(repo.get_tags(), ['upstream/0.2.29', 'vendor/0.2.29-2.3'])
@@ -132,31 +131,31 @@ class TestImport(unittest.TestCase):
     @with_data("bison-1.27.tar.gz")
     def test_is_not_git_repository(self, tarball):
         """Test raising exception when importing tarball outside of git."""
-        self.gbs(argv=["gbs", "import", tarball])
+        GBS(argv=["gbs", "import", tarball])
 
     @raises(SystemExit)
     @with_data("bad.src.rpm")
     def test_error_reading_pkg_header(self, srcrpm):
         """Test raising exception when importing from bad package."""
-        self.gbs(argv=["gbs", "import", srcrpm])
+        GBS(argv=["gbs", "import", srcrpm])
 
     @raises(SystemExit)
     @with_data("bad.spec")
     def test_cant_parse_specfile(self, spec):
         """Test raising exception when importing from non-parseable spec."""
-        self.gbs(argv=["gbs", "import", spec])
+        GBS(argv=["gbs", "import", spec])
 
     @raises(SystemExit)
     def test_missing_argument(self):
         """Test raising exception when running gbs without any arguments."""
-        self.gbs(argv=["gbs", "import"])
+        GBS(argv=["gbs", "import"])
 
     @raises(SystemExit)
     def test_too_many_arguments(self):
         """Test raising exception when running gbs with too many arguments."""
-        self.gbs(argv=["gbs", "import", "1", "2"])
+        GBS(argv=["gbs", "import", "1", "2"])
 
     @raises(SystemExit)
     def test_path_doesnt_exist(self):
         """Test raising exception when running gbs with not existing path."""
-        self.gbs(argv=["gbs", "import", "I don't exist!"])
+        GBS(argv=["gbs", "import", "I don't exist!"])

@@ -16,519 +16,352 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+"""Gbs - commandline tool for Tizen developers. Main module."""
+
 import sys
-import re
+import os
+
+from argparse import ArgumentParser
 
 from gitbuildsys import __version__
 from gitbuildsys import msger, errors
-from osc import cmdln
+from gitbuildsys.parsing import subparser, GbsHelpFormatter
 
-def handle_repository(option, opt_str, value, parser):
-    if not value:
-        raise errors.Usage("option %s: need value" % opt_str)
-    if value[0] == '-':
-        raise errors.Usage("option %s: invalid value %s" % (opt_str, value))
-    if getattr(parser.values, option.dest) is None:
-        setattr(parser.values, option.dest, [])
-    getattr(parser.values, option.dest).append(value)
-
-def handle_project(option, opt_str, value, parser):
-    if not value:
-        raise errors.Usage("option %s: need value" % opt_str)
-    if value[0] == '-':
-        raise errors.Usage("option %s: invalid project name %s, cannot " \
-                           "start with '-'" % (opt_str, value))
-    if not re.match(r'^(\w|:|\.|-)+$', value):
-        raise errors.Usage("option %s: invalid project name %s, only word " \
-                           "character, ':', '.' and '-' are supported" \
-                           % (opt_str, value))
-    setattr(parser.values, option.dest, value)
-
-class Gbs(cmdln.Cmdln):
-    """gbs - the command line tool for Tizen package developers
-
-    Usage: gbs [GLOBAL-OPTS] SUBCOMMAND [OPTS] [ARGS...]
-    Try 'gbs help SUBCOMAND' for help on a specific subcommand.
-
-    ${command_list}
-    global ${option_list}
-    ${help_list}
+@subparser
+def import_parser(parser):
+    """import spec file/source rpm/tar ball to git repository
+    Examples:
+      $ gbs import /path/to/specfile.spec
+      $ gbs import /path/to/package-version.src.rpm
+      $ gbs import /path/to/tarball.tar.gz
     """
 
-    name = 'gbs'
-    version = __version__
+    parser.add_argument('path', type=os.path.abspath,
+                        help='path to spec, srcrpm or tarball')
 
-    def get_optparser(self):
-        optparser = cmdln.CmdlnOptionParser(self, version=self.version)
-        optparser.add_option('-d', '--debug', action='store_true',
-                                              dest='debug',
-                                              help='print debug message')
-        optparser.add_option('-v', '--verbose', action='store_true',
-                                                dest='verbose',
-                                                help='verbose information')
-        optparser.add_option('-c', '--conf', dest='conf',
-                                             help='specify config file for gbs')
-        return optparser
+    parser.add_argument('--author-name', help='author name of git commit')
+    parser.add_argument('--author-email', help='author email of git commit')
+    parser.add_argument('--upstream_branch', default='upstream',
+                        help='specify upstream branch for new package version')
+    parser.add_argument('--no-merge', action='store_true',
+                         help='don\'t merge new upstream branch to master')
 
-    def postoptparse(self):
-        from gitbuildsys.conf import configmgr
-        if self.options.verbose:
-            msger.set_loglevel('verbose')
+    parser.set_defaults(alias="im")
+    return parser
 
-        if self.options.debug:
-            msger.set_loglevel('debug')
+@subparser
+def export_parser(parser):
+    """export files and prepare for build
+    Examples:
+      $ gbs export --spec packaging/my.spec --commit d64065c
+      $ gbs export --source-rpm -o /tmp/
+      $ gbs export --include-all
+    """
 
-        if self.options.conf:
-            configmgr.reset_from_conf(self.options.conf)
-    @cmdln.alias('sr')
-    @cmdln.option('-m', '--msg',
-                  default=None,
-                  dest='msg',
-                  help='specify tag message info')
-    @cmdln.option('-c', '--commit',
-                  default='HEAD',
-                  dest='commit',
-                  help='specify a commit ID to submit')
-    @cmdln.option('-s', '--sign',
-                  action='store_true',
-                  default=False,
-                  dest='sign',
-                  help='make a GPG-signed tag')
-    @cmdln.option('-u', '--user-key',
-                  default=None,
-                  dest='user_key',
-                  help='using the given key to make a GPG-signed tag')
-    @cmdln.option('-t', '--target',
-                  default=None,
-                  dest='target',
-                  help='specify target version to submit, eg: trunk.')
-    @cmdln.option('-r', '--remote',
-                  default='origin',
-                  dest='remote',
-                  help='specify gerrit project server, default value is '\
-                  'origin for example:\nssh://user@review.tizen.org:29418'\
-                  '/public/base/gcc')
-    def do_submit(self, _subcmd, opts, *args):
-        """${cmd_name}: submit tag to gerrit and trigger building in OBS
+    parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
+                        default=os.getcwd(),
+                        help='path to git repository')
 
-        Usage:
-            gbs submit -m <message for tag> [options]
+    parser.add_argument('-o', '--outdir', help='output directory')
+    parser.add_argument('--spec', help='specify a spec file to use')
+    parser.add_argument('-c', '--commit', help='specify a commit ID to export')
+    parser.add_argument('--include-all', action='store_true',
+                        help='uncommitted changes and untracked files '
+                        'would be included while generating tar ball')
+    parser.add_argument('--source-rpm', action='store_true',
+                        help='generate source rpm')
+    parser.add_argument('--upstream-branch', help='upstream branch')
+    parser.add_argument('--upstream-tag',
+                        help="upstream tag format, '${upstreamversion}' is "
+                        'expanded to the version in the spec file. '
+                        "E.g. 'v${upstreamversion}'")
+    parser.add_argument('--squash-patches-until',
+                         help='when generating patches, squash patches up '
+                         'to given commit-ish into one monolithic diff file. '
+                         'Format is the commit-ish optionally followed by a '
+                         'colon and diff filename base.')
 
-        Examples:
-            gbs submit -m 'release for 0.1'
-            gbs submit -c <commit_ID> -m 'release for 0.2'
-            gbs submit -m 'release for 0.3' -s
-            gbs submit -r ssh://user@review.tizen.org:29418/public/base/gcc\
- -m 'release for 0.4'
+    parser.set_defaults(alias="ex")
+    return parser
 
-        ${cmd_option_list}
-        """
+@subparser
+def build_parser(parser):
+    """local build package
+    Examples:
+      $ mkdir tizen-packages
+      $ cp package1 package2 package3 ... tizen-packages/
+      $ gbs build -A ia32 tizen-packages # build all packages from tizen-packages
+      $ cd tizen-packages/
+      $ gbs build -A ia32 # build all packages under current dir
+      $ gbs build -A ia32 --overwrite --include-all
+      $ gbs build -A i586 --threads=2
+      $ gbs build -A i586 --threads=2 --exclude=dlog --exclude=eglibc
+      $ gbs build -A i586 --threads=4 --binary-list=/path/to/pkgs.list
+      $ cd package1/
+      $ gbs build -A i586 --incremental # only support build one package
+    """
 
-        from gitbuildsys import cmd_submit as cmd
-        cmd.do(opts, args)
+    parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
+                        default=os.getcwd(),
+                        help='path to git repository')
 
-    @cmdln.alias('ex')
-    @cmdln.option('-o', '--outdir',
-                  default=None,
-                  dest='outdir',
-                  help='output directory')
-    @cmdln.option('--spec',
-                  default=None,
-                  dest='spec',
-                  help='specify a spec file to use')
-    @cmdln.option('-c', '--commit',
-                  default=None,
-                  dest='commit',
-                  help='specify a commit ID to export')
-    @cmdln.option('--include-all',
-                  action='store_true',
-                  default=False,
-                  dest='include_all',
-                  help='uncommitted changes and untracked files would be '\
-                       'included while generating tar ball')
-    @cmdln.option('--source-rpm',
-                  action='store_true',
-                  default=False,
-                  dest='source_rpm',
-                  help='generate source rpm')
-    @cmdln.option('--upstream-branch',
-                  default=None,
-                  dest='upstream_branch',
-                  help='upstream branch')
-    @cmdln.option('--upstream-tag',
-                  default=None,
-                  dest='upstream_tag',
-                  help="upstream tag format, '${upstreamversion}' is "\
-                       "expanded to the version in the spec file. "\
-                       "E.g. 'v${upstreamversion}'")
-    @cmdln.option('--squash-patches-until',
-                  default=None,
-                  dest='squash_patches_until',
-                  help="when generating patches, squash patches up to given "\
-                       "commit-ish into one monolithic diff file. Format is "\
-                       "the commit-ish optionally followed by a colon and "\
-                       "diff filename base.")
-    def do_export(self, _subcmd, opts, *args):
-        """${cmd_name}: export files and prepare for build
-
-        Usage:
-            gbs export
-
-        ${cmd_option_list}
-        """
-
-        from gitbuildsys import cmd_export as cmd
-        cmd.do(opts, args)
-
-    @cmdln.alias('lb')
-    @cmdln.option('-D', '--dist',
-                  default=None,
-                  dest='dist',
-                  help='specify distribution configuration file, which should ' \
-                       'be a full path')
-    @cmdln.option('-R', '--repository',
-                  action="callback",
-                  default=None,
-                  type='string',
-                  dest='repositories',
-                  callback=handle_repository,
-                  help='specify package repositories, only rpm-md format ' \
-                       'is supported')
-    @cmdln.option('-B', '--buildroot',
-                  default=None,
-                  dest='buildroot',
-                  help='specify build root to setup chroot environment. '\
-                       'By default, ~/GBS-ROOT/ will be used, and if no ' \
-                       '-B option, but TIZEN_BUILD_ROOT env exists, then '\
-                       '${TIZEN_BUILD_ROOT} will used as build root')
-    @cmdln.option('-A', '--arch',
-                  default=None,
-                  dest='arch',
-                  help='build target arch ')
-    @cmdln.option('-C', '--clean',
-                  action='store_true',
-                  default=False,
-                  dest='clean',
-                  help='delete old build root before initialization')
-    @cmdln.option('--ccache',
-                  action="store_true",
-                  default=False,
-                  dest='ccache',
-                  help='use ccache to speed up rebuilds')
-    @cmdln.option('--skip-conf-repos',
-                  action="store_true",
-                  default=False,
-                  dest='skip_conf_repos',
-                  help='skip repositories mentioned in config file')
-    @cmdln.option('-c', '--commit',
-                  default=None,
-                  dest='commit',
-                  help='specify a commit ID to build')
-    @cmdln.option('--spec',
-                  default=None,
-                  dest='spec',
-                  help='specify a spec file to use')
-    @cmdln.option('--extra-packs',
-                  default=None,
-                  dest='extra_packs',
-                  help='specify extra packages to install to build root '\
-                       'multiple packages can be separated by comma')
-    @cmdln.option('--include-all',
-                  action='store_true',
-                  default=False,
-                  dest='include_all',
-                  help='uncommitted changes and untracked files would be '\
-                       'included while generating tar ball')
-    @cmdln.option('--upstream-branch',
-                  default=None,
-                  dest='upstream_branch',
-                  help='upstream branch')
-    @cmdln.option('--upstream-tag',
-                  default=None,
-                  dest='upstream_tag',
-                  help="upstream tag format, '${upstreamversion}' is "\
-                       "expanded to the version in the spec file. "\
-                       "E.g. 'v${upstreamversion}'")
-    @cmdln.option('--squash-patches-until',
-                  default=None,
-                  dest='squash_patches_until',
-                  help="when generating patches, squash patches up to given "\
-                       "commit-ish into one monolithic diff file. Format is "\
-                       "the commit-ish optionally followed by a colon and "\
-                       "diff filename base.")
+    parser.add_argument('-D', '--dist',
+                        help='specify distribution configuration file, '
+                        'which should be a full path')
+    parser.add_argument('-R', '--repository', dest='repositories',
+                        action="append", help='specify package repositories, '
+                        'only rpm-md format is supported')
+    parser.add_argument('-B', '--buildroot',
+                        help='specify build root to setup chroot environment. '
+                        'By default, ~/GBS-ROOT/ will be used, and if no '
+                        '-B option, but TIZEN_BUILD_ROOT env exists, then '
+                        '${TIZEN_BUILD_ROOT} will used as build root')
+    parser.add_argument('-A', '--arch', help='build target arch ')
+    parser.add_argument('-C', '--clean', action='store_true',
+                        help='delete old build root before initialization')
+    parser.add_argument('--ccache', action="store_true",
+                        help='use ccache to speed up rebuilds')
+    parser.add_argument('--skip-conf-repos', action="store_true",
+                        help='skip repositories mentioned in config file')
+    parser.add_argument('-c', '--commit', help='specify a commit ID to build')
+    parser.add_argument('--spec', help='specify a spec file to use')
+    parser.add_argument('--extra-packs',
+                        help='specify extra packages to install to build root '
+                        'multiple packages can be separated by comma')
+    parser.add_argument('--include-all', action='store_true',
+                        help='uncommitted changes and untracked files would be '
+                        'included while generating tar ball')
+    parser.add_argument('--upstream-branch', help='upstream branch')
+    parser.add_argument('--upstream-tag',
+                        help="upstream tag format, '${upstreamversion}' is "
+                       "expanded to the version in the spec file. "
+                        "E.g. 'v${upstreamversion}'")
+    parser.add_argument('--squash-patches-until',
+                        help='when generating patches, squash patches up '
+                        'to given commit-ish into one monolithic diff file. '
+                        'Format is the commit-ish optionally followed by a '
+                        'colon and diff filename base.')
 
     # depanneur special options
-    @cmdln.option('--clean-once',
-                  action='store_true',
-                  default=False,
-                  dest='clean_once',
-                  help='clean the build environment only once when you start '\
-                       'building multiple packages, after that use existing '\
-                       'environment for all packages.')
-    @cmdln.option('--overwrite',
-                  action='store_true',
-                  default=False,
-                  dest='overwrite',
-                  help='overwrite existing binaries and build them anyway')
-    @cmdln.option('--incremental',
-                  action='store_true',
-                  default=False,
-                  dest='incremental',
-                  help='build a package from the local git tree incremental.' \
-                       'If the build fails, changes can be done directly to ' \
-                       'the source and build can continue from where it ' \
-                       'stopped')
-    @cmdln.option('--debug',
-                  action='store_true',
-                  default=False,
-                  dest='debug',
-                  help='debug output')
-    @cmdln.option('--binary-list',
-                  default=None,
-                  dest='binary_list',
-                  help='specify a binary list file. Packages listed in '\
-                       'this file will be selected to be built. The format '\
-                       'of binary-list file is one package for one line, '\
+    parser.add_argument('--clean-once', action='store_true',
+                        help='clean the build environment only once when you '
+                        'start building multiple packages, after that use '
+                        'existing environment for all packages.')
+    parser.add_argument('--overwrite', action='store_true',
+                        help='overwrite existing binaries and build '
+                        'them anyway')
+    parser.add_argument('--incremental', action='store_true',
+                       help='build a package from the local git tree '
+                        'incremental. If the build fails, changes can be done '
+                        'directly to the source and build can continue from '
+                        'where it stopped')
+    parser.add_argument('--debug', action='store_true', help='debug output')
+    parser.add_argument('--binary-list',
+                        help='specify a binary list file. Packages listed in '
+                       'this file will be selected to be built. The format '
+                       'of binary-list file is one package for one line, '
                        'and only binary RPM name is accepted')
-    @cmdln.option('--threads',
-                  default=1,
-                  dest='threads',
-                  help='number of threads to build package in parallel')
-    @cmdln.option('--exclude',
-                  action="append",
-                  default=None,
-                  type="string",
-                  dest='exclude',
-                  help='specify a package to be excluded to be built')
-    @cmdln.option('--exclude-from-file',
-                  default=None,
-                  dest='exclude_from_file',
-                  help='specify an exclude package list text file, the '\
-                       'format is one package in one line, and only binary '\
-                       'RPM package name is accepted. Packages listed in '\
-                       'this file will be skipped to be built.')
-    @cmdln.option('--keepgoing',
-                  action='store_true',
-                  default=False,
-                  dest='keepgoing',
-                  help='if a package build fails, do not abort and continue '\
-                       'building other packages in the queue')
-    @cmdln.option('--no-configure',
-                  action='store_true',
-                  default=False,
-                  dest='no_configure',
-                  help='this option disables running configure scripts and auto '\
-                       'generation of auto-tools to make incremental build ' \
-                       'possible. This requires the configure scripts in the '\
-                       'spec to be refereneced using the %configure, %reconfigre '\
-                       'and %autogen macros')
+    parser.add_argument('--threads', type=int, default=1,
+                        help='number of threads to build package in parallel')
+    parser.add_argument('--exclude', action="append",
+                        help='specify a package to be excluded to be built')
+    parser.add_argument('--exclude-from-file',
+                        help='specify an exclude package list text file, the '
+                        'format is one package in one line, and only binary '
+                        'RPM package name is accepted. Packages listed in '
+                        'this file will be skipped to be built.')
+    parser.add_argument('--keepgoing', action='store_true',
+                        help='if a package build fails, do not abort and '
+                        'continue building other packages in the queue')
+    parser.add_argument('--no-configure', action='store_true',
+                        help='this option disables running configure scripts '
+                        'and auto generation of auto-tools to make incremental '
+                        'build possible. This requires the configure scripts '
+                        'in the spec to be refereneced using the %%configure, '
+                        '%%reconfigre and %%autogen macros')
 
-    def do_build(self, _subcmd, opts, *args):
-        """${cmd_name}: local build package
+    parser.set_defaults(alias="lb")
+    return parser
 
-        Usage:
-            gbs build -R repository [options] [package git dir]
+@subparser
+def remotebuild_parser(parser):
+    """remote build package
+    Examples:
+      $ gbs remotebuild
+      $ gbs remotebuild -B Test
+      $ gbs remotebuild -B Test -T home:<userid>:gbs
+      $ gbs remotebuild <package git directory>
+    """
 
-            [package git dir] is optional, if not specified, current dir would
-            be used, and all packages in this dir would be scheduled to be built.
+    parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
+                        default=os.getcwd(),
+                        help='path to git repository')
 
-        Examples:
-            $ mkdir tizen-packages
-            $ cp package1 package2 package3 ... tizen-packages/
-            $ gbs build -A ia32 tizen-packages # build all packages under tizen-packages
-            $ cd tizen-packages/
-            $ gbs build -A ia32 # build all packages under current dir
-            $ gbs build -A ia32 --overwrite --include-all
-            $ gbs build -A i586 --threads=2
-            $ gbs build -A i586 --threads=2 --exclude=dlog --exclude=eglibc
-            $ gbs build -A i586 --threads=4 --binary-list=/path/to/pkgs.list
-            $ cd package1/
-            $ gbs build -A i586 --incremental # only support build one package
+    parser.add_argument('-T', '--target-obsprj',
+                        help='OBS project where package will be checked in '
+                        '(default is home:<userid>:gbs:Tizen:Main)')
+    parser.add_argument('-B', '--base-obsprj', default="Tizen:Main",
+                        help='OBS project to branch from')
+    parser.add_argument('--spec', help='specify a spec file to use')
+    parser.add_argument('-c', '--commit', help='specify a commit ID to build')
+    parser.add_argument('--buildlog', action='store_true',
+                        help='get buildlog from build sever')
+    parser.add_argument('--status', action='store_true',
+                        help='get build status from build server')
+    parser.add_argument('-R', '--repository',
+                        help='OBS repository for --buildlog')
+    parser.add_argument('-A', '--arch',
+                        help='OBS build architecture for --buildlog')
+    parser.add_argument('--include-all', action='store_true',
+                        help='uncommitted changes and untracked files will be '
+                        'included while generating tar ball')
+    parser.add_argument('--upstream-branch', help='upstream branch')
+    parser.add_argument('--upstream-tag',
+                        help="upstream tag format, '${upstreamversion}' is "
+                        "expanded to the version in the spec file. "
+                        "E.g. 'v${upstreamversion}'")
+    parser.add_argument('--squash-patches-until',
+                        help='when generating patches, squash patches up to '
+                        'given commit-ish into one monolithic diff file. '
+                        'Format is the commit-ish optionally followed by a '
+                        'colon and diff filename base.')
 
-        ${cmd_option_list}
-        """
+    parser.set_defaults(alias="rb")
+    return parser
 
-        from gitbuildsys import cmd_build as cmd
-        cmd.do(opts, args)
+@subparser
+def chroot_parser(parser):
+    """chroot to build root
+    Examples:
+      $ gbs chroot /var/tmp/mybuildroot
+      $ gbs chroot --root /var/tmp/mybuildroot
 
-    @cmdln.alias('ch')
-    @cmdln.option('-r', '--root',
-                  action='store_true',
-                  default=False,
-                  dest='root',
-                  help='chroot as root instead of abuild by default')
-    def do_chroot(self, subcmd, opts, *args):
-        """${cmd_name}: chroot to build root
+    Note: The default location of build root located at:
+    ~/GBS-ROOT/local/scratch.{arch}.*, which will be different
+    if -B option specified while running gbs build
+    """
 
-        Usage:
-            gbs chroot [options] <build root dir>
+    parser.add_argument('buildroot', type=os.path.abspath,
+                        help='path to build root')
 
-        Note: The default location of build root located at:
-        ~/GBS-ROOT/local/scratch.{arch}.*, which will be different
-        if -B option specified while running gbs build
+    parser.add_argument('-r', '--root', action='store_true',
+                        help='chroot as root instead of abuild by default')
 
-        ${cmd_option_list}
-        """
+    parser.set_defaults(alias="chr")
+    return parser
 
-        from gitbuildsys import cmd_chroot as cmd
-        cmd.do(opts, args)
+@subparser
+def changelog_parser(parser):
+    """update the changelog file with the git commit messages
+    Examples:
+      $ gbs changelog
+      $ gbs changelog --since=COMMIT_ID
+      $ gbs changelog -m 'new upstream release 0.0.1'
+    """
 
-    @cmdln.alias('rb')
-    @cmdln.option('-T', '--target-obsprj',
-                  action='callback',
-                  default=None,
-                  dest='target_obsprj',
-                  type='string',
-                  callback=handle_project,
-                  help='OBS project where package will be checked in ' \
-                       '(default is home:<userid>:gbs:Tizen:Main)')
-    @cmdln.option('-B', '--base-obsprj',
-                  action='callback',
-                  default=None,
-                  dest='base_obsprj',
-                  type='string',
-                  callback=handle_project,
-                  help='OBS project to branch from (default is Tizen:Main)')
-    @cmdln.option('--spec',
-                  default=None,
-                  dest='spec',
-                  help='specify a spec file to use')
-    @cmdln.option('-c', '--commit',
-                  default=None,
-                  dest='commit',
-                  help='specify a commit ID to build')
-    @cmdln.option('--buildlog',
-                  action='store_true',
-                  default=False,
-                  dest='buildlog',
-                  help='get buildlog from build sever')
-    @cmdln.option('--status',
-                  action='store_true',
-                  default=False,
-                  dest='status',
-                  help='get build status from build server')
-    @cmdln.option('--include-all',
-                  action='store_true',
-                  default=False,
-                  dest='include_all',
-                  help='uncommitted changes and untracked files will be '\
-                       'included while generating tar ball')
-    @cmdln.option('--upstream-branch',
-                  default=None,
-                  dest='upstream_branch',
-                  help='upstream branch')
-    @cmdln.option('--upstream-tag',
-                  default=None,
-                  dest='upstream_tag',
-                  help="upstream tag format, '${upstreamversion}' is "\
-                       "expanded to the version in the spec file. "\
-                       "E.g. 'v${upstreamversion}'")
-    @cmdln.option('--squash-patches-until',
-                  default=None,
-                  dest='squash_patches_until',
-                  help="when generating patches, squash patches up to given "\
-                       "commit-ish into one monolithic diff file. Format is "\
-                       "the commit-ish optionally followed by a colon and "\
-                       "diff filename base.")
-    def do_remotebuild(self, subcmd, opts, *args):
-        """${cmd_name}: remote build package
+    parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
+                        default=os.getcwd(),
+                        help='path to git repository')
 
-        Usage:
-            gbs remotebuild [options] [package git dir] \
-[--buildlog repo arch] [--status]
+    parser.add_argument('-s', '--since',
+                        help='commit to start from')
+    parser.add_argument('-m', '--message',
+                        help='use given message as the changelog entry')
+    parser.set_defaults(alias='ch')
+    return parser
 
-            [package git dir] is optional, if not specified, current dir would
-            be used.
+@subparser
+def submit_parser(parser):
+    """submit tag to gerrit and trigger building in OBS
+    Examples:
+      $ gbs submit -m 'release for 0.1'
+      $ gbs submit -c <commit_ID> -m 'release for 0.2'
+      $ gbs submit -m 'release for 0.3' -s
+      $ gbs submit -r ssh://user@review.tizen.org:29418/public/base/gcc -m 'release for 0.4'
+    """
 
-        Examples:
-          $ gbs remotebuild
-          $ gbs remotebuild -B Test
-          $ gbs remotebuild -B Test -T home:<userid>:gbs
-          $ gbs remotebuild <package git directory>
+    parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
+                        default=os.getcwd(),
+                        help='path to git repository')
 
-        ${cmd_option_list}
-        """
+    parser.add_argument('-m', '--msg', required=True,
+                        help='specify tag message info')
+    parser.add_argument('-c', '--commit', default='HEAD',
+                        help='specify a commit ID to submit')
+    parser.add_argument('-s', '--sign', action='store_true',
+                        help='make a GPG-signed tag')
+    parser.add_argument('-u', '--user-key',
+                        help='using the given key to make a GPG-signed tag')
+    parser.add_argument('-t', '--target',
+                        help='specify target version to submit, eg: trunk.')
+    parser.add_argument('-r', '--remote', default='origin',
+                        help='specify gerrit project server, default value is '
+                        'origin for example:\nssh://user@review.tizen.org:29418'
+                        '/public/base/gcc')
 
-        from gitbuildsys import cmd_remotebuild as cmd
-        cmd.do(opts, args)
+    parser.set_defaults(alias="sr")
+    return parser
 
+def main(argv):
+    """Script entry point."""
 
-    @cmdln.alias('im')
-    @cmdln.option('--author-name',
-                  default=None,
-                  dest='author_name',
-                  help='author name of git commit')
-    @cmdln.option('--author-email',
-                  default=None,
-                  dest='author_email',
-                  help='author email of git commit')
-    @cmdln.option('--upstream_branch',
-                  default='upstream',
-                  dest='upstream_branch',
-                  help='specify upstream branch for new version of package')
-    @cmdln.option('--no-merge',
-                  action='store_true',
-                  default=False,
-                  dest='no_merge',
-                  help='don\'t merge new upstream branch to master')
-    def do_import(self, subcmd, opts, *args):
-        """${cmd_name}: import spec file/source rpm/tar ball to git repository
+    # Create top level parser
+    epilog = "Try 'gbs SUBCOMAND --help' for help on a specific subcommand."
+    description = "gbs - the command line tool for Tizen package developers"
+    parser = ArgumentParser(description=description, epilog=epilog,
+                            formatter_class=GbsHelpFormatter)
 
-        Usage:
-            gbs import [options] specfile | source rpm | tar ball
+    parser.add_argument('-V', '--version', action='version',
+                        version='%(prog)s ' + __version__)
+    parser.add_argument('-c', '--conf', help='specify config file for gbs')
+    parser.add_argument('-d', '--debug', action='store_true',
+                        help='debug output')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='verbose output')
 
-        Examples:
-          $ gbs import /path/to/specfile/
-          $ gbs import /path/to/src.rpm
-          $ gbs import /path/to/tarball
+    # hacked by the request of cmdln lovers
+    parser.format_usage = parser.format_help
 
-        ${cmd_option_list}
-        """
+    # Create parsers for subcommands
+    subparsers = parser.add_subparsers(title='subcommands')
 
-        from gitbuildsys import cmd_import as cmd
-        cmd.do(opts, args)
+    # collect aliases
+    aliases = {}
+    for name, obj in globals().iteritems():
+        if name.endswith('_parser') and callable(obj):
+            aliases[obj(subparsers).get_default('alias')] = name.split('_')[0]
 
+    # replace aliases with real commands
+    positionals = [(i, arg) for i, arg in enumerate(argv[1:]) \
+                       if not arg.startswith('-')]
+    if positionals:
+        i, cmd = positionals[0]
+        if cmd in aliases:
+            argv[i+1] = aliases[cmd]
 
-    @cmdln.alias('ch')
-    @cmdln.option('-s', '--since',
-                  default=None,
-                  dest='since',
-                  help='commit to start from')
-    @cmdln.option('-m', '--message',
-                  default=None,
-                  dest='message',
-                  help='use given message as the changelog entry')
-    def do_changelog(self, _subcmd, opts, *args):
-        """${cmd_name}: update the changelog file with the git commit messages
+    # Parse arguments
+    args = parser.parse_args(argv[1:])
 
-        Usage:
-            gbs changelog [options]
+    # Set log level for --debug and --verbose
+    if args.verbose:
+        msger.set_loglevel('verbose')
 
-        Examples:
-          $ gbs changelog
-          $ gbs changelog --since=COMMIT_ID
-          $ gbs changelog -m 'new upstream release 0.0.1'
+    if args.debug:
+        msger.set_loglevel('debug')
 
-        ${cmd_option_list}
-        """
+    # Process configuration file if --conf is used
+    if args.conf:
+        from gitbuildsys.conf import configmgr
+        configmgr.reset_from_conf(args.conf)
 
-        from gitbuildsys import cmd_changelog as cmd
-        cmd.do(opts, args)
-
-    @cmdln.hide()
-    def do_man(self, argv):
-        """${cmd_name}: generates a man page
-
-        usage:
-            ${name} man
-        """
-        return cmdln.Cmdln.do_man(self, argv)
+    # Import target module and call 'main' from it
+    module = __import__("gitbuildsys.%s" % args.module, fromlist=[args.module])
+    return module.main(args)
 
 
 if __name__ == '__main__':
     try:
-        sys.exit(Gbs().main())
-
+        sys.exit(main(sys.argv))
     except KeyboardInterrupt:
         msger.error('\n^C caught, program aborted.')
 

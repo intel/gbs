@@ -24,7 +24,7 @@ import re
 import shutil
 import errno
 
-from gitbuildsys import msger, runner, utils, errors
+from gitbuildsys import msger, utils, errors
 from gitbuildsys.conf import configmgr
 
 from gbp.scripts.buildpackage_rpm import main as gbp_build
@@ -45,12 +45,12 @@ def mkdir_p(path):
         else:
             raise
 
-def is_native_pkg(repo, opts):
+def is_native_pkg(repo, args):
     """
     Determine if the package is "native"
     """
-    if opts.upstream_branch:
-        upstream_branch = opts.upstream_branch
+    if args.upstream_branch:
+        upstream_branch = args.upstream_branch
     else:
         upstream_branch = configmgr.get('upstream_branch', 'general')
     return not repo.has_branch(upstream_branch)
@@ -59,17 +59,17 @@ def transform_var_format_from_shell_to_python(whole):
     '''replace string like ${xxx} with %(xxx)s'''
     return re.sub(r'\$\{([^}]+)\}', r'%(\1)s', whole)
 
-def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
+def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
                            force_native=False):
     """
     Construct the cmdline argument list for git-buildpackage export
     """
-    if opts.upstream_branch:
-        upstream_branch = opts.upstream_branch
+    if args.upstream_branch:
+        upstream_branch = args.upstream_branch
     else:
         upstream_branch = configmgr.get('upstream_branch', 'general')
-    if opts.upstream_tag:
-        upstream_tag = opts.upstream_tag
+    if args.upstream_tag:
+        upstream_tag = args.upstream_tag
     else:
         upstream_tag = configmgr.get('upstream_tag', 'general')
         upstream_tag = transform_var_format_from_shell_to_python(upstream_tag)
@@ -77,13 +77,13 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
     msger.debug("Using upstream tag format: '%s'" % upstream_tag)
 
     # Get patch squashing option
-    if opts.squash_patches_until:
-        squash_patches_until = opts.squash_patches_until
+    if args.squash_patches_until:
+        squash_patches_until = args.squash_patches_until
     else:
         squash_patches_until = configmgr.get('squash_patches_until', 'general')
 
     # Now, start constructing the argument list
-    args = ["argv[0] placeholder",
+    argv = ["argv[0] placeholder",
             "--git-ignore-new",
             "--git-upstream-branch=upstream",
             "--git-export-dir=%s" % export_dir,
@@ -93,21 +93,21 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
             "--git-export=%s" % commit,
             "--git-upstream-branch=%s" % upstream_branch,
             "--git-upstream-tag=%s" % upstream_tag]
-    if force_native or is_native_pkg(repo, opts):
-        args.extend(["--git-no-patch-export",
+    if force_native or is_native_pkg(repo, args):
+        argv.extend(["--git-no-patch-export",
                      "--git-upstream-tree=%s" % commit])
     else:
-        args.extend(["--git-patch-export",
+        argv.extend(["--git-patch-export",
                      "--git-patch-export-compress=100k",
                      "--git-force-create",
                      "--git-patch-export-squash-until=%s" %
                             squash_patches_until,
                      "--git-patch-export-ignore-path=^packaging/.*"])
         if repo.has_branch("pristine-tar"):
-            args.extend(["--git-pristine-tar"])
+            argv.extend(["--git-pristine-tar"])
 
-    if opts.source_rpm:
-        args.extend(['--git-builder=rpmbuild',
+    if args.source_rpm:
+        argv.extend(['--git-builder=rpmbuild',
                      '--git-rpmbuild-builddir=.',
                      '--git-rpmbuild-builddir=.',
                      '--git-rpmbuild-rpmdir=.',
@@ -118,11 +118,11 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
                      '--short-circuit', '-bs',
                      ])
     else:
-        args.extend(["--git-builder=osc", "--git-export-only"])
+        argv.extend(["--git-builder=osc", "--git-export-only"])
 
-    return args
+    return argv
 
-def export_sources(repo, commit, export_dir, spec, opts):
+def export_sources(repo, commit, export_dir, spec, args):
     """
     Export packaging files using git-buildpackage
     """
@@ -130,10 +130,10 @@ def export_sources(repo, commit, export_dir, spec, opts):
                             directory=True)
 
     gbp_args = create_gbp_export_args(repo, commit, export_dir, tmp.path,
-                                      spec, opts)
+                                      spec, args)
     try:
         ret = gbp_build(gbp_args)
-        if ret == 2 and not is_native_pkg(repo, opts):
+        if ret == 2 and not is_native_pkg(repo, args):
             # Try falling back to old logic of one monolithic tarball
             msger.warning("Generating upstream tarball and/or generating "\
                           "patches failed. GBS tried this as you have "\
@@ -146,7 +146,7 @@ def export_sources(repo, commit, export_dir, spec, opts):
             msger.info("Falling back to the old method of generating one "\
                        "monolithic source archive")
             gbp_args = create_gbp_export_args(repo, commit, export_dir,
-                                              tmp.path, spec, opts,
+                                              tmp.path, spec, args,
                                               force_native=True)
             ret = gbp_build(gbp_args)
         if ret:
@@ -155,27 +155,20 @@ def export_sources(repo, commit, export_dir, spec, opts):
         msger.error("Repository error: %s" % excobj)
 
 
-def do(opts, args):
-    """
-    The main plugin call
-    """
-    workdir = os.getcwd()
+def main(args):
+    """gbs export entry point."""
 
-    if len(args) > 1:
-        msger.error('only one work directory can be specified in args.')
-    if len(args) == 1:
-        workdir = os.path.abspath(args[0])
-
-    if opts.commit and opts.include_all:
+    if args.commit and args.include_all:
         raise errors.Usage('--commit can\'t be specified together with '\
                            '--include-all')
 
+    workdir = args.gitdir
     try:
         repo = RpmGitRepository(workdir)
     except GitRepositoryError, err:
         msger.error(str(err))
 
-    utils.git_status_checker(repo, opts)
+    utils.git_status_checker(repo, args)
     workdir = repo.path
 
     if not os.path.exists("%s/packaging" % workdir):
@@ -183,11 +176,11 @@ def do(opts, args):
 
     # Only guess spec filename here, parse later when we have the correct
     # spec file at hand
-    specfile = utils.guess_spec(workdir, opts.spec)
+    specfile = utils.guess_spec(workdir, args.spec)
 
     outdir = "%s/packaging" % workdir
-    if opts.outdir:
-        outdir = opts.outdir
+    if args.outdir:
+        outdir = args.outdir
     mkdir_p(outdir)
     outdir = os.path.abspath(outdir)
     tmpdir     = configmgr.get('tmpdir', 'general')
@@ -196,14 +189,14 @@ def do(opts, args):
     export_dir = tempd.path
 
     with utils.Workdir(workdir):
-        if opts.commit:
-            commit = opts.commit
-        elif opts.include_all:
+        if args.commit:
+            commit = args.commit
+        elif args.include_all:
             commit = 'WC.UNTRACKED'
         else:
             commit = 'HEAD'
         relative_spec = specfile.replace('%s/' % workdir, '')
-        export_sources(repo, commit, export_dir, relative_spec, opts)
+        export_sources(repo, commit, export_dir, relative_spec, args)
 
     try:
         spec = rpm.parse_spec(os.path.join(export_dir,
@@ -218,7 +211,6 @@ def do(opts, args):
                                   spec.release)
         shutil.rmtree(outdir, ignore_errors=True)
         shutil.move(export_dir, outdir)
-
         msger.info('source rpm generated to:\n     %s/%s.src.rpm' % \
                    (outdir, os.path.basename(outdir)))
 

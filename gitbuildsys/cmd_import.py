@@ -25,31 +25,27 @@ from gitbuildsys import msger
 from gbp.scripts.import_srpm import main as gbp_import_srpm
 from gbp.scripts.import_orig_rpm import main as gbp_import_orig
 
-def do(opts, args):
+def main(args):
+    """gbs import entry point."""
 
-    if opts.author_name:
-        os.environ["GIT_AUTHOR_NAME"] = opts.author_name
-    if opts.author_email:
-        os.environ["GIT_AUTHOR_EMAIL"] = opts.author_email
+    if args.author_name:
+        os.environ["GIT_AUTHOR_NAME"] = args.author_name
+    if args.author_email:
+        os.environ["GIT_AUTHOR_EMAIL"] = args.author_email
 
-    if len(args) < 1:
-        msger.error('missing argument, please reference gbs import --help.')
-    if len(args) > 1:
-        msger.error('too many arguments! Please reference gbs import --help.')
-    if not os.path.exists(args[0]):
-        msger.error('%s not exist' % args[0])
+    path = args.path
 
     params = ["argv[0] placeholder", "--packaging-dir=packaging",
-              "--upstream-branch=%s" % opts.upstream_branch, args[0]]
+              "--upstream-branch=%s" % args.upstream_branch, path]
 
-    if args[0].endswith('.src.rpm') or args[0].endswith('.spec'):
+    if path.endswith('.src.rpm') or path.endswith('.spec'):
         params.append("--no-patch-import")
         if gbp_import_srpm(params):
-            msger.error("Failed to import %s" % args[0])
+            msger.error("Failed to import %s" % path)
     else:
-        if opts.no_merge:
+        if args.no_merge:
             params.insert(1, '--no-merge')
         if gbp_import_orig(params):
-            msger.error('Failed to import %s' % args[0])
+            msger.error('Failed to import %s' % path)
 
     msger.info('done.')
