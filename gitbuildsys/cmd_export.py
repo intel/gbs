@@ -83,8 +83,8 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
         squash_patches_until = configmgr.get('squash_patches_until', 'general')
 
     # Now, start constructing the argument list
-    args = ["argv[0] placeholder", "--git-export-only",
-            "--git-ignore-new", "--git-builder=osc",
+    args = ["argv[0] placeholder",
+            "--git-ignore-new",
             "--git-upstream-branch=upstream",
             "--git-export-dir=%s" % export_dir,
             "--git-tmp-dir=%s" % tmp_dir,
@@ -105,6 +105,20 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, opts,
                      "--git-patch-export-ignore-path=^packaging/.*"])
         if repo.has_branch("pristine-tar"):
             args.extend(["--git-pristine-tar"])
+
+    if opts.source_rpm:
+        args.extend(['--git-builder=rpmbuild',
+                     '--git-rpmbuild-builddir=.',
+                     '--git-rpmbuild-builddir=.',
+                     '--git-rpmbuild-rpmdir=.',
+                     '--git-rpmbuild-sourcedir=.',
+                     '--git-rpmbuild-specdir=.',
+                     '--git-rpmbuild-srpmdir=.',
+                     '--git-rpmbuild-buildrootdir=.',
+                     '--short-circuit', '-bs',
+                     ])
+    else:
+        args.extend(["--git-builder=osc", "--git-export-only"])
 
     return args
 
@@ -205,19 +219,6 @@ def do(opts, args):
         shutil.rmtree(outdir, ignore_errors=True)
         shutil.move(export_dir, outdir)
 
-    if opts.source_rpm:
-        cmd = ['rpmbuild',
-               '--short-circuit', '-bs',
-               '--define "_topdir %s"' % outdir,
-               '--define "_builddir %_topdir"',
-               '--define "_buildrootdir %_topdir"',
-               '--define "_rpmdir %_topdir"',
-               '--define "_sourcedir %_topdir"',
-               '--define "_specdir %_topdir"',
-               '--define "_srcrpmdir %_topdir"',
-               specfile
-              ]
-        runner.quiet(' '.join(cmd))
         msger.info('source rpm generated to:\n     %s/%s.src.rpm' % \
                    (outdir, os.path.basename(outdir)))
 
