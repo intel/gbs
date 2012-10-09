@@ -106,7 +106,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
         if repo.has_branch("pristine-tar"):
             argv.extend(["--git-pristine-tar"])
 
-    if args.source_rpm:
+    if 'source_rpm' in args and args.source_rpm:
         argv.extend(['--git-builder=rpmbuild',
                      '--git-rpmbuild-builddir=.',
                      '--git-rpmbuild-builddir=.',
