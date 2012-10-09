@@ -263,6 +263,7 @@ def changelog_parser(parser):
                         default=os.getcwd(),
                         help='path to git repository')
 
+    parser.add_argument('--spec', help='specify a spec file to use')
     parser.add_argument('-s', '--since',
                         help='commit to start from')
     parser.add_argument('-m', '--message',
