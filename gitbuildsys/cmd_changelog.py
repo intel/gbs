@@ -98,11 +98,8 @@ def main(args):
                            % (changes_file_list[0]))
     else:
         # Create .changes file with the same name as a spec
-        spec_file_list = glob.glob("%s/packaging/*.spec" % project_root_dir)
-        if spec_file_list:
-            fn_changes = os.path.splitext(spec_file_list[0])[0] + ".changes"
-        else:
-            msger.error("Found no changes nor spec files under packaging dir")
+        specfile = utils.guess_spec(project_root_dir, args.spec)
+        fn_changes = os.path.splitext(specfile)[0] + ".changes"
 
     # get the commit start from the args.since
     if args.since:
