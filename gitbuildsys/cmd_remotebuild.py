@@ -69,12 +69,12 @@ def main(args):
     if args.buildlog and None in (obs_repo, obs_arch):
         msger.error('please specify arch(-A) and repository(-R)')
 
-    workdir = args.gitdir
-
     try:
-        repo = RpmGitRepository(workdir)
+        repo = RpmGitRepository(args.gitdir)
     except GitRepositoryError, err:
         msger.error(str(err))
+
+    workdir = repo.path
 
     if not (args.buildlog or args.status):
         utils.git_status_checker(repo, args)
