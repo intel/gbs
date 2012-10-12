@@ -31,6 +31,9 @@ def main(args):
 
     workdir = args.gitdir
 
+    if not args.msg:
+        msger.error("argument for -m option can't be empty")
+
     try:
         repo = RpmGitRepository(workdir)
         commit = repo.rev_parse(args.commit)
