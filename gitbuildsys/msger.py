@@ -44,6 +44,7 @@ INFO_COLOR = 32 # green
 WARN_COLOR = 33 # yellow
 ERR_COLOR  = 31 # red
 ASK_COLOR  = 34 # blue
+DEBUG_COLOR = 35 # Magenta
 NO_COLOR = 0
 
 # save the timezone info at import time
@@ -307,7 +308,7 @@ def warning(msg):
 
 def debug(msg):
     head, msg = _split_msg('debug', msg)
-    _color_perror(head, ERR_COLOR, msg, level = 'debug')
+    _color_perror(head, DEBUG_COLOR, msg, level = 'debug')
 
 def error(msg):
     head, msg = _split_msg('error', msg)
