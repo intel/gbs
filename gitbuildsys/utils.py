@@ -144,18 +144,8 @@ class TempCopy(object):
             os.unlink(self.name)
 
 
-class AuthFailed(errors.UrlError):
-    'authenticated or authorization failed: 401, 403'
-
 class PageNotFound(errors.UrlError):
     'page not found error: 404'
-
-class CallbackAborted(errors.UrlError):
-    'break when fetching url'
-
-class TimeoutError(errors.UrlError):
-    'timeout when fetching url'
-
 
 class URLGrabber(object):
     '''grab an url and save to local file'''
@@ -213,15 +203,18 @@ class URLGrabber(object):
             http_code = curl.getinfo(pycurl.HTTP_CODE)
 
             if errcode == pycurl.E_OPERATION_TIMEOUTED:
-                raise TimeoutError(err)
+                raise errors.UrlError("connect timeout to %s, maybe it's "
+                                      "caused by proxy settings, please "
+                                      "check." % curl.url)
             elif errcode == pycurl.E_ABORTED_BY_CALLBACK:
-                raise CallbackAborted(err)
+                raise KeyboardInterrupt(err)
             elif http_code in (401, 403):
-                raise AuthFailed(err)
+                raise errors.UrlError('authenticate failed on: %s' % curl.url)
             elif http_code == 404:
                 raise PageNotFound(err)
             else:
-                raise errors.UrlError('URL error %s: "%s"' % (errcode, errmsg))
+                raise errors.UrlError('URL error on %s: (%s: "%s")' %
+                                     (curl.url, errcode, errmsg))
         finally:
             signal.signal(signal.SIGINT, original_handler)
 
@@ -360,6 +353,8 @@ class RepoParser(object):
                     return
 
                 latest_repo_url = repo.pathjoin('../../../../')
+                if latest_repo_url.find('../') >= 0:
+                    return
                 meta = self._fetch_build_meta(latest_repo_url)
                 if meta:
                     self._fetch_build_conf(latest_repo_url, meta)
@@ -373,15 +368,7 @@ class RepoParser(object):
                 self._fetch_build_conf(repo, meta)
 
         for repo in remotes:
-            try:
-                deal_with_one_repo(repo)
-            except AuthFailed, err:
-                msger.warning('authenticate failed, ignore %s' % repo)
-            except TimeoutError, err:
-                msger.warning("connect timeout to %s, maybe it's caused "
-                              "by proxy settings, please check." % repo)
-            except CallbackAborted, err:
-                raise KeyboardInterrupt(err)
+            deal_with_one_repo(repo)
 
     @staticmethod
     def split_out_local_repo(repos):
