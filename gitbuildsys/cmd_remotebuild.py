@@ -27,6 +27,7 @@ from gitbuildsys import msger, errors, utils
 from gitbuildsys.conf import configmgr, encode_passwd
 from gitbuildsys.oscapi import OSC, OSCError
 from gitbuildsys.cmd_export import export_sources
+from gitbuildsys.cmd_build import get_profile
 
 import gbp.rpm
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
@@ -48,7 +49,7 @@ passx=%(passwdx)s
 def main(args):
     """gbs remotebuild entry point."""
 
-    obsconf = configmgr.get_current_profile().obs
+    obsconf = get_profile(args).obs
 
     if not obsconf or not obsconf.url:
         msger.error('no obs api found, please add it to gbs conf and try again')

@@ -64,7 +64,7 @@ SUPPORTEDARCHS = [
 USERID = pwd.getpwuid(os.getuid())[0]
 TMPDIR = os.path.join(configmgr.get('tmpdir', 'general'), '%s-gbs' % USERID)
 
-def prepare_repos_and_build_conf(args, arch):
+def prepare_repos_and_build_conf(args, arch, profile):
     '''generate repos and build conf options for depanneur'''
 
     cmd_opts = []
@@ -78,7 +78,7 @@ def prepare_repos_and_build_conf(args, arch):
     if args.skip_conf_repos:
         repos = []
     else:
-        repos = [i.url for i in configmgr.get_current_profile().repos]
+        repos = [i.url for i in profile.repos]
 
     if args.repositories:
         for i in args.repositories:
@@ -268,6 +268,19 @@ def setup_qemu_emulator():
     return qemu_emulator
 
 
+def get_profile(args):
+    """
+    Get the build profile to be used
+    """
+    if args.profile:
+        profile_name = args.profile if args.profile.startswith("profile.") \
+                                    else "profile." + args.profile
+        profile = configmgr.build_profile_by_name(profile_name)
+    else:
+        profile = configmgr.get_current_profile()
+    return profile
+
+
 def main(args):
     """gbs build entry point."""
 
@@ -295,7 +308,7 @@ def main(args):
         msger.error('arch %s not supported, supported archs are: %s ' % \
                    (buildarch, ','.join(SUPPORTEDARCHS)))
 
-    profile = configmgr.get_current_profile()
+    profile = get_profile(args)
     if args.buildroot:
         build_root = args.buildroot
     elif 'TIZEN_BUILD_ROOT' in os.environ:
@@ -323,7 +336,7 @@ def main(args):
         cmd += ['--clean']
 
     # check & prepare repos and build conf
-    cmd += prepare_repos_and_build_conf(args, buildarch)
+    cmd += prepare_repos_and_build_conf(args, buildarch, profile)
 
     cmd += ['--path=%s' % workdir]
 
