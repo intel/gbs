@@ -306,19 +306,45 @@ def submit_parser(parser):
 def main(argv):
     """Script entry point."""
 
+    def has_parameter(arg, arglist):
+        """
+        Helper function.
+        Check if argument requires parameter by analyzing
+        its action. Parameter is required only for 'store' and 'append' actions
+        """
+        if arg.startswith('-'):
+            for args in arglist:
+                if arg in (args['short'], args['long']):
+                    if args.get('action') in (None, 'store', 'append'):
+                        return True
+                    return False
+
     # Create top level parser
     epilog = "Try 'gbs SUBCOMAND --help' for help on a specific subcommand."
     description = "gbs - the command line tool for Tizen package developers"
     parser = ArgumentParser(description=description, epilog=epilog,
                             formatter_class=GbsHelpFormatter)
 
-    parser.add_argument('-V', '--version', action='version',
-                        version='%(prog)s ' + __version__)
-    parser.add_argument('-c', '--conf', help='specify config file for gbs')
-    parser.add_argument('-d', '--debug', action='store_true',
-                        help='debug output')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='verbose output')
+    # List of global arguments
+    # The main purpose of this structure is to contain arguments
+    # of add_argument. This is used to do aliasing properly
+    # (see code under the comment 'replace aliases with real commands')
+    global_args = [{'short': '-V', 'long': '--version', 'action': 'version',
+                    'version': '%(prog)s ' + __version__},
+                   {'short': '-c', 'long': '--conf',
+                    'help': 'specify config file for gbs'},
+                   {'short': '-d', 'long': '--debug', 'action': 'store_true',
+                    'help': 'debug output'},
+                   {'short': '-v', 'long': '--verbose', 'action': 'store_true',
+                    'help': 'verbose output'}]
+
+    for args in global_args:
+        parser_kwargs = {}
+        for key in ('action', 'help', 'version'):
+            if key in args:
+                parser_kwargs[key] = args[key]
+
+        parser.add_argument(args['short'], args['long'], **parser_kwargs)
 
     # hacked by the request of cmdln lovers
     parser.format_usage = parser.format_help
@@ -333,12 +359,12 @@ def main(argv):
             aliases[obj(subparsers).get_default('alias')] = name.split('_')[0]
 
     # replace aliases with real commands
-    positionals = [(i, arg) for i, arg in enumerate(argv[1:]) \
-                       if not arg.startswith('-')]
-    if positionals:
-        i, cmd = positionals[0]
-        if cmd in aliases:
-            argv[i+1] = aliases[cmd]
+    for i, arg in enumerate(argv[1:]):
+        if not arg.startswith('-'):
+            # argv[i] is previous argument to arg
+            if not has_parameter(argv[i], global_args) and arg in aliases:
+                argv[i+1] = aliases[arg]
+                break
 
     # Parse arguments
     args = parser.parse_args(argv[1:])
