@@ -266,43 +266,6 @@ class OSC(object):
         except OSCError, err:
             raise ObsError("can't commit files to %s/%s: %s" % (prj, pkg, err))
 
-    @waiting
-    def remove_files(self, prj, pkg, fnames=None):
-        """
-        Remove file[s] from the package.
-        If filenames are not provided remove all files.
-        """
-        if not fnames:
-            url = core.makeurl(self.apiurl, ['source', prj, pkg])
-            for i in (1, 2, 3):
-                try:
-                    response = self.core_http(core.http_GET, url).read()
-                    entries = core.ET.fromstring(response)
-                    break
-                except OSCError, err:
-                    raise ObsError("can't get list of sources from"\
-                                   " %s/%s: %s" % (prj, pkg, err))
-                except core.ET.ParseError, err:
-                    if i == 3:
-                        raise ObsError("Error parsing OBS response: %s" \
-                                       % str(err))
-                    continue
-
-            fnames = [entry.get('name') for entry in entries]
-
-        for fname in fnames:
-            if fname is None:
-                continue
-            query = 'rev=upload'
-            url = core.makeurl(self.apiurl,
-                               ['source', prj, pkg, pathname2url(fname)],
-                               query=query)
-            try:
-                self.core_http(core.http_DELETE, url)
-            except OSCError, err:
-                raise ObsError("can\'t remove file %s/%s/%s: %s" \
-                               % (prj, pkg, fname, err))
-
     def create_package(self, prj, pkg):
         """Create package in the project."""
 

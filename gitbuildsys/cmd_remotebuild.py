@@ -218,9 +218,6 @@ def main(args):
         if api.exists(target_prj, package):
             old, _not_changed, changed, new = api.diff_files(target_prj,
                                                              package, files)
-            if old:
-                log.info("removing old files from OBS project")
-                api.remove_files(target_prj, package, old)
             commit_files = changed + new
         else:
             log.info('creating new package %s/%s' % (target_prj, package))
