@@ -511,7 +511,7 @@ class BizConfigManager(ConfigMgr):
     def get_current_profile(self):
         '''get profile current used'''
         if self.is_profile_oriented():
-            return self._build_profile_by_name(self.get('profile'))
+            return self.build_profile_by_name(self.get('profile'))
 
         profile = self._build_profile_by_subcommand()
         self.convert_to_new_style(profile)
@@ -559,7 +559,7 @@ class BizConfigManager(ConfigMgr):
         password = self.get_optional_item(section_id, 'passwd')
         return URL(url, user, password)
 
-    def _build_profile_by_name(self, name):
+    def build_profile_by_name(self, name):
         '''return profile object by a given section'''
         if not name.startswith('profile.'):
             raise errors.ConfigError('section name specified by general.profile '
