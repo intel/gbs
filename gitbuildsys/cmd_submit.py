@@ -44,18 +44,25 @@ def main(args):
     except GitRepositoryError, err:
         msger.error(str(err))
 
+    try:
+        upstream = repo.get_upstream_branch(target_branch)
+    except GitRepositoryError:
+        pass
+    if not args.remote:
+        if upstream:
+            args.remote = upstream.split('/')[0]
+        else:
+            msger.info("no upstream set for the current branch, using "
+                       "'origin' as the remote server")
+            args.remote = 'origin'
     if not args.target:
-        try:
-            upstream = repo.get_upstream_branch(target_branch)
-            if upstream and upstream.startswith(args.remote):
-                target_branch = os.path.basename(upstream)
-            else:
-                msger.warning('can\'t find upstream branch for current branch '\
-                              '%s. Gbs will try to find it by name. Please '\
-                              'consider to use git-branch --set-upstream to '\
-                              'set upstream remote branch.' % target_branch)
-        except GitRepositoryError:
-            pass
+        if upstream and upstream.startswith(args.remote):
+            target_branch = os.path.basename(upstream)
+        else:
+            msger.warning('can\'t find upstream branch for current branch '\
+                          '%s. Gbs will try to find it by name. Please '\
+                          'consider to use git-branch --set-upstream to '\
+                          'set upstream remote branch.' % target_branch)
 
     try:
         if target_branch == 'master':
@@ -69,7 +76,7 @@ def main(args):
         msger.error('failed to create tag %s: %s ' % (tagname, str(err)))
 
     try:
-        msger.info('pushing tag to remote server')
+        msger.info("pushing tag to remote '%s'" % args.remote)
         repo.push_tag(args.remote, tagname)
     except GitRepositoryError, err:
         repo.delete_tag(tagname)

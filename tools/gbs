@@ -301,9 +301,9 @@ def submit_parser(parser):
                         help='using the given key to make a GPG-signed tag')
     parser.add_argument('-t', '--target',
                         help='specify target version to submit, eg: trunk.')
-    parser.add_argument('-r', '--remote', default='origin',
-                        help='specify gerrit project server, default value is '
-                        'origin for example:\nssh://user@review.tizen.org:29418'
+    parser.add_argument('-r', '--remote',
+                        help='specify gerrit project server, '
+                        'for example:\nssh://user@review.tizen.org:29418'
                         '/public/base/gcc')
 
     parser.set_defaults(alias="sr")
