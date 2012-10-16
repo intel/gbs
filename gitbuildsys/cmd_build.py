@@ -204,70 +204,6 @@ def is_statically_linked(binary):
     """
     return ", statically linked, " in runner.outs(['file', binary])
 
-def setup_qemu_emulator():
-    """
-    setup qemu emulator env using system static qemu
-    """
-    # mount binfmt_misc if it doesn't exist
-    if not os.path.exists("/proc/sys/fs/binfmt_misc"):
-        modprobecmd = find_binary_path("modprobe")
-        runner.show([modprobecmd, "binfmt_misc"])
-    if not os.path.exists("/proc/sys/fs/binfmt_misc/register"):
-        mountcmd = find_binary_path("mount")
-        runner.show([mountcmd, "-t", "binfmt_misc", "none",
-                     "/proc/sys/fs/binfmt_misc"])
-
-    # qemu_emulator is a special case, we can't use find_binary_path
-    # qemu emulator should be a statically-linked executable file
-    qemu_emulator = "/usr/bin/qemu-arm"
-    if not os.path.exists(qemu_emulator) or \
-           not is_statically_linked(qemu_emulator):
-        qemu_emulator = "/usr/bin/qemu-arm-static"
-    if not os.path.exists(qemu_emulator):
-        raise errors.QemuError("Please install a statically-linked qemu-arm")
-
-    # disable selinux, selinux will block qemu emulator to run
-    if os.path.exists("/usr/sbin/setenforce"):
-        msger.info('Try to disable selinux')
-        runner.show(["/usr/sbin/setenforce", "0"])
-
-    node = "/proc/sys/fs/binfmt_misc/arm"
-    if is_statically_linked(qemu_emulator) and os.path.exists(node):
-        return qemu_emulator
-
-    # unregister it if it has been registered and
-    # is a dynamically-linked executable
-    # FIXME: fix permission issue if qemu-arm dynamically used
-    if not is_statically_linked(qemu_emulator) and os.path.exists(node):
-        qemu_unregister_string = "-1\n"
-        fds = open("/proc/sys/fs/binfmt_misc/arm", "w")
-        fds.write(qemu_unregister_string)
-        fds.close()
-
-    # register qemu emulator for interpreting other arch executable file
-    if not os.path.exists(node):
-        qemu_arm_string = ":arm:M::\\x7fELF\\x01\\x01\\x01\\x00\\x00\\x00\\x00"\
-                          "\\x00\\x00\\x00\\x00\\x00\\x02\\x00\\x28\\x00:\\xff"\
-                          "\\xff\\xff\\xff\\xff\\xff\\xff\\x00\\xff\\xff\\xff"\
-                          "\\xff\\xff\\xff\\xff\\xff\\xfa\\xff\\xff\\xff:%s:" \
-                          % qemu_emulator
-        try:
-            (tmpfd, tmppth) = tempfile.mkstemp()
-            os.write(tmpfd, "echo '%s' > /proc/sys/fs/binfmt_misc/register" \
-                                % qemu_arm_string)
-            os.close(tmpfd)
-            # on this way can work to use sudo register qemu emulator
-            ret = os.system('sudo sh %s' % tmppth)
-            if ret != 0:
-                raise errors.QemuError('failed to set up qemu arm environment')
-        except IOError:
-            raise errors.QemuError('failed to set up qemu arm environment')
-        finally:
-            os.unlink(tmppth)
-
-    return qemu_emulator
-
-
 def get_profile(args):
     """
     Get the build profile to be used
@@ -348,12 +284,6 @@ def main(args):
 
     if hostarch != buildarch and buildarch in CHANGE_PERSONALITY:
         cmd = [ CHANGE_PERSONALITY[buildarch] ] + cmd
-
-    if buildarch.startswith('arm'):
-        try:
-            setup_qemu_emulator()
-        except errors.QemuError, exc:
-            msger.error('%s' % exc)
 
     # Extra depanneur special command options
     cmd += prepare_depanneur_opts(args)

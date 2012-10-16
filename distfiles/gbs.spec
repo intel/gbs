@@ -11,8 +11,6 @@ Source0:    %{name}_%{version}.tar.gz
 Requires:   python >= 2.5
 Requires:   python-pycurl
 Requires:   git-core
-Requires:   qemu >= 0.14.1
-Requires:   qemu-arm-static >= 0.14.1
 Requires:   sudo
 Requires:   createrepo
 Requires:   osc = 0.134.0
