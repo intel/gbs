@@ -37,15 +37,12 @@ def main(args):
     try:
         repo = RpmGitRepository(workdir)
         commit = repo.rev_parse(args.commit)
-        if args.target:
-            target_branch = args.target
-        else:
-            target_branch = repo.get_branch()
+        current_branch = repo.get_branch()
     except GitRepositoryError, err:
         msger.error(str(err))
 
     try:
-        upstream = repo.get_upstream_branch(target_branch)
+        upstream = repo.get_upstream_branch(current_branch)
     except GitRepositoryError:
         upstream = None
         pass
@@ -58,17 +55,18 @@ def main(args):
             args.remote = 'origin'
     if not args.target:
         if upstream and upstream.startswith(args.remote):
-            target_branch = os.path.basename(upstream)
+            args.target = os.path.basename(upstream)
         else:
-            msger.warning('can\'t find upstream branch for current branch '\
-                          '%s. Gbs will try to find it by name. Please '\
-                          'consider to use git-branch --set-upstream to '\
-                          'set upstream remote branch.' % target_branch)
+            msger.warning("Can't find upstream branch for current branch "
+                          "%s. Gbs uses the local branch name as the target. "
+                          "Please consider to use git-branch --set-upstream "
+                          "to set upstream remote branch." % current_branch)
+            args.target = current_branch
 
     try:
-        if target_branch == 'master':
-            target_branch = 'trunk'
-        tagname = 'submit/%s/%s' % (target_branch, time.strftime( \
+        if args.target == 'master':
+            args.target = 'trunk'
+        tagname = 'submit/%s/%s' % (args.target, time.strftime( \
                                     '%Y%m%d.%H%M%S', time.gmtime()))
         msger.info('creating tag: %s' % tagname)
         repo.create_tag(tagname, msg=args.msg, commit=commit, sign=args.sign,
