@@ -47,6 +47,7 @@ def main(args):
     try:
         upstream = repo.get_upstream_branch(target_branch)
     except GitRepositoryError:
+        upstream = None
         pass
     if not args.remote:
         if upstream:
