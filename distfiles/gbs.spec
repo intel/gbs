@@ -8,24 +8,16 @@ License:    GPLv2
 BuildArch:  noarch
 URL:        http://www.tizen.org
 Source0:    %{name}_%{version}.tar.gz
-Requires:   python >= 2.5
+Requires:   python >= 2.7
 Requires:   python-pycurl
 Requires:   git-core
 Requires:   sudo
-Requires:   createrepo
 Requires:   osc = 0.134.0
-Requires:   build = 2012.09.12
 Requires:   git-buildpackage-rpm = 0.6.0git20120822
 Requires:   depanneur = 0.1
-%if 0%{?fedora_version}
-Requires:   rpm-build
-%else
-Requires:   rpm
-%endif
 
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
-
 
 %description
 The command line tools for Tizen package developers will
