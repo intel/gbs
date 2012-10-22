@@ -21,20 +21,11 @@
 import sys
 import os
 
-from argparse import ArgumentParser, ArgumentTypeError
+from argparse import ArgumentParser
 
 from gitbuildsys import __version__
 from gitbuildsys import msger, errors
 from gitbuildsys.parsing import subparser, GbsHelpFormatter
-
-
-def abspath_arg(arg):
-    '''validate path argument and convert to absolute format'''
-    path = os.path.abspath(arg)
-    if not os.path.exists(path):
-        raise ArgumentTypeError('no such %s' % path)
-    return path
-
 
 @subparser
 def import_parser(parser):
@@ -136,8 +127,7 @@ def build_parser(parser):
     parser.add_argument('--skip-conf-repos', action="store_true",
                         help='skip repositories mentioned in config file')
     parser.add_argument('-c', '--commit', help='specify a commit ID to build')
-    parser.add_argument('--spec', type=abspath_arg,
-                        help='specify a spec file to use')
+    parser.add_argument('--spec', help='specify a spec file to use')
     parser.add_argument('--extra-packs',
                         help='specify extra packages to install to build root '
                         'multiple packages can be separated by comma')
