@@ -13,7 +13,7 @@ Depends: ${misc:Depends}, ${python:Depends},
  python-pycurl,
  git-core,
  sudo,
- osc (= 0.134.0-1tizen+1),
+ osc (= 0.136.0),
  git-buildpackage-rpm (= 0.6.0git20120822),
  depanneur (= 0.1)
 Description: The command line tools for Tizen package developers

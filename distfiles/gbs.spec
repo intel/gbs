@@ -12,7 +12,7 @@ Requires:   python >= 2.7
 Requires:   python-pycurl
 Requires:   git-core
 Requires:   sudo
-Requires:   osc = 0.134.0
+Requires:   osc = 0.136.0
 Requires:   git-buildpackage-rpm = 0.6.0git20120822
 Requires:   depanneur = 0.1
 
