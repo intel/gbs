@@ -162,14 +162,6 @@ def main(args):
 
         msger.info('checking status of obs project: %s ...' % target_prj)
         if not api.exists(target_prj):
-            # FIXME: How do you know that a certain user does not have
-            # permissions to create any project, anywhewre?
-            if args.target_obsprj and \
-                   not target_prj.startswith('home:%s:' % apiurl.user):
-                msger.error('no permission to create project %s, only sub '
-                            'projects of home:%s are '
-                            'allowed ' % (target_prj, apiurl.user))
-
             msger.info('copying settings of %s to %s' % (base_prj, target_prj))
             api.copy_project(base_prj, target_prj)
 
