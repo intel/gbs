@@ -25,6 +25,7 @@ Only APIs which are required by cmd_remotebuild present here.
 import os
 import urllib2
 import M2Crypto
+from M2Crypto.SSL.Checker import SSLVerificationError
 import ssl
 
 from collections import defaultdict
@@ -159,6 +160,8 @@ class OSC(object):
         except (urllib2.URLError, M2Crypto.m2urllib2.URLError, \
                                   M2Crypto.SSL.SSLError), err:
             pass
+        except SSLVerificationError:
+            raise ObsError("SSL verification error.")
         if err:
             raise ObsError("can't check if %s/%s exists: %s" % (prj, pkg, err))
 
