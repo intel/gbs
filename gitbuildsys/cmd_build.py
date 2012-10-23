@@ -231,6 +231,12 @@ def main(args):
     except GitRepositoryError:
         pass
 
+    if args.spec:
+        try:
+            RpmGitRepository(os.path.dirname(args.spec))
+        except GitRepositoryError:
+            msger.error('spec file should reside in git directory')
+
     hostarch = get_hostarch()
     if args.arch:
         buildarch = args.arch
@@ -299,6 +305,9 @@ def main(args):
         cmd += ['--upstream-tag=%s' % args.upstream_tag]
     if args.squash_patches_until:
         cmd += ['--squash-patches-until=%s' % args.squash_patches_until]
+
+    if args.spec:
+        cmd += [args.spec]
 
     msger.debug("running command: %s" % ' '.join(cmd))
     retcode = os.system(' '.join(cmd))
