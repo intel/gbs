@@ -44,14 +44,18 @@ class Workdir(object):
         os.chdir(self._cwd)
 
 def guess_spec(workdir, default_spec):
+    workdir = os.path.abspath(workdir)
+    git_project =  os.path.basename(workdir)
+
     if default_spec:
         default_spec = os.path.abspath(default_spec)
+        if not default_spec.startswith(workdir):
+            msger.error("spec file doesn't belong to the project %s: "
+                        "%s" % (git_project, default_spec))
         if not os.path.exists(default_spec):
             msger.error('%s does not exit' % default_spec)
         return default_spec
 
-    workdir = os.path.abspath(workdir)
-    git_project =  os.path.basename(workdir)
     specfile = os.path.join(workdir, 'packaging', '%s.spec' % git_project)
     if not os.path.exists(specfile):
         specs = glob.glob(os.path.join(workdir, 'packaging', '*.spec'))
