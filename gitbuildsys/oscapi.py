@@ -210,6 +210,8 @@ class OSC(object):
             fnames = [entry.get('name') for entry in \
                                             core.ET.fromstring(responce)]
         for fname in fnames:
+            if fname is None:
+                continue
             query = 'rev=upload'
             url = core.makeurl(self.apiurl,
                                ['source', prj, pkg, pathname2url(fname)],
@@ -217,8 +219,8 @@ class OSC(object):
             try:
                 self.core_http(core.http_DELETE, url)
             except OSCError, err:
-                raise ObsError("can\'t remove files from %s/%s: %s" \
-                               % (prj, pkg, err))
+                raise ObsError("can\'t remove file %s/%s/%s: %s" \
+                               % (prj, pkg, fname, err))
 
     def create_package(self, prj, pkg):
         """Create package in the project."""
