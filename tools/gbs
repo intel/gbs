@@ -108,6 +108,13 @@ def build_parser(parser):
       $ gbs build -A i586 --threads=4 --binary-list=/path/to/pkgs.list
       $ cd package1/
       $ gbs build -A i586 --incremental # only support build one package
+
+      # Use repos specified from command line
+      $ gbs build -R http://user:passwd@example.org -R ... --skip-conf-repos
+      # Use repos specified from command line and gbs.conf
+      $ gbs build -R http://user:passwd@example.org -R ...
+
+
     """
 
     parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
