@@ -211,7 +211,8 @@ def main(args):
                                   spec.release)
         shutil.rmtree(outdir, ignore_errors=True)
         shutil.move(export_dir, outdir)
-        msger.info('source rpm generated to:\n     %s/%s.src.rpm' % \
-                   (outdir, os.path.basename(outdir)))
+        if args.source_rpm:
+            msger.info('source rpm generated to:\n     %s/%s.src.rpm' % \
+                       (outdir, os.path.basename(outdir)))
 
     msger.info('package files have been exported to:\n     %s' % outdir)
