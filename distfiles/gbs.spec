@@ -12,9 +12,9 @@ Requires:   python >= 2.7
 Requires:   python-pycurl
 Requires:   git-core
 Requires:   sudo
-Requires:   osc = 0.136.0
-Requires:   git-buildpackage-rpm = 0.6.0git20120822
-Requires:   depanneur = 0.1
+Requires:   osc >= 0.136.0
+Requires:   tizen-gbp-rpm >= 2012.10.25
+Requires:   depanneur >= 0.2
 
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
