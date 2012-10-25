@@ -213,18 +213,19 @@ url = https://api.tizen.org
 #user =
 #passwd =
 
+#Repo section example
 [repo.tizen_latest]
 #Build against repo's URL
-url = http://download.tizen.org/snapshots/trunk/common/latest
+url = http://download.tizen.org/releases/trunk/daily/ivi/latest/
 #Optional user and password, set if differ from profile's user and password
 #user =
 #passwd =
 
-[repo.tizen_base]
-url = http://download.tizen.org/snapshots/trunk/common/latest/repos/base/ia32/packages/
-
-[repo.tizen_main]
-url = http://download.tizen.org/snapshots/trunk/common/latest/repos/main/ia32/packages/
+#Individual repo is also supported
+#[repo.tizen_base]
+#url = http://download.tizen.org/releases/trunk/daily/ivi/latest/repos/base/ia32/packages/
+#[repo.tizen_main]
+#url = http://download.tizen.org/releases/trunk/daily/ivi/latest/repos/main/ia32/packages/
 '''
 
     # make the manager class as singleton
