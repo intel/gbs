@@ -1,3 +1,30 @@
+* Thu Oct 25 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.11
+- Upgrade to gbs v0.11, which contains the following bug fixing & features:
+    * Add --spec in 'gbs build' to support building one spec file for packages
+      contains multiple spec files.
+    * Add --profile/-P in 'gbs build' to support building packages using specified
+      profile.
+    * support local buildroot configurable in config file. The 'buildroot' can
+      be set under the 'general' section as a global setting.
+    * more clear and readable error report for gbs build, including gbs export
+      error, expansion error and rpmbuild error.
+    * bug fix:
+      - fix plaintext passwd printed for some error cases
+      - fix gbs archive tar ball issue if using user defined macro in spec file
+      - fix request passwd again if one package build for a long time(>15 mins)
+      - fix sudo timeout issue, which will result in endless loop
+      - fix return 0 from depanneur even if error occurs
+      - unify display color of debug message in gbs and depanneur
+      - fix endless loop if package circle dependency exists
+      - fix gbs build error if '~' exist in build root path
+      - fix passwd conflict issue with multiple instance of 'gbs build'
+      - fix remotebuild can't run in sub-directory issue
+      - fix gbs build error with https_proxy trailing '/'
+      - fix gbs submit gives no error if there is no comment
+      - describe missing dependencies for gbs build
+      - support create project outside home:<user> if user have permission
+      - fix server's certificate traceback issue for gbs remotebuild
+
 * Tue Sep 18 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.10
 - Upgrade to gbs v0.10, which contains the following features:
     * Re-designed gbs config format and parser to support multiple profile more flexible:
