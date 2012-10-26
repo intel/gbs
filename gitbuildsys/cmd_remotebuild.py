@@ -160,17 +160,6 @@ def main(args):
                        % '\n'.join(results))
             return 0
 
-        msger.info('checking status of obs project: %s ...' % target_prj)
-        if not api.exists(target_prj):
-            msger.info('copying settings of %s to %s' % (base_prj, target_prj))
-            api.copy_project(base_prj, target_prj)
-
-        if api.exists(target_prj, package):
-            msger.info('cleaning existing package')
-            api.remove_files(target_prj, package)
-        else:
-            msger.info('creating new package %s/%s' % (target_prj, package))
-            api.create_package(target_prj, package)
     except OSCError, err:
         msger.error(str(err))
 
@@ -189,16 +178,40 @@ def main(args):
     except GitRepositoryError, exc:
         msger.error('failed to get commit info: %s' % exc)
 
-    msger.info('commit packaging files to build server ...')
+    files = glob.glob("%s/*" % exportdir)
     try:
-        api.commit_files(target_prj, package,
-                         glob.glob("%s/*" % exportdir), commit_msg)
-    except errors.ObsError, exc:
-        msger.error('commit packages fail: %s, please check the permission '\
-                    'of target project:%s' % (exc, target_prj))
+        msger.info('checking status of obs project: %s ...' % target_prj)
+        if api.exists(target_prj, package):
+            old, _not_changed, changed, new = api.diff_files(target_prj,
+                                                             package, files)
+            if old:
+                msger.info("removing old files from OBS project")
+                api.remove_files(target_prj, package, old)
+            commit_files = changed + new
+        else:
+            msger.info('copying settings of %s to %s' % (base_prj, target_prj))
+            api.copy_project(base_prj, target_prj)
+            msger.info('creating new package %s/%s' % (target_prj, package))
+            api.create_package(target_prj, package)
+            # new project - submitting all local files
+            commit_files = files
+    except OSCError, err:
+        msger.error(str(err))
 
+    if not commit_files:
+        msger.warning("No local changes found. Triggering rebuild")
+        api.rebuild(target_prj, package, obs_arch)
+    else:
+        msger.info('commit packaging files to build server ...')
+        commit_files = [(fpath, fpath in commit_files) for fpath in files]
+        try:
+            api.commit_files(target_prj, package, commit_files, commit_msg)
+        except errors.ObsError, exc:
+            msger.error('commit packages fail: %s, please check the permission '\
+                        'of target project:%s' % (exc, target_prj))
 
-    msger.info('local changes submitted to build server successfully')
+        msger.info('local changes submitted to build server successfully')
+
     msger.info('follow the link to monitor the build progress:\n'
                '  %s/package/show?package=%s&project=%s' \
                % (apiurl.replace('api', 'build'), package, target_prj))

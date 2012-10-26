@@ -167,6 +167,59 @@ class OSC(object):
 
         return True
 
+    def rebuild(self, prj, pkg, arch):
+        """Rebuild package."""
+        try:
+            return core.rebuild(self.apiurl, prj, pkg, repo=None, arch=arch)
+        except (urllib2.URLError, M2Crypto.m2urllib2.URLError, \
+                M2Crypto.SSL.SSLError), err:
+            raise ObsError("Can't trigger rebuild for %s/%s: %s" % \
+                           (prj, pkg, str(err)))
+        except SSLVerificationError:
+            raise ObsError("SSL verification error.")
+
+    def diff_files(self, prj, pkg, paths):
+        """
+        Find difference between local and remote filelists
+        Return 4 lists: (old, not changed, changed, new)
+        where:
+           old - present only remotely
+           changed - present remotely and locally and differ
+           not changed - present remotely and locally and does not not differ
+           new - present only locally
+        old is a list of remote filenames
+        changed, not changed and new are lists of local filepaths
+        """
+
+        # Get list of files from the OBS
+        rfiles = core.meta_get_filelist(self.apiurl, prj, pkg, verbose=True)
+
+        old, not_changed, changed, new = [], [], [], []
+
+        if not rfiles:
+            # no remote files - all local files are new
+            return old, not_changed, changed, paths[:]
+
+        # Helper dictionary helps to avoid looping over remote files
+        rdict = dict((fobj.name, (fobj.size, fobj.md5)) for fobj in rfiles)
+
+        for lpath in paths:
+            lname = os.path.basename(lpath)
+            if lname in rdict:
+                lsize = os.path.getsize(lpath)
+                rsize, rmd5 = rdict[lname]
+                if rsize == lsize and rmd5 == core.dgst(lpath):
+                    not_changed.append(lpath)
+                else:
+                    changed.append(lpath)
+                # remove processed files from the remote dict
+                # after processing only old files will be letf there
+                rdict.pop(lname)
+            else:
+                new.append(lpath)
+
+        return rdict.keys(), not_changed, changed, new
+
     def commit_files(self, prj, pkg, files, message):
         """Commits files to OBS."""
 
@@ -176,7 +229,7 @@ class OSC(object):
         url = core.makeurl(self.apiurl, ['source', prj, pkg], query=query)
 
         xml = "<directory>"
-        for fpath in files:
+        for fpath, _ in files:
             with open(fpath) as fhandle:
                 xml += '<entry name="%s" md5="%s"/>' % \
                        (os.path.basename(fpath), hexdigest(fhandle))
@@ -184,12 +237,13 @@ class OSC(object):
 
         try:
             self.core_http(core.http_POST, url, data=xml)
-            for fpath in files:
-                put_url = core.makeurl(
-                    self.apiurl, ['source', prj, pkg,
-                                  pathname2url(os.path.basename(fpath))],
-                    query="rev=repository")
-                self.core_http(core.http_PUT, put_url, filep=fpath)
+            for fpath, commit_flag in files:
+                if commit_flag:
+                    put_url = core.makeurl(
+                        self.apiurl, ['source', prj, pkg,
+                                      pathname2url(os.path.basename(fpath))],
+                        query="rev=repository")
+                    self.core_http(core.http_PUT, put_url, filep=fpath)
             self.core_http(core.http_POST, url, data=xml)
         except OSCError, err:
             raise ObsError("can't commit files to %s/%s: %s" % (prj, pkg, err))
