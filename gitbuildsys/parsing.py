@@ -24,7 +24,7 @@ import functools
 from argparse import RawDescriptionHelpFormatter
 
 class GbsHelpFormatter(RawDescriptionHelpFormatter):
-    """Changed default arparse help output by request from cmdln lovers."""
+    """Changed default argparse help output by request from cmdln lovers."""
 
     def __init__(self, *args, **kwargs):
         super(GbsHelpFormatter, self).__init__(*args, **kwargs)
@@ -41,7 +41,7 @@ class GbsHelpFormatter(RawDescriptionHelpFormatter):
 
     def format_help(self):
         """
-        There is no safe and documented way in argparser to reformat
+        There is no safe and documented way in argparse to reformat
         help output through APIs as almost all of them are private,
         so this method just parses the output and changes it.
         """

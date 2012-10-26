@@ -118,8 +118,8 @@ class Temp(object):
 
 class TempCopy(object):
     """Copy original file to temporary file in the same directory as
-       original. Creates empty termporary file if original doesn't exist.
-       Deletes termporary file when object is destroyed.
+       original. Creates empty temporary file if original doesn't exist.
+       Deletes temporary file when object is destroyed.
     """
 
     def __init__(self, orig_fpath):

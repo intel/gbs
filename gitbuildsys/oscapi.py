@@ -71,7 +71,7 @@ class OSC(object):
     def core_http(method, url, data=None, filep=None):
         """Wrapper above core.<http_METHOD> to catch exceptions."""
 
-        # Workarounded osc bug. http_GET sometimes returns empty responce
+        # Workarounded osc bug. http_GET sometimes returns empty response
         # Usually next try succeeds, so let's try 3 times
         for count in (1, 2, 3):
             try:
@@ -81,7 +81,7 @@ class OSC(object):
                 if count == 3:
                     raise OSCError(str(err))
 
-        raise OSCError('Got empty responce from %s %s' % \
+        raise OSCError('Got empty response from %s %s' % \
                        (method.func_name.split('_')[-1], url))
 
     def copy_project(self, src, target, rewrite=False):
@@ -202,13 +202,13 @@ class OSC(object):
         if not fnames:
             url = core.makeurl(self.apiurl, ['source', prj, pkg])
             try:
-                responce = self.core_http(core.http_GET, url).read()
+                response = self.core_http(core.http_GET, url).read()
             except OSCError, err:
                 raise ObsError("can't get list of sources from"\
                                " %s/%s: %s" % (prj, pkg, err))
 
             fnames = [entry.get('name') for entry in \
-                                            core.ET.fromstring(responce)]
+                                            core.ET.fromstring(response)]
         for fname in fnames:
             if fname is None:
                 continue

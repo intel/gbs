@@ -197,8 +197,8 @@ def build_parser(parser):
                         help='this option disables running configure scripts '
                         'and auto generation of auto-tools to make incremental '
                         'build possible. This requires the configure scripts '
-                        'in the spec to be refereneced using the %%configure, '
-                        '%%reconfigre and %%autogen macros')
+                        'in the spec to be referenced using the %%configure, '
+                        '%%reconfigure and %%autogen macros')
 
     parser.set_defaults(alias="lb")
     return parser
@@ -343,7 +343,7 @@ def main(argv):
                     return False
 
     # Create top level parser
-    epilog = "Try 'gbs SUBCOMAND --help' for help on a specific subcommand."
+    epilog = "Try 'gbs SUBCOMMAND --help' for help on a specific subcommand."
     description = "gbs - the command line tool for Tizen package developers"
     parser = ArgumentParser(description=description, epilog=epilog,
                             formatter_class=GbsHelpFormatter)

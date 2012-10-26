@@ -69,7 +69,7 @@ CATCHERR_BUFFILE_FD = -1
 CATCHERR_BUFFILE_PATH = None
 CATCHERR_SAVED_2 = -1
 
-# save the orignal stdout/stderr at the very start
+# save the original stdout/stderr at the very start
 STDOUT = sys.stdout
 STDERR = sys.stderr
 
