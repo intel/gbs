@@ -255,14 +255,22 @@ class OSC(object):
         """
         if not fnames:
             url = core.makeurl(self.apiurl, ['source', prj, pkg])
-            try:
-                response = self.core_http(core.http_GET, url).read()
-            except OSCError, err:
-                raise ObsError("can't get list of sources from"\
-                               " %s/%s: %s" % (prj, pkg, err))
+            for i in (1, 2, 3):
+                try:
+                    response = self.core_http(core.http_GET, url).read()
+                    entries = core.ET.fromstring(response)
+		    break
+                except OSCError, err:
+                    raise ObsError("can't get list of sources from"\
+                                   " %s/%s: %s" % (prj, pkg, err))
+                except core.ET.ParseError, err:
+                    if i == 3:
+                        raise ObsError("Error parsing OBS response: %s" \
+                                       % str(err))
+                    continue
 
-            fnames = [entry.get('name') for entry in \
-                                            core.ET.fromstring(response)]
+            fnames = [entry.get('name') for entry in entries]
+
         for fname in fnames:
             if fname is None:
                 continue
