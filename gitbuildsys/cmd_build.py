@@ -293,8 +293,13 @@ def main(args):
         cmd += ['--include-all']
     if args.commit:
         cmd += ['--commit=%s' % args.commit]
+
     if args.upstream_branch:
-        cmd += ['--upstream-branch=%s' % args.upstream_branch]
+        upstream_branch = args.upstream_branch
+    else:
+        upstream_branch = configmgr.get('upstream_branch', 'general')
+    cmd += ['--upstream-branch=%s' % upstream_branch]
+
     if args.upstream_tag:
         cmd += ['--upstream-tag=%s' % args.upstream_tag]
     if args.squash_patches_until:

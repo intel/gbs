@@ -43,10 +43,15 @@ def main(args):
                dirn=configmgr.get('tmpdir', 'general'),
                directory=True)
 
+    if args.upstream_branch:
+        upstream_branch = args.upstream_branch
+    else:
+        upstream_branch = configmgr.get('upstream_branch', 'general')
+
     params = ["argv[0] placeholder",
               "--color-scheme=magenta:green:yellow:red",
               "--packaging-dir=%s" % get_packaging_dir(args),
-              "--upstream-branch=%s" % args.upstream_branch, path,
+              "--upstream-branch=%s" % upstream_branch, path,
               "--tmp-dir=%s" % tmp.path,
               ]
     if args.debug:
