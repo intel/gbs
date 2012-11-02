@@ -15,6 +15,7 @@ Requires:   sudo
 Requires:   osc >= 0.136.0
 Requires:   tizen-gbp-rpm >= 2012.10.25
 Requires:   depanneur >= 0.2
+Requires:   pristine-tar
 
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build

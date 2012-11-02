@@ -82,7 +82,7 @@ class TestImport(unittest.TestCase):
         """Test importing from source rpm."""
         eq_(GBS(argv=["gbs", "import", srcrpm]), None)
         repo = GitRepository("./ail")
-        eq_(repo.get_local_branches(), ['master', 'upstream'])
+        eq_(repo.get_local_branches(), ['master', 'pristine-tar', 'upstream'])
         eq_(repo.get_tags(), ['upstream/0.2.29', 'vendor/0.2.29-2.3'])
 
     @with_data("bluez_unpacked")
@@ -91,7 +91,7 @@ class TestImport(unittest.TestCase):
         eq_(GBS(argv=["gbs", "import",
                       os.path.join(srcdir, 'bluez.spec')]), None)
         repo = GitRepository("./bluez")
-        eq_(repo.get_local_branches(), ['master', 'upstream'])
+        eq_(repo.get_local_branches(), ['master', 'pristine-tar', 'upstream'])
         eq_(repo.get_tags(), ['upstream/4.87', 'vendor/4.87-1'])
 
         #raise Exception(os.listdir('./bluez'))
@@ -103,7 +103,7 @@ class TestImport(unittest.TestCase):
         repo = GitRepository.create("./repo_dir")
         os.chdir(repo.path)
         eq_(GBS(argv=["gbs", "import", srcrpm]), None)
-        eq_(repo.get_local_branches(), ['master', 'upstream'])
+        eq_(repo.get_local_branches(), ['master', 'pristine-tar', 'upstream'])
         eq_(repo.get_tags(), ['upstream/0.2.29', 'vendor/0.2.29-2.5'])
 
         #raise Exception(os.listdir('./bluez'))
@@ -115,7 +115,7 @@ class TestImport(unittest.TestCase):
                       "--author-email=test@otctools.jf.intel.com",
                       srcrpm]), None)
         repo = GitRepository("./app-core")
-        eq_(repo.get_local_branches(), ['master', 'upstream'])
+        eq_(repo.get_local_branches(), ['master', 'pristine-tar', 'upstream'])
         eq_(repo.get_tags(), ['upstream/1.2', 'vendor/1.2-19.3'])
 
     @with_data("ail-0.2.29-2.3.src.rpm")
@@ -124,7 +124,7 @@ class TestImport(unittest.TestCase):
         eq_(GBS(argv=["gbs", "import", "--upstream=upstream",
                       srcrpm]), None)
         repo = GitRepository("./ail")
-        eq_(repo.get_local_branches(), ['master', 'upstream'])
+        eq_(repo.get_local_branches(), ['master', 'pristine-tar', 'upstream'])
         eq_(repo.get_tags(), ['upstream/0.2.29', 'vendor/0.2.29-2.3'])
 
     @raises(SystemExit)

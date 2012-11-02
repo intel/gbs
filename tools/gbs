@@ -56,6 +56,11 @@ def import_parser(parser):
                          help='don\'t merge new upstream branch to master')
     parser.add_argument('--packaging-dir',
                         help='directory containing packaging files')
+    parser.add_argument('--no-pristine-tar', action='store_true',
+                         help='don\'t use pristine-tar to import source. '
+                        'pristine-tar only support import *tar.{gz,bz2,xz} '
+                        'sources, this option can be specified to import '
+                        'other format sources')
 
     parser.set_defaults(alias="im")
     return parser

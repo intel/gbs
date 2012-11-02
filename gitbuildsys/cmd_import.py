@@ -39,6 +39,8 @@ def main(args):
     params = ["argv[0] placeholder",
               "--packaging-dir=%s" % get_packaging_dir(args),
               "--upstream-branch=%s" % args.upstream_branch, path]
+    if not args.no_pristine_tar and os.path.exists("/usr/bin/pristine-tar"):
+        params.append("--pristine-tar")
 
     if path.endswith('.src.rpm') or path.endswith('.spec'):
         params.append("--no-patch-import")
