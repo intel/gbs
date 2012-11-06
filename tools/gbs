@@ -210,6 +210,8 @@ def build_parser(parser):
                         'build possible. This requires the configure scripts '
                         'in the spec to be referenced using the %%configure, '
                         '%%reconfigure and %%autogen macros')
+    parser.add_argument('--noinit', action='store_true',
+                        help='start building directly')
 
     parser.set_defaults(alias="lb")
     return parser

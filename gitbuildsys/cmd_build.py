@@ -225,6 +225,9 @@ def main(args):
     if args.commit and args.include_all:
         raise errors.Usage('--commit can\'t be specified together with '\
                            '--include-all')
+    if args.noinit and (args.clean or args.clean_once):
+        raise errors.Usage('--noinit can\'t be specified together with '\
+                           '--clean or --clean-once')
     workdir = args.gitdir
 
     try:
@@ -280,7 +283,10 @@ def main(args):
         cmd += ['--clean']
 
     # check & prepare repos and build conf
-    cmd += prepare_repos_and_build_conf(args, buildarch, profile)
+    if not args.noinit:
+        cmd += prepare_repos_and_build_conf(args, buildarch, profile)
+    else:
+        cmd += ['--noinit']
 
     cmd += ['--path=%s' % workdir]
 
