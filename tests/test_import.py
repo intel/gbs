@@ -92,7 +92,9 @@ class TestImport(unittest.TestCase):
                       os.path.join(srcdir, 'bluez.spec')]), None)
         repo = GitRepository("./bluez")
         eq_(repo.get_local_branches(), ['master', 'pristine-tar', 'upstream'])
-        eq_(repo.get_tags(), ['upstream/4.87', 'vendor/4.87-1'])
+        # No packging tag as patch-import fails
+        eq_(repo.get_tags(), ['upstream/4.87'])
+        eq_(len(repo.get_commits(until='master')), 2)
 
         #raise Exception(os.listdir('./bluez'))
 

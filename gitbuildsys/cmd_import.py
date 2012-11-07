@@ -43,8 +43,13 @@ def main(args):
         params.append("--pristine-tar")
 
     if path.endswith('.src.rpm') or path.endswith('.spec'):
-        params.append("--no-patch-import")
-        if gbp_import_srpm(params):
+        ret = gbp_import_srpm(params)
+        if ret == 2:
+            msger.warning("Importing of patches into packaging branch failed! "
+                          "Please import manually (apply and commit to git, "
+                          "remove files from packaging dir and spec) in order "
+                          "to enable automatic patch generation.")
+        elif ret:
             msger.error("Failed to import %s" % path)
     else:
         if args.no_merge:
