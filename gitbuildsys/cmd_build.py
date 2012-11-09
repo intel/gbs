@@ -269,7 +269,7 @@ def main(args):
     sanitized_profile_name = re.sub("[^a-zA-Z0-9:._-]", "_", profile.name)
     build_root = build_root % {'tmpdir': TMPDIR,
                                'profile': sanitized_profile_name}
-    os.environ['TIZEN_BUILD_ROOT'] = build_root
+    os.environ['TIZEN_BUILD_ROOT'] = os.path.abspath(build_root)
 
     # get virtual env from system env first
     if 'VIRTUAL_ENV' in os.environ:
