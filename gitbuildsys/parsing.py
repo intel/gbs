@@ -18,10 +18,11 @@
 
 """Local additions to commandline parsing."""
 
+import os
 import re
 import functools
 
-from argparse import RawDescriptionHelpFormatter
+from argparse import RawDescriptionHelpFormatter, ArgumentTypeError
 
 class GbsHelpFormatter(RawDescriptionHelpFormatter):
     """Changed default argparse help output by request from cmdln lovers."""
@@ -86,3 +87,10 @@ def subparser(func):
         subpar.set_defaults(module="cmd_%s" % name)
         return func(subpar)
     return wrapper
+
+
+def basename_type(path):
+    '''validate function for base file name argument'''
+    if os.path.basename(path) != path:
+        raise ArgumentTypeError('should be a file name rather than a path')
+    return path

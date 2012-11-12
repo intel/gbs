@@ -94,15 +94,17 @@ def main(args):
     changes_file_list = glob.glob("%s/%s/*.changes" % (project_root_dir,
                                                        packaging_dir))
 
-    if changes_file_list:
+    if args.spec or not changes_file_list:
+        # Create .changes file with the same name as a spec
+        specfile = os.path.basename(utils.guess_spec(project_root_dir,
+                                                     packaging_dir, args.spec))
+        fn_changes = os.path.splitext(specfile)[0] + ".changes"
+        fn_changes = os.path.join(project_root_dir, packaging_dir, fn_changes)
+    else:
         fn_changes = changes_file_list[0]
         if len(changes_file_list) > 1:
             msger.warning("Found more than one changes files, %s is taken " \
                            % (changes_file_list[0]))
-    else:
-        # Create .changes file with the same name as a spec
-        specfile = utils.guess_spec(project_root_dir, packaging_dir, args.spec)
-        fn_changes = os.path.splitext(specfile)[0] + ".changes"
 
     # get the commit start from the args.since
     if args.since:

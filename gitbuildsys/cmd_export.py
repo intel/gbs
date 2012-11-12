@@ -186,7 +186,13 @@ def main(args):
 
     # Only guess spec filename here, parse later when we have the correct
     # spec file at hand
-    specfile = utils.guess_spec(workdir, packaging_dir, args.spec)
+    if args.commit:
+        commit = args.commit
+    elif args.include_all:
+        commit = 'WC.UNTRACKED'
+    else:
+        commit = 'HEAD'
+    relative_spec = utils.guess_spec(workdir, packaging_dir, args.spec, commit)
 
     outdir = "%s/packaging" % workdir
     if args.outdir:
@@ -199,18 +205,11 @@ def main(args):
     export_dir = tempd.path
 
     with utils.Workdir(workdir):
-        if args.commit:
-            commit = args.commit
-        elif args.include_all:
-            commit = 'WC.UNTRACKED'
-        else:
-            commit = 'HEAD'
-        relative_spec = specfile.replace('%s/' % workdir, '')
         export_sources(repo, commit, export_dir, relative_spec, args)
 
+    specfile = os.path.basename(relative_spec)
     try:
-        spec = rpm.parse_spec(os.path.join(export_dir,
-                                           os.path.basename(specfile)))
+        spec = rpm.parse_spec(os.path.join(export_dir, specfile))
     except GbpError, err:
         msger.error('%s' % err)
 

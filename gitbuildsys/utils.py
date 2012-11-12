@@ -22,7 +22,9 @@ import tempfile
 import shutil
 import pycurl
 import hashlib
+import fnmatch
 import signal
+import subprocess
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
@@ -43,31 +45,34 @@ class Workdir(object):
     def __exit__(self, _type, _value, _tb):
         os.chdir(self._cwd)
 
-def guess_spec(workdir, packaging_dir, default_spec):
-    workdir = os.path.abspath(workdir)
-    git_project =  os.path.basename(workdir)
+def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
+    '''guess spec file from project name if not given'''
+    git_path = os.path.abspath(git_path)
 
-    if default_spec:
-        default_spec = os.path.abspath(default_spec)
-        if not default_spec.startswith(workdir):
-            msger.error("spec file doesn't belong to the project %s: "
-                        "%s" % (git_project, default_spec))
-        if not os.path.exists(default_spec):
-            msger.error('%s does not exit' % default_spec)
-        return default_spec
+    if commit_id == 'WC.UNTRACKED':
+        check = lambda fname: os.path.exists(os.path.join(git_path, fname))
+        glob_ = lambda pattern: [ name.replace(git_path+'/', '')
+            for name in glob.glob(os.path.join(git_path, pattern)) ]
+        msg = 'No such spec file %s'
+    else:
+        check = lambda fname: file_exists_in_rev(git_path, fname, commit_id)
+        glob_ = lambda pattern: glob_in_rev(git_path, pattern, commit_id)
+        msg = "No such spec file %%s in %s" % commit_id
 
-    specfile = os.path.join(workdir, packaging_dir, '%s.spec' % git_project)
-    if not os.path.exists(specfile):
-        specs = glob.glob(os.path.join(workdir, packaging_dir, '*.spec'))
-        if not specs:
-            msger.error('no spec file found under %s/%s' % (workdir,
-                                                            packaging_dir))
+    if given_spec:
+        spec = os.path.join(packaging_dir, given_spec)
+        if not check(spec):
+            msger.error(msg % spec)
+        return spec
 
-        if len(specs) > 1:
-            msger.error("Can't decide which spec file to use.")
-        else:
-            specfile = specs[0]
-    return specfile
+    specs = glob_(os.path.join(packaging_dir, '*.spec'))
+    if not specs:
+        msger.error("can't find any spec file")
+
+    project_name =  os.path.basename(git_path)
+    spec = os.path.join(packaging_dir, '%s.spec' % project_name)
+    return spec if spec in specs else specs[0]
+
 
 class Temp(object):
     """
@@ -460,3 +465,45 @@ def hexdigest(fhandle, block_size=4096):
         md5obj.update(data)
     return md5obj.hexdigest()
 
+
+def show_file_from_rev(git_path, relative_path, commit_id):
+    '''return a single file content from given rev.'''
+
+    cmd = 'cd %s; git show %s:%s' % (git_path, commit_id, relative_path)
+    try:
+        return subprocess.check_output(cmd, shell=True)
+    except (subprocess.CalledProcessError, OSError), err:
+        msger.debug('failed to checkout %s from %s:%s' % (relative_path,
+                                                          commit_id, str(err)))
+    return None
+
+
+def file_exists_in_rev(git_path, relative_path, commit_id):
+    '''return True if file exists in given rev'''
+
+    cmd = 'cd %s; git ls-tree --name-only %s %s' % (
+        git_path, commit_id, relative_path)
+
+    try:
+        output = subprocess.check_output(cmd, shell=True)
+    except (subprocess.CalledProcessError, OSError), err:
+        raise errors.GbsError('failed to check existence of %s in %s:%s' % (
+            relative_path, commit_id, str(err)))
+
+    return output != ''
+
+
+def glob_in_rev(git_path, pattern, commit_id):
+    '''glob pattern in given rev'''
+
+    path = os.path.dirname(pattern)
+    cmd = 'cd %s; git ls-tree --name-only %s %s/' % (
+        git_path, commit_id, path)
+
+    try:
+        output = subprocess.check_output(cmd, shell=True)
+    except (subprocess.CalledProcessError, OSError), err:
+        raise errors.GbsError('failed to glob %s in %s:%s' % (
+            pattern, commit_id, str(err)))
+
+    return fnmatch.filter(output.splitlines(), pattern)

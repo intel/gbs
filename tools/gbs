@@ -21,19 +21,11 @@
 import sys
 import os
 
-from argparse import ArgumentParser, ArgumentTypeError
+from argparse import ArgumentParser
 
 from gitbuildsys import __version__
 from gitbuildsys import msger, errors
-from gitbuildsys.parsing import subparser, GbsHelpFormatter
-
-
-def abspath_arg(arg):
-    '''validate path argument and convert to absolute format'''
-    path = os.path.abspath(arg)
-    if not os.path.exists(path):
-        raise ArgumentTypeError('no such %s' % path)
-    return path
+from gitbuildsys.parsing import subparser, GbsHelpFormatter, basename_type
 
 
 @subparser
@@ -69,7 +61,7 @@ def import_parser(parser):
 def export_parser(parser):
     """export files and prepare for build
     Examples:
-      $ gbs export --spec packaging/my.spec --commit d64065c
+      $ gbs export --spec my.spec --commit d64065c
       $ gbs export --source-rpm -o /tmp/
       $ gbs export --include-all
     """
@@ -79,7 +71,9 @@ def export_parser(parser):
                         help='path to git repository')
 
     parser.add_argument('-o', '--outdir', help='output directory')
-    parser.add_argument('--spec', help='specify a spec file to use')
+    parser.add_argument('--spec', type=basename_type,
+                        help='specify a spec file to use. It should be a file '
+                        'name that GBS will find it in packaging dir')
     parser.add_argument('-c', '--commit', help='specify a commit ID to export')
     parser.add_argument('--include-all', action='store_true',
                         help='uncommitted changes and untracked files '
@@ -152,8 +146,9 @@ def build_parser(parser):
     parser.add_argument('--skip-conf-repos', action="store_true",
                         help='skip repositories mentioned in config file')
     parser.add_argument('-c', '--commit', help='specify a commit ID to build')
-    parser.add_argument('--spec', type=abspath_arg,
-                        help='specify a spec file to use')
+    parser.add_argument('--spec', type=basename_type,
+                        help='specify a spec file to use. It should be a file '
+                        'name that GBS will find it in packaging dir')
     parser.add_argument('--extra-packs',
                         help='specify extra packages to install to build root '
                         'multiple packages can be separated by comma')
@@ -244,7 +239,9 @@ def remotebuild_parser(parser):
     parser.add_argument('-P', '--profile',
                         help='profile to be used for building, can be given '
                              'without the "profile." prefix')
-    parser.add_argument('--spec', help='specify a spec file to use')
+    parser.add_argument('--spec', type=basename_type,
+                        help='specify a spec file to use. It should be a file '
+                        'name that GBS will find it in packaging dir')
     parser.add_argument('-c', '--commit', help='specify a commit ID to build')
     parser.add_argument('--buildlog', action='store_true',
                         help='get buildlog from build sever')
@@ -307,7 +304,9 @@ def changelog_parser(parser):
                         default=os.getcwd(),
                         help='path to git repository')
 
-    parser.add_argument('--spec', help='specify a spec file to use')
+    parser.add_argument('--spec', type=basename_type,
+                        help='specify a spec file to use. It should be a file '
+                        'name that GBS will find it in packaging dir')
     parser.add_argument('-s', '--since',
                         help='commit to start from')
     parser.add_argument('-m', '--message',

@@ -82,14 +82,32 @@ def main(args):
 
     # TODO: check ./packaging dir at first
     packaging_dir = get_packaging_dir(args)
-    specs = glob.glob('%s/%s/*.spec' % (workdir, packaging_dir))
-    if not specs:
-        msger.error("no spec file found under './%s'" % packaging_dir)
 
-    specfile = utils.guess_spec(workdir, packaging_dir, args.spec)
+    if args.commit:
+        commit = args.commit
+    elif args.include_all:
+        commit = 'WC.UNTRACKED'
+    else:
+        commit = 'HEAD'
+
+    relative_spec = utils.guess_spec(workdir, packaging_dir, args.spec, commit)
+
+    if args.include_all:
+        # include_all means to use work copy,
+        # otherwise use the reversion in git history
+        spec_to_parse = os.path.join(workdir, relative_spec)
+    else:
+        content = utils.show_file_from_rev(workdir, relative_spec, commit)
+        if content is None:
+            msger.error('failed to checkout %s '
+                        'from commit: %s' % (relative_spec, commit))
+
+        tmp_spec = utils.Temp(content=content)
+        spec_to_parse = tmp_spec.path
+
     # get 'name' and 'version' from spec file
     try:
-        spec = gbp.rpm.parse_spec(specfile)
+        spec = gbp.rpm.parse_spec(spec_to_parse)
     except GbpError, err:
         msger.error('%s' % err)
 
@@ -165,13 +183,6 @@ def main(args):
         msger.error(str(err))
 
     with utils.Workdir(workdir):
-        if args.commit:
-            commit = args.commit
-        elif args.include_all:
-            commit = 'WC.UNTRACKED'
-        else:
-            commit = 'HEAD'
-        relative_spec = specfile.replace('%s/' % workdir, '')
         export_sources(repo, commit, exportdir, relative_spec, args)
 
     try:

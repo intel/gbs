@@ -234,13 +234,9 @@ def main(args):
         repo = RpmGitRepository(workdir)
         workdir = repo.path
     except GitRepositoryError:
-        pass
-
-    if args.spec:
-        try:
-            RpmGitRepository(os.path.dirname(args.spec))
-        except GitRepositoryError:
-            msger.error('spec file should reside in git directory')
+        if args.spec:
+            msger.error("git project can't be found for --spec, "
+                        "give it in argument or cd into it")
 
     hostarch = get_hostarch()
     if args.arch:
@@ -317,7 +313,7 @@ def main(args):
     if args.define:
         cmd += [('--define="%s"' % i) for i in args.define]
     if args.spec:
-        cmd += [args.spec]
+        cmd += ['--spec=%s' % args.spec]
 
     msger.debug("running command: %s" % ' '.join(cmd))
     retcode = os.system(' '.join(cmd))
