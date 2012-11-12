@@ -15,7 +15,7 @@ Depends: ${misc:Depends}, ${python:Depends},
  sudo,
  osc (>= 0.136.0),
  git-buildpackage-rpm (>= 0.6.0git20120822-tizen20121025),
- depanneur (>= 0.2),
+ depanneur (>= 0.2.1),
  pristine-tar
 Description: The command line tools for Tizen package developers
   The command line tools for Tizen package developers will
