@@ -152,6 +152,8 @@ def prepare_depanneur_opts(args):
         cmd_opts += ['--keepgoing']
     if args.no_configure:
         cmd_opts += ['--no-configure']
+    if args.keep_packs:
+        cmd_opts += ['--keep-packs']
     if args.binary_list:
         if not os.path.exists(args.binary_list):
             msger.error('specified binary list file %s not exists' %\

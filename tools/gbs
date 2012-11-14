@@ -212,6 +212,10 @@ def build_parser(parser):
                         '%%reconfigure and %%autogen macros')
     parser.add_argument('--noinit', action='store_true',
                         help='start building directly')
+    parser.add_argument('--keep-packs', action='store_true',
+                        help='keep unused packages in build root. without '
+                        'this option, unused packages will be removed from '
+                        'build root')
 
     parser.set_defaults(alias="lb")
     return parser
