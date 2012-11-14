@@ -220,6 +220,7 @@ class OSC(object):
 
         return rdict.keys(), not_changed, changed, new
 
+    @msger.waiting
     def commit_files(self, prj, pkg, files, message):
         """Commits files to OBS."""
 
@@ -248,6 +249,7 @@ class OSC(object):
         except OSCError, err:
             raise ObsError("can't commit files to %s/%s: %s" % (prj, pkg, err))
 
+    @msger.waiting
     def remove_files(self, prj, pkg, fnames=None):
         """
         Remove file[s] from the package.
