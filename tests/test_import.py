@@ -28,6 +28,8 @@ from functools import wraps
 
 from nose.tools import eq_, raises
 
+from gitbuildsys.errors import GbsError
+
 from gbp.git.repository import GitRepository
 
 GBS = imp.load_source("gbs", "./tools/gbs").main
@@ -129,19 +131,19 @@ class TestImport(unittest.TestCase):
         eq_(repo.get_local_branches(), ['master', 'pristine-tar', 'upstream'])
         eq_(repo.get_tags(), ['upstream/0.2.29', 'vendor/0.2.29-2.3'])
 
-    @raises(SystemExit)
+    @raises(GbsError)
     @with_data("bison-1.27.tar.gz")
     def test_is_not_git_repository(self, tarball):
         """Test raising exception when importing tarball outside of git."""
         GBS(argv=["gbs", "import", tarball])
 
-    @raises(SystemExit)
+    @raises(GbsError)
     @with_data("bad.src.rpm")
     def test_error_reading_pkg_header(self, srcrpm):
         """Test raising exception when importing from bad package."""
         GBS(argv=["gbs", "import", srcrpm])
 
-    @raises(SystemExit)
+    @raises(GbsError)
     @with_data("bad.spec")
     def test_cant_parse_specfile(self, spec):
         """Test raising exception when importing from non-parseable spec."""
@@ -157,7 +159,8 @@ class TestImport(unittest.TestCase):
         """Test raising exception when running gbs with too many arguments."""
         GBS(argv=["gbs", "import", "1", "2"])
 
-    @raises(SystemExit)
+    @raises(GbsError)
     def test_path_doesnt_exist(self):
         """Test raising exception when running gbs with not existing path."""
         GBS(argv=["gbs", "import", "I don't exist!"])
+

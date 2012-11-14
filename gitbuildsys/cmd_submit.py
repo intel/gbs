@@ -21,8 +21,9 @@
 import os
 import time
 
-from gitbuildsys import msger
 from gitbuildsys.utils import edit
+from gitbuildsys.errors import GbsError
+from gitbuildsys.log import LOGGER as log
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
@@ -52,14 +53,14 @@ def main(args):
         message = args.msg
 
     if not message:
-        msger.error("tag message is required")
+        raise GbsError("tag message is required")
 
     try:
         repo = RpmGitRepository(workdir)
         commit = repo.rev_parse(args.commit)
         current_branch = repo.get_branch()
     except GitRepositoryError, err:
-        msger.error(str(err))
+        raise GbsError(str(err))
 
     try:
         upstream = repo.get_upstream_branch(current_branch)
@@ -70,14 +71,14 @@ def main(args):
         if upstream:
             args.remote = upstream.split('/')[0]
         else:
-            msger.info("no upstream set for the current branch, using "
+            log.info("no upstream set for the current branch, using "
                        "'origin' as the remote server")
             args.remote = 'origin'
     if not args.target:
         if upstream and upstream.startswith(args.remote):
             args.target = os.path.basename(upstream)
         else:
-            msger.warning("Can't find upstream branch for current branch "
+            log.warning("Can't find upstream branch for current branch "
                           "%s. Gbs uses the local branch name as the target. "
                           "Please consider to use git-branch --set-upstream "
                           "to set upstream remote branch." % current_branch)
@@ -88,17 +89,17 @@ def main(args):
             args.target = 'trunk'
         tagname = 'submit/%s/%s' % (args.target, time.strftime( \
                                     '%Y%m%d.%H%M%S', time.gmtime()))
-        msger.info('creating tag: %s' % tagname)
+        log.info('creating tag: %s' % tagname)
         repo.create_tag(tagname, msg=message, commit=commit, sign=args.sign,
                         keyid=args.user_key)
     except GitRepositoryError, err:
-        msger.error('failed to create tag %s: %s ' % (tagname, str(err)))
+        raise GbsError('failed to create tag %s: %s ' % (tagname, str(err)))
 
     try:
-        msger.info("pushing tag to remote '%s'" % args.remote)
+        log.info("pushing tag to remote '%s'" % args.remote)
         repo.push_tag(args.remote, tagname)
     except GitRepositoryError, err:
         repo.delete_tag(tagname)
-        msger.error('failed to push tag %s :%s' % (tagname, str(err)))
+        raise GbsError('failed to push tag %s :%s' % (tagname, str(err)))
 
-    msger.info('done.')
+    log.info('done.')

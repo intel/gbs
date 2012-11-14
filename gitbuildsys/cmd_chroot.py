@@ -21,7 +21,8 @@
 import os
 import subprocess
 
-from gitbuildsys import msger
+from gitbuildsys.errors import GbsError
+from gitbuildsys.log import LOGGER as log
 
 def main(args):
     """gbs chroot entry point."""
@@ -30,9 +31,9 @@ def main(args):
 
     running_lock = '%s/not-ready' % build_root
     if os.path.exists(running_lock):
-        msger.error('build root %s is not ready' % build_root)
+        raise GbsError('build root %s is not ready' % build_root)
 
-    msger.info('chroot %s' % build_root)
+    log.info('chroot %s' % build_root)
     user = 'abuild'
     if args.root:
         user = 'root'
@@ -42,13 +43,13 @@ def main(args):
         subprocess.call(['sudo', 'cp', '/etc/resolv.conf', build_root + \
                          '/etc/resolv.conf'])
     except OSError:
-        msger.warning('failed to setup /etc/resolv.conf')
+        log.warning('failed to setup /etc/resolv.conf')
 
     try:
         build_env = os.environ
         build_env['PS1'] = "(tizen-build-env)@\h \W]\$ "
         subprocess.call(cmd, env=build_env)
     except OSError, err:
-        msger.error('failed to chroot to %s: %s' % (build_root, err))
+        raise GbsError('failed to chroot to %s: %s' % (build_root, err))
     except KeyboardInterrupt:
-        msger.info('keyboard interrupt ...')
+        log.info('keyboard interrupt ...')

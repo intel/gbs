@@ -20,8 +20,9 @@
 """
 import os
 
-from gitbuildsys import msger
+from gitbuildsys.errors import GbsError
 from gitbuildsys.cmd_export import get_packaging_dir
+from gitbuildsys.log import LOGGER as log
 
 from gbp.scripts.import_srpm import main as gbp_import_srpm
 from gbp.scripts.import_orig_rpm import main as gbp_import_orig
@@ -46,18 +47,18 @@ def main(args):
     if path.endswith('.src.rpm') or path.endswith('.spec'):
         ret = gbp_import_srpm(params)
         if ret == 2:
-            msger.warning("Importing of patches into packaging branch failed! "
-                          "Please import manually (apply and commit to git, "
-                          "remove files from packaging dir and spec) in order "
-                          "to enable automatic patch generation.")
+            log.warning("Importing of patches into packaging branch failed! "
+                        "Please import manually (apply and commit to git, "
+                        "remove files from packaging dir and spec) in order "
+                        "to enable automatic patch generation.")
         elif ret:
-            msger.error("Failed to import %s" % path)
+            raise GbsError("Failed to import %s" % path)
     else:
         if args.merge:
             params.append('--merge')
         else:
             params.append('--no-merge')
         if gbp_import_orig(params):
-            msger.error('Failed to import %s' % path)
+            raise GbsError('Failed to import %s' % path)
 
-    msger.info('done.')
+    log.info('done.')

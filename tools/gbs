@@ -24,8 +24,9 @@ import os
 from argparse import ArgumentParser
 
 from gitbuildsys import __version__
-from gitbuildsys import msger, errors
+from gitbuildsys import errors
 from gitbuildsys.parsing import subparser, GbsHelpFormatter, basename_type
+from gitbuildsys import log
 
 
 @subparser
@@ -418,12 +419,7 @@ def main(argv):
     # Parse arguments
     args = parser.parse_args(argv[1:])
 
-    # Set log level for --debug and --verbose
-    if args.verbose:
-        msger.set_loglevel('verbose')
-
-    if args.debug:
-        msger.set_loglevel('debug')
+    log.setup(verbose=args.verbose, debug=args.debug)
 
     # Process configuration file if --conf is used
     if args.conf:
@@ -436,24 +432,26 @@ def main(argv):
 
 
 if __name__ == '__main__':
+    log.setup(verbose=False)
     try:
         sys.exit(main(sys.argv))
     except KeyboardInterrupt:
-        msger.error('\n^C caught, program aborted.')
+        log.LOGGER.error('^C caught, program aborted.')
 
     except errors.Usage, usage:
-        msger.error(str(usage))
+        log.LOGGER.error(str(usage))
 
     except errors.Abort, msg:
-        msger.info(str(msg))
+        log.LOGGER.info(str(msg))
 
     except errors.CmdError, err:
-        if msger.get_loglevel() == 'debug':
+        if log.LOGGER.level == log.DEBUG:
             import traceback
-            msger.error(traceback.format_exc())
+            log.LOGGER.error(traceback.format_exc())
         else:
-            msger.error('\n'+str(err))
+            log.LOGGER.error(str(err))
 
     except Exception:
         import traceback
-        msger.error(traceback.format_exc())
+        log.LOGGER.error(traceback.format_exc())
+    sys.exit(1)

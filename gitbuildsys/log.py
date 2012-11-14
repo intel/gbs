@@ -20,6 +20,9 @@ import functools
 import sys
 import threading
 
+import gbp.log
+from gbp.log import DEBUG, INFO, WARNING, ERROR
+
 def waiting(func):
     """
     Function decorator to show simple waiting message for long time operations.
@@ -51,4 +54,35 @@ def waiting(func):
 
     return _wait_with_print
 
+
+def setup(verbose, debug=False):
+    """Basic logging setup"""
+
+    # Change logging level names to lower case
+    for level in (DEBUG, INFO, WARNING, ERROR):
+        gbp.log.logging.addLevelName(level,
+                                 gbp.log.logging.getLevelName(level).lower())
+    # Set verbosity
+    verbose = verbose or debug
+    if verbose:
+        LOGGER.setLevel(DEBUG)
+    else:
+        LOGGER.setLevel(INFO)
+
+    # Set output format
+    log_fmt = '%(color)s%(levelname)s: %(coloroff)s%(message)s'
+    LOGGER.set_format(log_fmt)
+    gbp.log.LOGGER.set_format(log_fmt)
+
+    # Set output colors
+    color_scheme = {DEBUG: gbp.log.COLORS['magenta'],
+                    INFO: gbp.log.COLORS['green'],
+                    WARNING: gbp.log.COLORS['yellow'],
+                    ERROR: gbp.log.COLORS['red']}
+    LOGGER.set_color_scheme(color_scheme)
+    gbp.log.LOGGER.set_color_scheme(color_scheme)
+
+
+# Module initialization
+LOGGER = gbp.log.getLogger("gbs")
 

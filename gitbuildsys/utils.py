@@ -28,7 +28,8 @@ import subprocess
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
-from gitbuildsys import errors, msger
+from gitbuildsys.errors import UrlError, GbsError
+from gitbuildsys.log import LOGGER as log
 
 from gbp.rpm.git import GitRepositoryError
 from gbp.errors import GbpError
@@ -62,12 +63,12 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
     if given_spec:
         spec = os.path.join(packaging_dir, given_spec)
         if not check(spec):
-            msger.error(msg % spec)
+            raise GbsError(msg % spec)
         return spec
 
     specs = glob_(os.path.join(packaging_dir, '*.spec'))
     if not specs:
-        msger.error("can't find any spec file")
+        raise GbsError("can't find any spec file")
 
     project_name =  os.path.basename(git_path)
     spec = os.path.join(packaging_dir, '%s.spec' % project_name)
@@ -110,8 +111,8 @@ class Temp(object):
                     with file(path, 'w+') as fobj:
                         fobj.write(content)
         except OSError, err:
-            raise errors.GbsError("Failed to create dir or file on %s: %s" % \
-                            (target_dir, str(err)))
+            raise GbsError("Failed to create dir or file on %s: %s" % \
+                          (target_dir, str(err)))
         self.path = path
 
     def __del__(self):
@@ -151,7 +152,7 @@ class TempCopy(object):
             os.unlink(self.name)
 
 
-class PageNotFound(errors.UrlError):
+class PageNotFound(UrlError):
     'page not found error: 404'
 
 class URLGrabber(object):
@@ -204,24 +205,23 @@ class URLGrabber(object):
         try:
             curl.perform()
         except pycurl.error, err:
-            msger.debug('fetching error:%s' % str(err))
+            log.debug('fetching error:%s' % str(err))
 
             errcode, errmsg = err.args
             http_code = curl.getinfo(pycurl.HTTP_CODE)
 
             if errcode == pycurl.E_OPERATION_TIMEOUTED:
-                raise errors.UrlError("connect timeout to %s, maybe it's "
-                                      "caused by proxy settings, please "
-                                      "check." % curl.url)
+                raise UrlError("connect timeout to %s, maybe it's caused by "
+                               "proxy settings, please check." % curl.url)
             elif errcode == pycurl.E_ABORTED_BY_CALLBACK:
                 raise KeyboardInterrupt(err)
             elif http_code in (401, 403):
-                raise errors.UrlError('authenticate failed on: %s' % curl.url)
+                raise UrlError('authenticate failed on: %s' % curl.url)
             elif http_code == 404:
                 raise PageNotFound(err)
             else:
-                raise errors.UrlError('URL error on %s: (%s: "%s")' %
-                                     (curl.url, errcode, errmsg))
+                raise UrlError('URL error on %s: (%s: "%s")' %
+                               (curl.url, errcode, errmsg))
         finally:
             signal.signal(signal.SIGINT, original_handler)
 
@@ -233,7 +233,7 @@ class URLGrabber(object):
     def grab(self, url, filename, user=None, passwd=None):
         '''grab url to filename'''
 
-        msger.debug("fetching %s => %s" % (url, filename))
+        log.debug("fetching %s => %s" % (url, filename))
 
         with open(filename, 'w') as outfile:
             self.change_url(url, outfile, user, passwd)
@@ -263,7 +263,7 @@ class RepoParser(object):
         try:
             etree = ET.parse(build_xml)
         except ET.ParseError:
-            msger.warning('Not well formed xml: %s' % build_xml)
+            log.warning('Not well formed xml: %s' % build_xml)
             return
 
         meta = {}
@@ -335,7 +335,7 @@ class RepoParser(object):
         if not meta or \
             'buildconf' not in meta or \
             not meta['buildconf']:
-            msger.warning("No build.conf in build.xml "
+            log.warning("No build.conf in build.xml "
                           "of repo: %s" % latest_repo_url)
             return
 
@@ -389,7 +389,7 @@ class RepoParser(object):
                 if os.path.exists(repo):
                     local_repos.append(repo)
                 else:
-                    msger.warning('No such repo path:%s' % repo)
+                    log.warning('No such repo path:%s' % repo)
             else:
                 remotes.append(repo)
 
@@ -411,7 +411,7 @@ class RepoParser(object):
                 if not url.startswith('http://') and \
                     not url.startswith('https://') and \
                     not (url.startswith('/') and os.path.exists(url)):
-                    msger.warning('ignore invalid repo url: %s' % url)
+                    log.warning('ignore invalid repo url: %s' % url)
                 else:
                     rets.append(url)
             return rets
@@ -426,7 +426,7 @@ def git_status_checker(git, opts):
         is_clean = git.is_clean()[0]
         status = git.status()
     except (GbpError, GitRepositoryError), err:
-        msger.error(str(err))
+        raise GbsError(str(err))
 
     untracked_files = status['??']
     uncommitted_files = []
@@ -437,19 +437,19 @@ def git_status_checker(git, opts):
 
     if not is_clean and not opts.include_all:
         if untracked_files:
-            msger.warning('the following untracked files would NOT be '\
-                       'included:\n   %s' % '\n   '.join(untracked_files))
+            log.warning('the following untracked files would NOT be '
+                        'included:\n   %s' % '\n   '.join(untracked_files))
         if uncommitted_files:
-            msger.warning('the following uncommitted changes would NOT be '\
-                       'included:\n   %s' % '\n   '.join(uncommitted_files))
-        msger.warning('you can specify \'--include-all\' option to '\
-                      'include these uncommitted and untracked files.')
+            log.warning('the following uncommitted changes would NOT be '
+                        'included:\n   %s' % '\n   '.join(uncommitted_files))
+        log.warning('you can specify \'--include-all\' option to '
+                    'include these uncommitted and untracked files.')
     if not is_clean and opts.include_all:
         if untracked_files:
-            msger.info('the following untracked files would be included'  \
+            log.info('the following untracked files would be included'
                        ':\n   %s' % '\n   '.join(untracked_files))
         if uncommitted_files:
-            msger.info('the following uncommitted changes would be included'\
+            log.info('the following uncommitted changes would be included'
                        ':\n   %s' % '\n   '.join(uncommitted_files))
 
 def hexdigest(fhandle, block_size=4096):
@@ -470,8 +470,8 @@ def show_file_from_rev(git_path, relative_path, commit_id):
     try:
         return subprocess.check_output(cmd, shell=True)
     except (subprocess.CalledProcessError, OSError), err:
-        msger.debug('failed to checkout %s from %s:%s' % (relative_path,
-                                                          commit_id, str(err)))
+        log.debug('failed to checkout %s from %s:%s' % (relative_path,
+                                                        commit_id, str(err)))
     return None
 
 
@@ -484,7 +484,7 @@ def file_exists_in_rev(git_path, relative_path, commit_id):
     try:
         output = subprocess.check_output(cmd, shell=True)
     except (subprocess.CalledProcessError, OSError), err:
-        raise errors.GbsError('failed to check existence of %s in %s:%s' % (
+        raise GbsError('failed to check existence of %s in %s:%s' % (
             relative_path, commit_id, str(err)))
 
     return output != ''
@@ -500,7 +500,7 @@ def glob_in_rev(git_path, pattern, commit_id):
     try:
         output = subprocess.check_output(cmd, shell=True)
     except (subprocess.CalledProcessError, OSError), err:
-        raise errors.GbsError('failed to glob %s in %s:%s' % (
+        raise GbsError('failed to glob %s in %s:%s' % (
             pattern, commit_id, str(err)))
 
     return fnmatch.filter(output.splitlines(), pattern)
@@ -536,5 +536,5 @@ def edit_file(target_fname, initial_content=None):
         with open(target_fname, 'w') as fobj:
             fobj.write(changes)
     except IOError, err:
-        msger.error("Can't update %s: %s" % (target_fname, str(err)))
+        raise GbsError("Can't update %s: %s" % (target_fname, str(err)))
     return True

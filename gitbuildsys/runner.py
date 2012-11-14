@@ -19,7 +19,8 @@
 import os
 import subprocess
 
-from gitbuildsys import msger
+from gitbuildsys.errors import GbsError
+from gitbuildsys.log import LOGGER as log
 
 def runtool(cmdln_or_args, catch=1):
     """ wrapper for most of the subprocess calls
@@ -59,7 +60,7 @@ def runtool(cmdln_or_args, catch=1):
     except OSError, exc:
         if exc.errno == 2:
             # [Errno 2] No such file or directory
-            msger.error('Cannot run command: %s, lost dependency?' % cmd)
+            raise GbsError('Cannot run command: %s, lost dependency?' % cmd)
         else:
             raise # relay
     finally:
@@ -68,7 +69,7 @@ def runtool(cmdln_or_args, catch=1):
     return (process.returncode, out)
 
 def show(cmdln_or_args):
-    # show all the message using msger.verbose
+    # show all the message using log.debug
 
     rcode, out = runtool(cmdln_or_args, catch=3)
 
@@ -87,7 +88,7 @@ def show(cmdln_or_args):
             msg += '\n  | %s' % line
         msg += '\n  +----------------'
 
-    msger.verbose(msg)
+    log.debug(msg)
     return rcode
 
 def outs(cmdln_or_args, catch=1):

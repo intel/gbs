@@ -30,6 +30,8 @@ from nose.tools import eq_, raises
 
 from gbp.git.repository import GitRepository
 
+from gitbuildsys.errors import GbsError
+
 GBS = imp.load_source("gbs", "./tools/gbs").main
 ENV = {}
 
@@ -133,19 +135,19 @@ class TestChangelog(unittest.TestCase):
         eq_(GBS(argv=["gbs ", "changelog"]), None)
 
     @staticmethod
-    @raises(SystemExit)
+    @raises(GbsError)
     def test_no_new_changes():
         """Test failure when no new changes can be generated."""
         eq_(GBS(argv=["gbs", "changelog"]), None)
         GBS(argv=["gbs", "changelog"])
 
     @staticmethod
-    @raises(SystemExit)
+    @raises(GbsError)
     def test_wrong_since():
         """Test failure with wrong --since value."""
         GBS(argv=["gbs", "changelog", "--since", "bla"])
 
-    @raises(SystemExit)
+    @raises(GbsError)
     def test_non_existent_commit(self):
         """Test failure with wrong commit id in the changelog."""
         with open(self.changes, "w") as changes:
@@ -154,13 +156,13 @@ class TestChangelog(unittest.TestCase):
         GBS(argv=["gbs", "changelog"])
 
     @staticmethod
-    @raises(SystemExit)
+    @raises(GbsError)
     def test_not_in_git_repository():
         """Test failure when run not in git repo."""
         os.chdir('..')
         GBS(argv=["gbs", "changelog"])
 
-    @raises(SystemExit)
+    @raises(GbsError)
     def test_no_spec(self):
         """Test failure when there is not spec in packaging dir."""
         os.unlink(self.spec)

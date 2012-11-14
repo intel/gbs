@@ -24,13 +24,16 @@ import shutil
 import pwd
 import re
 
-from gitbuildsys import msger, utils, runner, errors
+from gitbuildsys import utils, runner
+from gitbuildsys.errors import GbsError, Usage
 from gitbuildsys.conf import configmgr
 from gitbuildsys.safe_url import SafeURL
 from gitbuildsys.cmd_export import transform_var_format_from_shell_to_python, \
                                    get_packaging_dir
+from gitbuildsys.log import LOGGER as log
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
+
 
 CHANGE_PERSONALITY = {
             'ia32':  'linux32',
@@ -93,7 +96,7 @@ def prepare_repos_and_build_conf(args, arch, profile):
     cachedir  = cache.path
     if not os.path.exists(cachedir):
         os.makedirs(cachedir)
-    msger.info('generate repositories ...')
+    log.info('generate repositories ...')
 
     if args.skip_conf_repos:
         repos = []
@@ -105,46 +108,46 @@ def prepare_repos_and_build_conf(args, arch, profile):
             try:
                 opt_repo = SafeURL(i)
             except ValueError, err:
-                msger.warning('Invalid repo %s: %s' % (i, str(err)))
+                log.warning('Invalid repo %s: %s' % (i, str(err)))
             else:
                 repos.append(opt_repo)
 
     if not repos:
-        msger.error('No package repository specified.')
+        raise GbsError('No package repository specified.')
 
     repoparser = utils.RepoParser(repos, cachedir)
     repourls = repoparser.get_repos_by_arch(arch)
     if not repourls:
-        msger.error('no available repositories found for arch %s under the '
-                    'following repos:\n%s' % (arch, '\n'.join(repos)))
+        raise GbsError('no available repositories found for arch %s under the '
+                       'following repos:\n%s' % (arch, '\n'.join(repos)))
     cmd_opts += [('--repository=%s' % url.full) for url in repourls]
 
     if args.dist:
         distconf = args.dist
         if not os.path.exists(distconf):
-            msger.error('specified build conf %s does not exists' % distconf)
+            raise GbsError('specified build conf %s does not exists' % distconf)
     else:
         if repoparser.buildconf is None:
-            msger.error('failed to get build conf from repos, please '
-                        'use snapshot repo or specify build config using '
-                        '-D option')
+            raise GbsError('failed to get build conf from repos, please '
+                           'use snapshot repo or specify build config using '
+                           '-D option')
         else:
             shutil.copy(repoparser.buildconf, TMPDIR)
             distconf = os.path.join(TMPDIR, os.path.basename(\
                                     repoparser.buildconf))
-            msger.info('build conf has been downloaded at:\n      %s' \
+            log.info('build conf has been downloaded at:\n      %s' \
                        % distconf)
 
     if distconf is None:
-        msger.error('No build config file specified, please specify in '\
-                    '~/.gbs.conf or command line using -D')
+        raise GbsError('No build config file specified, please specify in '\
+                       '~/.gbs.conf or command line using -D')
 
     # must use abspath here, because build command will also use this path
     distconf = os.path.abspath(distconf)
 
     if not distconf.endswith('.conf') or '-' in os.path.basename(distconf):
-        msger.error("build config file must end with .conf, and can't "
-                    "contain '-'")
+        raise GbsError("build config file must end with .conf, and can't "
+                       "contain '-'")
     dist = os.path.basename(distconf)[:-len('.conf')]
     cmd_opts += ['--dist=%s' % dist]
     cmd_opts += ['--configdir=%s' % os.path.dirname(distconf)]
@@ -177,7 +180,7 @@ def prepare_depanneur_opts(args):
         cmd_opts += ['--keep-packs']
     if args.binary_list:
         if not os.path.exists(args.binary_list):
-            msger.error('specified binary list file %s not exists' %\
+            raise GbsError('specified binary list file %s not exists' % \
                         args.binary_list)
         cmd_opts += ['--binary=%s' % args.binary_list]
     cmd_opts += ['--threads=%s' % args.threads]
@@ -237,11 +240,11 @@ def main(args):
     """gbs build entry point."""
 
     if args.commit and args.include_all:
-        raise errors.Usage('--commit can\'t be specified together with '\
-                           '--include-all')
+        raise Usage('--commit can\'t be specified together with '\
+                    '--include-all')
     if args.noinit and (args.clean or args.clean_once):
-        raise errors.Usage('--noinit can\'t be specified together with '\
-                           '--clean or --clean-once')
+        raise Usage('--noinit can\'t be specified together with '\
+                    '--clean or --clean-once')
     workdir = args.gitdir
 
     try:
@@ -249,27 +252,27 @@ def main(args):
         workdir = repo.path
     except GitRepositoryError:
         if args.spec:
-            msger.error("git project can't be found for --spec, "
-                        "give it in argument or cd into it")
+            raise GbsError("git project can't be found for --spec, "
+                           "give it in argument or cd into it")
 
     hostarch = os.uname()[4]
     if args.arch:
         buildarch = args.arch
     else:
         buildarch = hostarch
-        msger.info('No arch specified, using system arch: %s' % hostarch)
+        log.info('No arch specified, using system arch: %s' % hostarch)
 
     if not buildarch in SUPPORTEDARCHS:
-        msger.error('arch %s not supported, supported archs are: %s ' % \
-                   (buildarch, ','.join(SUPPORTEDARCHS)))
+        raise GbsError('arch %s not supported, supported archs are: %s ' % \
+                       (buildarch, ','.join(SUPPORTEDARCHS)))
 
     if buildarch in BUILDARCHMAP:
         buildarch = BUILDARCHMAP[buildarch]
 
     if buildarch not in CAN_ALSO_BUILD.get(hostarch, []):
         if buildarch not in QEMU_CAN_BUILD:
-            msger.error('hostarch: %s can\'t build target arch %s' % \
-                       (hostarch, buildarch))
+            raise GbsError("hostarch: %s can't build target arch %s" %
+                            (hostarch, buildarch))
 
     profile = get_profile(args)
     if args.buildroot:
@@ -335,9 +338,9 @@ def main(args):
     if args.spec:
         cmd += ['--spec=%s' % args.spec]
 
-    msger.debug("running command: %s" % ' '.join(cmd))
+    log.debug("running command: %s" % ' '.join(cmd))
     retcode = os.system(' '.join(cmd))
     if retcode != 0:
-        msger.error('rpmbuild fails')
+        raise GbsError('rpmbuild fails')
     else:
-        msger.info('Done')
+        log.info('Done')

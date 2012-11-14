@@ -25,8 +25,10 @@ import shutil
 import errno
 from urlparse import urlparse
 
-from gitbuildsys import msger, utils, errors
+from gitbuildsys import utils
 from gitbuildsys.conf import configmgr
+from gitbuildsys.errors import GbsError, Usage
+from gitbuildsys.log import LOGGER as log
 
 from gbp.scripts.buildpackage_rpm import main as gbp_build
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
@@ -86,17 +88,17 @@ def check_export_branches(repo, args):
     if repo.has_branch(upstream_branch) and \
        not repo.has_branch('pristine-tar') and \
        'pristine-tar' in remote_branches:
-        msger.warning('pristine-tar branch exist in remote branches, '
-                      'you can checkout it to enable exporting upstrean '
-                      'tarball from pristine-tar branch')
+        log.warning('pristine-tar branch exist in remote branches, '
+                    'you can checkout it to enable exporting upstrean '
+                    'tarball from pristine-tar branch')
 
     # all upstream and pristine-tar are not exist
     if not repo.has_branch(upstream_branch) and \
        not repo.has_branch('pristine-tar') and  \
        'pristine-tar' in remote_branches and upstream_branch in remote_branches:
-        msger.warning('pristine-tar and %s branches exist in remote branches, '
-                      'you can checkout them to enable upstream tarball and '
-                      'patch-generation ' % upstream_branch)
+        log.warning('pristine-tar and %s branches exist in remote branches, '
+                    'you can checkout them to enable upstream tarball and '
+                    'patch-generation ' % upstream_branch)
 
 def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
                            force_native=False):
@@ -112,8 +114,8 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
     else:
         upstream_tag = configmgr.get('upstream_tag', 'general')
         upstream_tag = transform_var_format_from_shell_to_python(upstream_tag)
-    msger.debug("Using upstream branch: %s" % upstream_branch)
-    msger.debug("Using upstream tag format: '%s'" % upstream_tag)
+    log.debug("Using upstream branch: %s" % upstream_branch)
+    log.debug("Using upstream tag format: '%s'" % upstream_tag)
 
     # Get patch squashing option
     if args.squash_patches_until:
@@ -194,46 +196,45 @@ def export_sources(repo, commit, export_dir, spec, args):
         ret = gbp_build(gbp_args)
         if ret == 2 and not is_native_pkg(repo, args):
             # Try falling back to old logic of one monolithic tarball
-            msger.warning("Generating upstream tarball and/or generating "\
-                          "patches failed. GBS tried this as you have "\
-                          "upstream branch in you git tree. This is a new "\
-                          "mode introduced in GBS v0.10. "\
-                          "Consider fixing the problem by either:\n"\
-                          "  1. Update your upstream branch and/or fix the "\
-                          "spec file. Also, check the upstream tag format.\n"\
+            log.warning("Generating upstream tarball and/or generating "
+                          "patches failed. GBS tried this as you have "
+                          "upstream branch in you git tree. This is a new "
+                          "mode introduced in GBS v0.10. "
+                          "Consider fixing the problem by either:\n"
+                          "  1. Update your upstream branch and/or fix the "
+                          "spec file. Also, check the upstream tag format.\n"
                           "  2. Remove or rename the upstream branch")
-            msger.info("Falling back to the old method of generating one "\
+            log.info("Falling back to the old method of generating one "
                        "monolithic source archive")
             gbp_args = create_gbp_export_args(repo, commit, export_dir,
                                               tmp.path, spec, args,
                                               force_native=True)
             ret = gbp_build(gbp_args)
         if ret:
-            msger.error("Failed to export packaging files from git tree")
+            raise GbsError("Failed to export packaging files from git tree")
     except GitRepositoryError, excobj:
-        msger.error("Repository error: %s" % excobj)
+        raise GbsError("Repository error: %s" % excobj)
 
 
 def main(args):
     """gbs export entry point."""
 
     if args.commit and args.include_all:
-        raise errors.Usage('--commit can\'t be specified together with '\
-                           '--include-all')
+        raise Usage("--commit can't be specified together with --include-all")
 
     workdir = args.gitdir
     try:
         repo = RpmGitRepository(workdir)
     except GitRepositoryError, err:
-        msger.error(str(err))
+        raise GbsError(str(err))
 
     utils.git_status_checker(repo, args)
     workdir = repo.path
 
     packaging_dir = get_packaging_dir(args)
     if not os.path.exists(os.path.join(workdir, packaging_dir)):
-        msger.error("No packaging directory '%s/', so there is nothing to "
-                    "export." % packaging_dir)
+        raise GbsError("No packaging directory '%s/', so there is nothing to "
+                       "export." % packaging_dir)
 
     # Only guess spec filename here, parse later when we have the correct
     # spec file at hand
@@ -265,17 +266,17 @@ def main(args):
     try:
         spec = rpm.parse_spec(os.path.join(export_dir, specfile))
     except GbpError, err:
-        msger.error('%s' % err)
+        raise GbsError('%s' % err)
 
     if not spec.name or not spec.version:
-        msger.error('can\'t get correct name or version from spec file.')
+        raise GbsError('can\'t get correct name or version from spec file.')
     else:
         outdir = "%s/%s-%s-%s" % (outdir, spec.name, spec.upstreamversion,
                                   spec.release)
         shutil.rmtree(outdir, ignore_errors=True)
         shutil.move(export_dir, outdir)
         if args.source_rpm:
-            msger.info('source rpm generated to:\n     %s/%s.src.rpm' % \
+            log.info('source rpm generated to:\n     %s/%s.src.rpm' % \
                        (outdir, os.path.basename(outdir)))
 
-    msger.info('package files have been exported to:\n     %s' % outdir)
+    log.info('package files have been exported to:\n     %s' % outdir)

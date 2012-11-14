@@ -31,13 +31,12 @@ import ssl
 from collections import defaultdict
 from urllib import quote_plus, pathname2url
 
-from gitbuildsys import msger
 from gitbuildsys.utils import hexdigest
 from gitbuildsys.errors import ObsError
 from gitbuildsys.log import waiting
+from gitbuildsys.log import LOGGER as logger
 
 from osc import conf, core
-
 
 class OSCError(Exception):
     """Local exception class."""
@@ -102,9 +101,9 @@ class OSC(object):
             raise ObsError('base project: %s not exists' % src)
 
         if self.exists(target):
-            msger.warning('target project: %s exists' % target)
+            logger.warning('target project: %s exists' % target)
             if rewrite:
-                msger.warning('rewriting target project %s' % target)
+                logger.warning('rewriting target project %s' % target)
             else:
                 return
 
@@ -124,7 +123,7 @@ class OSC(object):
                     meta += "<arch>%s</arch>\n" % arch
                 meta += "</repository>\n"
         else:
-            msger.warning('no project repos in target project, please add '
+            logger.warning('no project repos in target project, please add '
                 'repos from OBS webUI manually, or specify base project '
                 'with -B <base_prj>, then gbs can help to set repos '
                 'using the settings of the specified base project.')

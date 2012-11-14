@@ -28,10 +28,10 @@ from collections import namedtuple
 from ConfigParser import SafeConfigParser, NoSectionError, \
                          MissingSectionHeaderError, Error
 
-from gitbuildsys import msger, errors
+from gitbuildsys import errors
 from gitbuildsys.safe_url import SafeURL
 from gitbuildsys.utils import Temp
-
+from gitbuildsys.log import LOGGER as log
 
 def decode_passwdx(passwdx):
     '''decode passwdx into plain format'''
@@ -301,8 +301,8 @@ url = http://download.tizen.org/releases/trunk/daily/ivi/latest/
             wfile.write(self.DEFAULT_CONF_TEMPLATE)
         os.chmod(fpath, 0600)
 
-        msger.warning('Created a new config file %s. Please check and edit '
-            'your authentication information.' % fpath)
+        log.warning('Created a new config file %s. Please check and edit '
+                    'your authentication information.' % fpath)
 
     def _check_passwd(self):
         'convert passwd item to passwdx and then update origin conf files'
@@ -329,8 +329,8 @@ url = http://download.tizen.org/releases/trunk/daily/ivi/latest/
                             dirty.add(cfgparser)
 
         if dirty:
-            msger.warning('plaintext password in config files will '
-                          'be replaced by encoded ones')
+            log.warning('plaintext password in config files will '
+                        'be replaced by encoded ones')
             self.update(dirty)
 
     def _get(self, opt, section='general'):
@@ -383,7 +383,7 @@ url = http://download.tizen.org/releases/trunk/daily/ivi/latest/
             try:
                 cfgparser.update()
             except IOError, err:
-                msger.warning('update config file error: %s' % err)
+                log.warning('update config file error: %s' % err)
 
 
 URL = namedtuple('URL', 'url user password')
@@ -543,7 +543,7 @@ class BizConfigManager(ConfigMgr):
         except IOError, err:
             raise errors.ConfigError(err)
 
-        msger.warning('subcommand oriented style of config is deprecated. '
+        log.warning('subcommand oriented style of config is deprecated. '
             'Please check %s, a new profile oriented style of config which'
             ' was converted from your current settings.' % fname)
 
@@ -591,8 +591,8 @@ class BizConfigManager(ConfigMgr):
             for repo in repos.split(','):
                 repo = repo.strip()
                 if not repo.startswith('repo.'):
-                    msger.warning('ignore %s, repo section name should start '
-                                  'with string "repo."' % repo)
+                    log.warning('ignore %s, repo section name should start '
+                                'with string "repo."' % repo)
                     continue
 
                 repoconf = RepoConf(profile, repo,

@@ -23,9 +23,10 @@ import os
 import datetime
 import glob
 
-from gitbuildsys import msger
 from gitbuildsys.utils import guess_spec, edit_file
 from gitbuildsys.cmd_export import get_packaging_dir
+from gitbuildsys.errors import GbsError
+from gitbuildsys.log import LOGGER as log
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
@@ -84,7 +85,7 @@ def main(args):
     try:
         repo = RpmGitRepository(args.gitdir)
     except GitRepositoryError, err:
-        msger.error(str(err))
+        raise GbsError(str(err))
 
     project_root_dir = repo.path
 
@@ -101,7 +102,7 @@ def main(args):
     else:
         fn_changes = changes_file_list[0]
         if len(changes_file_list) > 1:
-            msger.warning("Found more than one changes files, %s is taken " \
+            log.warning("Found more than one changes files, %s is taken "
                            % (changes_file_list[0]))
 
     # get the commit start from the args.since
@@ -116,14 +117,14 @@ def main(args):
             commitid_since = repo.rev_parse(since)
         except GitRepositoryError:
             if args.since:
-                msger.error("Invalid commit: %s" % (since))
+                raise GbsError("Invalid commit: %s" % (since))
             else:
-                msger.error("Can't find last commit ID in the log, "\
-                            "please specify it by '--since'")
+                raise GbsError("Can't find last commit ID in the log, "\
+                               "please specify it by '--since'")
 
     commits = repo.get_commits(commitid_since, 'HEAD')
     if not commits:
-        msger.error("Nothing found between %s and HEAD" % commitid_since)
+        raise GbsError("Nothing found between %s and HEAD" % commitid_since)
 
     if args.message:
         author = repo.get_author_info()
@@ -139,7 +140,7 @@ def main(args):
 
     content = get_all_entries(fn_changes, new_entries)
     if edit_file(fn_changes, content):
-        msger.info("Change log has been updated.")
+        log.info("Change log has been updated.")
     else:
-        msger.info("Change log has not been updated")
+        log.info("Change log has not been updated")
 
