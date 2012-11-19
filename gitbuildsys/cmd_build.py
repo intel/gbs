@@ -316,6 +316,8 @@ def main(args):
     if args.squash_patches_until:
         cmd += ['--squash-patches-until=%s' % args.squash_patches_until]
 
+    if args.define:
+        cmd += [('--define="%s"' % i) for i in args.define]
     if args.spec:
         cmd += [args.spec]
 

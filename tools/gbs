@@ -216,6 +216,8 @@ def build_parser(parser):
                         help='keep unused packages in build root. without '
                         'this option, unused packages will be removed from '
                         'build root')
+    parser.add_argument('--define', action="append",
+                        help='define macro X with value Y with format "X Y"')
 
     parser.set_defaults(alias="lb")
     return parser
