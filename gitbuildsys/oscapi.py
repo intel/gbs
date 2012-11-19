@@ -261,7 +261,7 @@ class OSC(object):
                 try:
                     response = self.core_http(core.http_GET, url).read()
                     entries = core.ET.fromstring(response)
-		    break
+                    break
                 except OSCError, err:
                     raise ObsError("can't get list of sources from"\
                                    " %s/%s: %s" % (prj, pkg, err))

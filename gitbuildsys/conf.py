@@ -564,8 +564,8 @@ class BizConfigManager(ConfigMgr):
     def build_profile_by_name(self, name):
         '''return profile object by a given section'''
         if not name.startswith('profile.'):
-            raise errors.ConfigError('section name specified by general.profile '
-                'must start with string "profile.": %s' % name)
+            raise errors.ConfigError('section name specified by general.profile'
+                ' must start with string "profile.": %s' % name)
         if not self.has_section(name):
             raise errors.ConfigError('no such section: %s' % name)
 
@@ -651,8 +651,8 @@ class BizConfigManager(ConfigMgr):
             url = URL(addr, user, password)
 
             obsconf = OBSConf(profile, 'obs.%s' % sec, url,
-                              self.get_optional_item('remotebuild', 'base_prj'),
-                              self.get_optional_item('remotebuild', 'target_prj'))
+                self.get_optional_item('remotebuild', 'base_prj'),
+                self.get_optional_item('remotebuild', 'target_prj'))
             profile.set_obs(obsconf)
 
         repos = self._parse_build_repos()

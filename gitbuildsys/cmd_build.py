@@ -20,8 +20,6 @@
 """
 
 import os
-import subprocess
-import tempfile
 import shutil
 import pwd
 import re

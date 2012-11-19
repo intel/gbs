@@ -208,7 +208,7 @@ def main(args):
         try:
             api.commit_files(target_prj, package, commit_files, commit_msg)
         except errors.ObsError, exc:
-            msger.error('commit packages fail: %s, please check the permission '\
+            msger.error('commit packages fail: %s, please check the permission '
                         'of target project:%s' % (exc, target_prj))
 
         msger.info('local changes submitted to build server successfully')

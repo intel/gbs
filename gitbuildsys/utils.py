@@ -341,9 +341,10 @@ class RepoParser(object):
                                                  meta['buildconf'])
         fname = self.fetch(buildconf_url)
         if fname:
-            release, buildid = meta['id'].split('_')
+            release, _buildid = meta['id'].split('_')
             release = release.replace('-','')
-            target_conf = os.path.join(os.path.dirname(fname), '%s.conf' % release)
+            target_conf = os.path.join(os.path.dirname(fname),
+                                       '%s.conf' % release)
             os.rename(fname, target_conf)
             self.buildconf = target_conf
 

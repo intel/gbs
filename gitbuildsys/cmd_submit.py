@@ -21,7 +21,7 @@
 import os
 import time
 
-from gitbuildsys import msger, errors
+from gitbuildsys import msger
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
@@ -45,7 +45,7 @@ def main(args):
         upstream = repo.get_upstream_branch(current_branch)
     except GitRepositoryError:
         upstream = None
-        pass
+
     if not args.remote:
         if upstream:
             args.remote = upstream.split('/')[0]
