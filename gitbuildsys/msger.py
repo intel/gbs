@@ -75,15 +75,19 @@ STDERR = sys.stderr
 
 # Configure gbp logging
 import gbp.log
-gbp.log.logger.format = '%(color)s%(levelname)s: %(coloroff)s%(message)s'
+for level in (gbp.log.DEBUG, gbp.log.INFO, gbp.log.WARNING, gbp.log.ERROR):
+    gbp.log.logging.addLevelName(level,
+                                 gbp.log.logging.getLevelName(level).lower())
+gbp.log.LOGGER.set_format('%(color)s%(levelname)s: '
+                          '%(coloroff)s%(message)s')
 
 # Mapping for gbs->gbp log levels
 GBP_LOG_LEVELS = {
-                    'quiet': gbp.log.Logger.ERROR,
-                    'normal': gbp.log.Logger.INFO,
-                    'verbose': gbp.log.Logger.DEBUG,
-                    'debug': gbp.log.Logger.DEBUG,
-                    'never': gbp.log.Logger.ERROR
+                    'quiet': gbp.log.ERROR,
+                    'normal': gbp.log.INFO,
+                    'verbose': gbp.log.DEBUG,
+                    'debug': gbp.log.DEBUG,
+                    'never': gbp.log.ERROR
                  }
 
 class PrintBuf(object):
@@ -282,7 +286,7 @@ def set_loglevel(level):
     LOG_LEVEL = LOG_LEVELS[level]
 
     # set git-buildpackage log level
-    gbp.log.logger.set_level(GBP_LOG_LEVELS[level])
+    gbp.log.LOGGER.setLevel(GBP_LOG_LEVELS[level])
 
 def set_interactive(mode=True):
     global INTERACTIVE

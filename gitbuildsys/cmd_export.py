@@ -92,6 +92,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
 
     # Now, start constructing the argument list
     argv = ["argv[0] placeholder",
+            "--git-color-scheme=magenta:green:yellow:red",
             "--git-ignore-new",
             "--git-upstream-branch=upstream",
             "--git-export-dir=%s" % export_dir,

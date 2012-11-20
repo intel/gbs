@@ -37,6 +37,7 @@ def main(args):
     path = args.path
 
     params = ["argv[0] placeholder",
+              "--color-scheme=magenta:green:yellow:red",
               "--packaging-dir=%s" % get_packaging_dir(args),
               "--upstream-branch=%s" % args.upstream_branch, path]
     if not args.no_pristine_tar and os.path.exists("/usr/bin/pristine-tar"):
