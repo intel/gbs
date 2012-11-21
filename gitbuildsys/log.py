@@ -69,9 +69,10 @@ def setup(verbose, debug=False):
     else:
         LOGGER.setLevel(INFO)
 
-    # Set output format
+    # Set output format and verbosity for gbp
     if debug:
         log_fmt = '%(color)s%(name)s:%(levelname)s: %(coloroff)s%(message)s'
+        gbp.log.LOGGER.setLevel(DEBUG)
     else:
         log_fmt = '%(color)s%(levelname)s: %(coloroff)s%(message)s'
     LOGGER.set_format(log_fmt)
