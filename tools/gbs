@@ -232,10 +232,12 @@ def remotebuild_parser(parser):
                         help='path to git repository')
 
     parser.add_argument('-T', '--target-obsprj',
-                        help='OBS project where package will be checked in '
-                        '(default is home:<userid>:gbs:Tizen:Main)')
-    parser.add_argument('-B', '--base-obsprj', default="Tizen:Main",
-                        help='OBS project to branch from')
+                        help='OBS project where package will be checked in. '
+                        'Default is home:<userid>:gbs:<base_prj>, you can '
+                        'set default target_prj in .gbs.conf')
+    parser.add_argument('-B', '--base-obsprj',
+                        help='OBS project being used to branch from, you can '
+                        'set default base_prj in .gbs.conf')
     parser.add_argument('-P', '--profile',
                         help='profile to be used for building, can be given '
                              'without the "profile." prefix')

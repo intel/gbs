@@ -115,11 +115,19 @@ def main(args):
         msger.error('can\'t get correct name.')
     package = spec.name
 
-    base_prj = args.base_obsprj
+    base_prj = None
+    if args.base_obsprj:
+        base_prj = args.base_obsprj
+    elif obsconf.base:
+        base_prj = obsconf.base
 
     if args.target_obsprj is None:
-        target_prj = obsconf.target or \
-            "home:%s:gbs:%s" % (apiurl.user, base_prj)
+        if obsconf.target:
+            target_prj = obsconf.target
+        else:
+            target_prj = "home:%s:gbs" % apiurl.user
+            if base_prj:
+                target_prj += ":%s" % base_prj
     else:
         target_prj = args.target_obsprj
 
@@ -191,8 +199,16 @@ def main(args):
         msger.error('failed to get commit info: %s' % exc)
 
     files = glob.glob("%s/*" % exportdir)
+    build_repos = None
     try:
         msger.info('checking status of obs project: %s ...' % target_prj)
+        if not api.exists(target_prj):
+            msger.info('creating new project %s' % (target_prj))
+            api.create_project(target_prj, base_prj)
+        else:
+            build_repos = api.get_repos_of_project(target_prj)
+            if not build_repos:
+                msger.warning("no available build repos for %s" % target_prj)
         if api.exists(target_prj, package):
             old, _not_changed, changed, new = api.diff_files(target_prj,
                                                              package, files)
@@ -201,8 +217,6 @@ def main(args):
                 api.remove_files(target_prj, package, old)
             commit_files = changed + new
         else:
-            msger.info('copying settings of %s to %s' % (base_prj, target_prj))
-            api.copy_project(base_prj, target_prj)
             msger.info('creating new package %s/%s' % (target_prj, package))
             api.create_package(target_prj, package)
             # new project - submitting all local files
@@ -211,8 +225,13 @@ def main(args):
         msger.error(str(err))
 
     if not commit_files:
-        msger.warning("No local changes found. Triggering rebuild")
-        api.rebuild(target_prj, package, obs_arch)
+        if build_repos:
+            msger.warning("no local changes found. Triggering rebuild")
+            api.rebuild(target_prj, package, obs_arch)
+        else:
+            msger.warning("no local changes found. can't trigger rebuild "
+                          "as no available build repos found")
+            return 0
     else:
         msger.info('commit packaging files to build server ...')
         commit_files = [(fpath, fpath in commit_files) for fpath in files]

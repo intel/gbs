@@ -84,13 +84,20 @@ class OSC(object):
         raise OSCError('Got empty response from %s %s' % \
                        (method.func_name.split('_')[-1], url))
 
-    def copy_project(self, src, target, rewrite=False):
+    def get_repos_of_project(self, project):
+        repos = defaultdict(list)
+        for repo in core.get_repos_of_project(self.apiurl, project):
+            repos[repo.name].append(repo.arch)
+        return repos
+
+    def create_project(self, target, src=None, rewrite=False):
         """
         Create new OBS project based on existing project.
         Copy config and repositories from src project to target
+        if src exists.
         """
 
-        if not self.exists(src):
+        if src and not self.exists(src):
             raise ObsError('base project: %s not exists' % src)
 
         if self.exists(target):
@@ -105,18 +112,21 @@ class OSC(object):
                '<person role="maintainer" userid="%s"/>' % \
                (target, conf.get_apiurl_usr(self.apiurl))
 
-        # Collect source repos
-        repos = defaultdict(list)
-        for repo in core.get_repos_of_project(self.apiurl, src):
-            repos[repo.name].append(repo.arch)
-
-        # Copy repos to target
-        for name in repos:
-            meta += '<repository name="%s">' % name
-            meta += '<path project="%s" repository="%s" />' % (src, name)
-            for arch in repos[name]:
-                meta += "<arch>%s</arch>\n" % arch
-            meta += "</repository>\n"
+        # Collect source repos if src project exist
+        if src:
+            # Copy repos to target
+            repos = self.get_repos_of_project(src)
+            for name in repos:
+                meta += '<repository name="%s">' % name
+                meta += '<path project="%s" repository="%s" />' % (src, name)
+                for arch in repos[name]:
+                    meta += "<arch>%s</arch>\n" % arch
+                meta += "</repository>\n"
+        else:
+            msger.warning('no project repos in target project, please add '
+                'repos from OBS webUI manually, or specify base project '
+                'with -B <base_prj>, then gbs can help to set repos '
+                'using the settings of the specified base project.')
         meta += "</project>\n"
 
         try:
@@ -125,6 +135,10 @@ class OSC(object):
         except (urllib2.URLError, M2Crypto.m2urllib2.URLError,
                 M2Crypto.SSL.SSLError), err:
             raise ObsError("Can't set meta for %s: %s" % (target, str(err)))
+
+        # don't need set project config if no src project
+        if not src:
+            return
 
         # copy project config
         try:
