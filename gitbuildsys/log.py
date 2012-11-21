@@ -70,7 +70,10 @@ def setup(verbose, debug=False):
         LOGGER.setLevel(INFO)
 
     # Set output format
-    log_fmt = '%(color)s%(levelname)s: %(coloroff)s%(message)s'
+    if debug:
+        log_fmt = '%(color)s%(name)s:%(levelname)s: %(coloroff)s%(message)s'
+    else:
+        log_fmt = '%(color)s%(levelname)s: %(coloroff)s%(message)s'
     LOGGER.set_format(log_fmt)
     gbp.log.LOGGER.set_format(log_fmt)
 

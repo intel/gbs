@@ -49,6 +49,8 @@ def main(args):
               "--upstream-branch=%s" % args.upstream_branch, path,
               "--tmp-dir=%s" % tmp.path,
               ]
+    if args.debug:
+        params.append("--verbose")
     if not args.no_pristine_tar and os.path.exists("/usr/bin/pristine-tar"):
         params.append("--pristine-tar")
 
