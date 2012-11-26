@@ -60,8 +60,10 @@ def get_packaging_dir(args):
     Determine the packaging dir to be used
     """
     if args.packaging_dir:
-        return args.packaging_dir
-    return configmgr.get('packaging_dir', 'general')
+        path = args.packaging_dir
+    else:
+        path = configmgr.get('packaging_dir', 'general')
+    return path.rstrip(os.sep)
 
 def transform_var_format_from_shell_to_python(whole):
     '''replace string like ${xxx} with %(xxx)s'''
