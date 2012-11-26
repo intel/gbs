@@ -92,6 +92,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
     else:
         squash_patches_until = configmgr.get('squash_patches_until', 'general')
 
+    packaging_dir = get_packaging_dir(args)
     # Now, start constructing the argument list
     argv = ["argv[0] placeholder",
             "--git-color-scheme=magenta:green:yellow:red",
@@ -99,7 +100,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
             "--git-upstream-branch=upstream",
             "--git-export-dir=%s" % export_dir,
             "--git-tmp-dir=%s" % tmp_dir,
-            "--git-packaging-dir=%s" % get_packaging_dir(args),
+            "--git-packaging-dir=%s" % packaging_dir,
             "--git-spec-file=%s" % spec,
             "--git-export=%s" % commit,
             "--git-upstream-branch=%s" % upstream_branch,
@@ -112,9 +113,10 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
                      "--git-patch-export-compress=100k",
                      "--git-force-create",
                      "--git-patch-export-squash-until=%s" %
-                            squash_patches_until,
-                     "--git-patch-export-ignore-path="
-                            "^(packaging/.*|.gbs.conf)"])
+                        squash_patches_until,
+                     "--git-patch-export-ignore-path=^(%s/.*|.gbs.conf)" %
+                        packaging_dir,
+                    ])
         if repo.has_branch("pristine-tar"):
             argv.extend(["--git-pristine-tar"])
 
@@ -198,11 +200,12 @@ def main(args):
         commit = 'HEAD'
     relative_spec = utils.guess_spec(workdir, packaging_dir, args.spec, commit)
 
-    outdir = "%s/packaging" % workdir
     if args.outdir:
         outdir = args.outdir
-    mkdir_p(outdir)
+    else:
+        outdir = os.path.join(workdir, packaging_dir)
     outdir = os.path.abspath(outdir)
+    mkdir_p(outdir)
     tmpdir     = configmgr.get('tmpdir', 'general')
     tempd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_export_'), \
                        directory=True)
