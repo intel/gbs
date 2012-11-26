@@ -1,0 +1,57 @@
+Release notes for gbs 0.11
+==========================
+
+- Release Date: 2012-11-07
+
+- Four enhancements to the existing features:
+  1. add '-spec' option in 'gbs build' to support building package which
+     contains multiple spec files.
+  2. add '--profile/-P' option in 'gbs build' to support building packages by using specified
+    profile which defined in .gbs.conf
+  3. support configuring local buildroot directory in config file. The 'buildroot' can
+    be set under the 'general' section as a global setting.
+  4. better error report for 'gbs build', including gbs export
+    error, expansion error and rpmbuild error, etc.
+
+- 33 bug fixes included:
+  1. plaintext passwd printed for some error cases
+  2. gbs archive tar ball issue if using user defined macro in spec file
+  3. request passwd again if one package build for a long time(>15 mins)
+  4. sudo timeout issue, which will result in endless loop
+  5. return 0 from depanneur even if error occurs
+  6. unify display color of debug message in gbs and depanneur
+  7. endless loop if package circle dependency exists
+  8. gbs build error if '~' exist in build root path
+  9. passwd conflict issue with multiple instance of 'gbs build'
+  10. remotebuild can't run in sub-directory issue
+  11. gbs build error with https_proxy trailing '/'
+  12. gbs submit gives no error if there is no comment
+  13. describe missing dependencies for gbs build
+  14. support create project outside home:<user> if user have permission
+  15. server's certificate traceback issue for gbs remotebuild
+  16. traceback for remotebuild if OBS server return None
+  17. redundant error message of connection time out when no proxy
+  18. gbp will skip packaging when spec orig file format is not supported
+  19. gbs config override password error
+  20. gbs build --incremental doesn't support one package in a dir
+  21. GBS localbuild doesn't show debug info from the 'gbs export' command
+  22. [depanneur] gbs build --buildroot=~/buildroot can't expand character like ~
+  23. project name is not checked to be legal or not any more
+  24. remotebuild can't run in sub-directory
+  25. gbs duplicates qemu handling and emulation setup environment
+  26. gbs export:: misleading output message
+  27. package file export by gbs to wrong path
+  28. [gbp] gbp need increase / update its version for new gbs
+  29. Wrong default conf info for 'repo.*' in the .gbs.conf, should point to release repo
+  30. "_" is valid in package names, gbs import does not think so!
+  31. Typo in help message
+  32. getlogin fail issue on some system while running gbs build
+  33. --extra-packs option doesn't work with --ccache option
+
+- Dependencies
+  - git-core
+  - python >= 2.7
+  - depanneur >= 0.2
+  - osc >= 0.136.0
+  - pristine-tar
+  - git-buildpackage

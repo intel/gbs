@@ -19,8 +19,8 @@ install: build
 	dh_clean -k
 	dh_installdirs
 	# Installing package
-	mkdir -p $(CURDIR)/debian/gbs $(CURDIR)/debian/gbs/usr/bin $(CURDIR)/debian/gbs/usr/share/man/man1
-	#install -m644 doc/gbs.1 $(CURDIR)/debian/gbs/usr/share/man/man1
+	mkdir -p $(CURDIR)/debian/gbs $(CURDIR)/debian/gbs/usr/bin $(CURDIR)/debian/gbs/usr/share/doc/gbs
+	install -m644 docs/RELEASE_NOTES $(CURDIR)/debian/gbs/usr/share/doc/gbs
 	#make DESTDIR=$(CURDIR)/debian/gbs installman
 	#make DESTDIR=$(CURDIR)/debian/gbs installconf
 	#make DESTDIR=$(CURDIR)/debian/gbs installsymlinks
