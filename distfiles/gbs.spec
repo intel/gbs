@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 Name:       gbs
 Summary:    The command line tools for Tizen package developers
-Version:    0.11.1
+Version:    0.12
 Release:    1
 Group:      Development/Tools
 License:    GPLv2
@@ -13,8 +13,8 @@ Requires:   python-pycurl
 Requires:   git-core
 Requires:   sudo
 Requires:   osc >= 0.136.0
-Requires:   tizen-gbp-rpm >= 2012.10.25
-Requires:   depanneur >= 0.2.1
+Requires:   tizen-gbp-rpm >= 20121123
+Requires:   depanneur >= 0.3
 Requires:   pristine-tar
 
 BuildRequires:  python-devel

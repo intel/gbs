@@ -1,3 +1,22 @@
+* Mon Nov 26 12 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.12
+  * upgrade to gbs v0.12, which contains the following bug fixing & features:
+    * support build rpm packages for incremental build
+    * --noinit support
+    * x86_64 support
+    * add --keep-packs to keep unused packages in buildroot
+    * show simple progress message for long time operations
+    * pristine-tar support
+    * patches generation for upstream branch exists
+    * add --define option to define macros for rpmbuild
+    * no hard code default base project
+    * modify changelog order to follow default order of git log
+    * change --spec to use only base file name
+    * ignore .gbs.conf in patch-generation
+    * cmd_import: enable importing patches
+    * remove output repo and buildroot info to depanneur
+    * bug fix:
+      - set TIZEN_BUILD_ROOT as abspath
+
 * Mon Nov 12 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.11.1
 - Upgrade to gbs v0.11.1, which contains the following bug fixing & features:
     * depend on depanneur 0.2.1 to fix build break issue for 'osc build'
