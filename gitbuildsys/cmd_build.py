@@ -162,6 +162,8 @@ def prepare_depanneur_opts(args):
         cmd_opts += ['--overwrite']
     if args.clean_once:
         cmd_opts += ['--clean-once']
+    if args.clean_repos:
+        cmd_opts += ['--clean-repos']
     if args.debug:
         cmd_opts += ['--debug']
     if args.incremental:

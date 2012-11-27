@@ -141,6 +141,9 @@ def build_parser(parser):
                              'without the "profile." prefix')
     parser.add_argument('-C', '--clean', action='store_true',
                         help='delete old build root before initialization')
+    parser.add_argument('--clean-repos', action='store_true',
+                        help='clean up local repos created by gbs build '
+                        'before building packages')
     parser.add_argument('--ccache', action="store_true",
                         help='use ccache to speed up rebuilds')
     parser.add_argument('--skip-conf-repos', action="store_true",
