@@ -22,26 +22,24 @@
 import os
 import datetime
 import glob
-import subprocess
-import shutil
 
-from gitbuildsys import msger, utils
-from gitbuildsys.conf import configmgr
+from gitbuildsys import msger
+from gitbuildsys.utils import guess_spec, edit_file
 from gitbuildsys.cmd_export import get_packaging_dir
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
-EDITOR = configmgr.get('editor') or os.getenv('EDITOR') or 'vi'
 
 
-def add_entries(changesfile, new_entries):
-    """Add new entries to the top of changelog."""
+def get_all_entries(changesfile, new_entries):
+    """return all entries including old in changesfile and new_entries"""
     lines = ["%s%s" % (line, os.linesep) for line in new_entries]
     lines.append(os.linesep)
-    with open(changesfile) as chlog:
-        lines.extend(chlog.readlines())
-    with open(changesfile, "w") as chlog:
-        chlog.writelines(lines)
+
+    if os.path.exists(changesfile):
+        with open(changesfile) as chlog:
+            lines.extend(chlog.readlines())
+    return ''.join(lines)
 
 
 def get_latest_rev(changesfile):
@@ -96,8 +94,8 @@ def main(args):
 
     if args.spec or not changes_file_list:
         # Create .changes file with the same name as a spec
-        specfile = os.path.basename(utils.guess_spec(project_root_dir,
-                                                     packaging_dir, args.spec))
+        specfile = os.path.basename(guess_spec(project_root_dir,
+                                               packaging_dir, args.spec))
         fn_changes = os.path.splitext(specfile)[0] + ".changes"
         fn_changes = os.path.join(project_root_dir, packaging_dir, fn_changes)
     else:
@@ -139,18 +137,8 @@ def main(args):
     else:
         new_entries = make_log_entries(commits, repo)
 
-    # create temporary copy and update it with new entries
-    temp = utils.TempCopy(fn_changes)
-    add_entries(temp.name, new_entries)
-    temp.update_stat()
-
-    subprocess.call("%s %s" % (EDITOR, temp.name), shell=True)
-
-    if temp.is_changed():
-        try:
-            shutil.copy2(temp.name, fn_changes)
-        except (IOError, shutil.Error), excobj:
-            msger.error("Can't update %s: %s" % (fn_changes, str(excobj)))
+    content = get_all_entries(fn_changes, new_entries)
+    if edit_file(fn_changes, content):
         msger.info("Change log has been updated.")
     else:
         msger.info("Change log has not been updated")

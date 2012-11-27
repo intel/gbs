@@ -128,16 +128,13 @@ class TempCopy(object):
        Deletes temporary file when object is destroyed.
     """
 
-    def __init__(self, orig_fpath):
-        self.orig_fpath = orig_fpath
-
-        # create temp file
-        tmpffd, self.name = tempfile.mkstemp(dir=os.path.dirname(orig_fpath))
+    def __init__(self, content=None):
+        tmpffd, self.name = tempfile.mkstemp()
         os.close(tmpffd)
 
-        # copy original file to temp
-        if os.path.exists(orig_fpath):
-            shutil.copy2(orig_fpath, self.name)
+        if content:
+            with open(self.name, 'w') as fobj:
+                fobj.write(content)
 
         self.stat = os.stat(self.name)
 
@@ -507,3 +504,37 @@ def glob_in_rev(git_path, pattern, commit_id):
             pattern, commit_id, str(err)))
 
     return fnmatch.filter(output.splitlines(), pattern)
+
+
+def edit(initial_content=None):
+    '''
+    launch an editor to get input from user. return the content that input.
+    '''
+    from gitbuildsys.conf import configmgr
+    EDITOR = configmgr.get('editor') or os.getenv('EDITOR') or 'vi'
+
+    temp = TempCopy(initial_content)
+    subprocess.call('%s %s' % (EDITOR, temp.name), shell=True)
+
+    if temp.is_changed():
+        with open(temp.name) as fobj:
+            return fobj.read()
+    return ''
+
+
+def edit_file(target_fname, initial_content=None):
+    '''
+    create temporary copy of target_fname with initial_content, then launch an
+        editor, update content back if user do some changes.
+    return True if content has been changed.
+    '''
+    changes = edit(initial_content)
+    if not changes:
+        return False
+
+    try:
+        with open(target_fname, 'w') as fobj:
+            fobj.write(changes)
+    except IOError, err:
+        msger.error("Can't update %s: %s" % (target_fname, str(err)))
+    return True

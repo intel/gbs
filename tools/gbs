@@ -332,8 +332,7 @@ def submit_parser(parser):
                         default=os.getcwd(),
                         help='path to git repository')
 
-    parser.add_argument('-m', '--msg', required=True,
-                        help='specify tag message info')
+    parser.add_argument('-m', '--msg', help='specify tag message info')
     parser.add_argument('-c', '--commit', default='HEAD',
                         help='specify a commit ID to submit')
     parser.add_argument('-s', '--sign', action='store_true',

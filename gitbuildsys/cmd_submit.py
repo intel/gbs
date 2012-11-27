@@ -22,8 +22,23 @@ import os
 import time
 
 from gitbuildsys import msger
+from gitbuildsys.utils import edit
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
+
+
+
+def get_message():
+    '''
+    get message from editor
+    '''
+    prompt = '''
+# Please enter the message for your tag. Lines starting with '#'
+# will be ignored, and an empty message aborts the submission.
+#'''
+    raw = edit(prompt)
+    useful = [i for i in raw.splitlines() if not i.startswith('#') ]
+    return os.linesep.join(useful).strip()
 
 
 def main(args):
@@ -31,8 +46,13 @@ def main(args):
 
     workdir = args.gitdir
 
-    if not args.msg:
-        msger.error("argument for -m option can't be empty")
+    if args.msg is None:
+        message = get_message()
+    else:
+        message = args.msg
+
+    if not message:
+        msger.error("tag message is required")
 
     try:
         repo = RpmGitRepository(workdir)
@@ -69,8 +89,8 @@ def main(args):
         tagname = 'submit/%s/%s' % (args.target, time.strftime( \
                                     '%Y%m%d.%H%M%S', time.gmtime()))
         msger.info('creating tag: %s' % tagname)
-        repo.create_tag(tagname, msg=args.msg, commit=commit, sign=args.sign,
-                                                 keyid=args.user_key)
+        repo.create_tag(tagname, msg=message, commit=commit, sign=args.sign,
+                        keyid=args.user_key)
     except GitRepositoryError, err:
         msger.error('failed to create tag %s: %s ' % (tagname, str(err)))
 

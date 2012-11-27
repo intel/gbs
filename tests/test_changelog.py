@@ -30,10 +30,12 @@ from nose.tools import eq_, raises
 
 from gbp.git.repository import GitRepository
 
-from gitbuildsys import cmd_changelog
-
 GBS = imp.load_source("gbs", "./tools/gbs").main
 ENV = {}
+
+def set_editor(editor):
+    '''set editor'''
+    os.environ['EDITOR'] = editor
 
 def setup_module():
     """One setup for all tests."""
@@ -87,7 +89,7 @@ class TestChangelog(unittest.TestCase):
         os.mkdir('packaging')
         open("packaging/test.spec", "w").close()
 
-        cmd_changelog.EDITOR = "sleep 1 && touch"
+        set_editor("sleep 1 && touch")
 
     def test_new_changes(self):
         """Test generating new .changes."""
@@ -127,7 +129,7 @@ class TestChangelog(unittest.TestCase):
     @staticmethod
     def test_not_updated():
         """Test normal exit when changelog is not updated."""
-        cmd_changelog.EDITOR = "true"
+        set_editor("true")
         eq_(GBS(argv=["gbs ", "changelog"]), None)
 
     @staticmethod
