@@ -53,8 +53,10 @@ def main(args):
         elif ret:
             msger.error("Failed to import %s" % path)
     else:
-        if args.no_merge:
-            params.insert(1, '--no-merge')
+        if args.merge:
+            params.append('--merge')
+        else:
+            params.append('--no-merge')
         if gbp_import_orig(params):
             msger.error('Failed to import %s' % path)
 
