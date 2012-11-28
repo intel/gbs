@@ -34,6 +34,7 @@ from urllib import quote_plus, pathname2url
 from gitbuildsys import msger
 from gitbuildsys.utils import hexdigest
 from gitbuildsys.errors import ObsError
+from gitbuildsys.log import waiting
 
 from osc import conf, core
 
@@ -234,7 +235,7 @@ class OSC(object):
 
         return rdict.keys(), not_changed, changed, new
 
-    @msger.waiting
+    @waiting
     def commit_files(self, prj, pkg, files, message):
         """Commits files to OBS."""
 
@@ -263,7 +264,7 @@ class OSC(object):
         except OSCError, err:
             raise ObsError("can't commit files to %s/%s: %s" % (prj, pkg, err))
 
-    @msger.waiting
+    @waiting
     def remove_files(self, prj, pkg, fnames=None):
         """
         Remove file[s] from the package.
