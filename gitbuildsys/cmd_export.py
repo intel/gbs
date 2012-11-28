@@ -69,6 +69,34 @@ def transform_var_format_from_shell_to_python(whole):
     '''replace string like ${xxx} with %(xxx)s'''
     return re.sub(r'\$\{([^}]+)\}', r'%(\1)s', whole)
 
+def check_export_branches(repo, args):
+    '''checking export related branches: pristine-tar, upstream.
+    give warning if pristine-tar/upstream branch exist in remote
+    but have not been checkout to local
+    '''
+    remote_branches = [branch.split('/')[-1] for branch in \
+                       repo.get_remote_branches()]
+    if args.upstream_branch:
+        upstream_branch = args.upstream_branch
+    else:
+        upstream_branch = configmgr.get('upstream_branch', 'general')
+
+    # upstream exist, but pristine-tar not exist
+    if repo.has_branch(upstream_branch) and \
+       not repo.has_branch('pristine-tar') and \
+       'pristine-tar' in remote_branches:
+        msger.warning('pristine-tar branch exist in remote branches, '
+                      'you can checkout it to enable exporting upstrean '
+                      'tarball from pristine-tar branch')
+
+    # all upstream and pristine-tar are not exist
+    if not repo.has_branch(upstream_branch) and \
+       not repo.has_branch('pristine-tar') and  \
+       'pristine-tar' in remote_branches and upstream_branch in remote_branches:
+        msger.warning('pristine-tar and %s branches exist in remote branches, '
+                      'you can checkout them to enable upstream tarball and '
+                      'patch-generation ' % upstream_branch)
+
 def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
                            force_native=False):
     """
@@ -105,6 +133,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
             "--git-export=%s" % commit,
             "--git-upstream-branch=%s" % upstream_branch,
             "--git-upstream-tag=%s" % upstream_tag]
+
     if force_native or is_native_pkg(repo, args):
         argv.extend(["--git-no-patch-export",
                      "--git-upstream-tree=%s" % commit])
@@ -210,6 +239,8 @@ def main(args):
     tempd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_export_'), \
                        directory=True)
     export_dir = tempd.path
+
+    check_export_branches(repo, args)
 
     with utils.Workdir(workdir):
         export_sources(repo, commit, export_dir, relative_spec, args)
