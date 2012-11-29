@@ -33,6 +33,7 @@ from gitbuildsys.cmd_export import transform_var_format_from_shell_to_python, \
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
 CHANGE_PERSONALITY = {
+            'ia32':  'linux32',
             'i686':  'linux32',
             'i586':  'linux32',
             'i386':  'linux32',
@@ -43,11 +44,9 @@ CHANGE_PERSONALITY = {
           }
 
 BUILDARCHMAP = {
-            'x86_64':   'x86_64',
-            'ia32':     'i586',
-            'i686':     'i586',
-            'i586':     'i586',
-            'i386':     'i586',
+            'ia32':     'i686',
+            'i586':     'i686',
+            'i386':     'i686',
           }
 
 SUPPORTEDARCHS = [
@@ -55,6 +54,8 @@ SUPPORTEDARCHS = [
             'ia32',
             'i686',
             'i586',
+            'i386',
+            'armv6l',
             'armv7hl',
             'armv7el',
             'armv7tnhl',
@@ -194,15 +195,6 @@ def get_processors():
     except ValueError:
         return 1
 
-def get_hostarch():
-    """
-    get arch of host
-    """
-    hostarch = os.uname()[4]
-    if hostarch == 'i686':
-        hostarch = 'i586'
-    return hostarch
-
 def find_binary_path(binary):
     """
     return full path of specified binary file
@@ -260,18 +252,19 @@ def main(args):
             msger.error("git project can't be found for --spec, "
                         "give it in argument or cd into it")
 
-    hostarch = get_hostarch()
+    hostarch = os.uname()[4]
     if args.arch:
         buildarch = args.arch
     else:
         buildarch = hostarch
         msger.info('No arch specified, using system arch: %s' % hostarch)
-    if buildarch in BUILDARCHMAP:
-        buildarch = BUILDARCHMAP[buildarch]
 
     if not buildarch in SUPPORTEDARCHS:
         msger.error('arch %s not supported, supported archs are: %s ' % \
                    (buildarch, ','.join(SUPPORTEDARCHS)))
+
+    if buildarch in BUILDARCHMAP:
+        buildarch = BUILDARCHMAP[buildarch]
 
     if buildarch not in CAN_ALSO_BUILD.get(hostarch, []):
         if buildarch not in QEMU_CAN_BUILD:
