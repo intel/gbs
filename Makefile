@@ -31,8 +31,16 @@ dist-gz: dist-common
 	tar zcpf $(PKGNAME)-$(TAGVER).tar.gz $(PKGNAME)-$(TAGVER)
 	rm -rf $(PKGNAME)-$(TAGVER)
 
-man: README.rst
-	rst2man $< >gbs.1
+man:
+	rst2man docs/GBS.rst >docs/gbs.1
+
+html:
+	rst2html docs/GBS.rst >docs/gbs.html
+
+pdf:
+	rst2pdf docs/GBS.rst -o docs/gbs.pdf
+
+docs: man html pdf
 
 install: all
 	python setup.py install --prefix=${PREFIX}
