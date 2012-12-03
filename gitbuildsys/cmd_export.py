@@ -23,6 +23,7 @@ import os
 import re
 import shutil
 import errno
+from urlparse import urlparse
 
 from gitbuildsys import msger, utils, errors
 from gitbuildsys.conf import configmgr
@@ -120,6 +121,20 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
     else:
         squash_patches_until = configmgr.get('squash_patches_until', 'general')
 
+    # Determine the remote repourl
+    reponame = ""
+    remotes = repo.get_remote_repos()
+    if remotes:
+        remotename = 'origin' if 'origin' in remotes else remotes.keys()[0]
+        # Take the remote repo of current branch, if available
+        try:
+            upstream_branch = repo.get_upstream_branch(repo.branch)
+            if upstream_branch:
+                remotename = upstream_branch.split("/")[0]
+        except GitRepositoryError:
+            pass
+        reponame = urlparse(remotes[remotename][0]).path[1:]
+
     packaging_dir = get_packaging_dir(args)
     # Now, start constructing the argument list
     argv = ["argv[0] placeholder",
@@ -132,7 +147,8 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
             "--git-spec-file=%s" % spec,
             "--git-export=%s" % commit,
             "--git-upstream-branch=%s" % upstream_branch,
-            "--git-upstream-tag=%s" % upstream_tag]
+            "--git-upstream-tag=%s" % upstream_tag,
+            "--git-spec-vcs-tag=%s#%%(tagname)s" % reponame]
 
     if force_native or is_native_pkg(repo, args):
         argv.extend(["--git-no-patch-export",
