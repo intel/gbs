@@ -1,3 +1,40 @@
+Release notes for gbs 0.12
+==========================
+
+- 11 new features added:
+  1. --noinit support, just like offline mode of `osc build`
+  2. support building RPM package for incremental build
+  3. no need generate/unpack tarball for incremental build
+  4. support patch generation and upstream tarball create from upstream/pristine-tar branches.
+  5. x86_64 and armv6l support
+  6. add --keep-packs to keep unused packages in build root while building new packages.
+  7. show progress information when running remote build
+  8. support define macros from command line using --define option for rpmbuild
+  9. launch editor for 'gbs submit' if no -m specified, and you can input multiple lines of message.
+  10.enable importing patches while importing packages
+  11.show build progress for multiple packages build
+
+- 5 bug fixes included:
+  1. [remotebuiold] OBS empty response traceback for remotebuild
+  2. [remotebuiold] remove hardcode of default base project (-B), but you can still set default in gbs.conf
+  3. warning user and try again if umount failed for incremental build
+  4. request passwd again if one package build for a long time(>10 mins) on openSUSE
+  5. lock shared vars operations to avoid race condition
+
+- 4 other changes:
+  1. add --merge option to replace --no-merge for gbs import, and not-merging is the default behavior
+  2. modify changelog order to follow default order of git log
+  3. show correct RPM/SRPM output directory for gbs build
+  4. give warning if build arch not compatible
+
+- Dependencies
+  - git-core
+  - python >= 2.7
+  - depanneur >= 0.3
+  - osc >= 0.136.0
+  - pristine-tar
+  - git-buildpackage
+
 Release notes for gbs 0.11
 ==========================
 
