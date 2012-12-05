@@ -52,9 +52,9 @@ Default profile is defined in [general] section. If profile changed, all behavio
 The mandatory rules for the section names are:
 
 
-- Profile section name should be started with `profile`
-- OBS section name should started with `obs`
-- Repository section name should started with `repo`
+- Profile section name should be started with `profile.`
+- OBS section name should started with `obs.`
+- Repository section name should started with `repo.`
 
 Common authentication info can be set in the profile level, no need to set them repeatedly in different obs and repo sections. If the authentication info is different for different obs or repos, it can be set by the **user** and **passwd** key in the individual section.
 
@@ -362,7 +362,7 @@ for architecture-dependent patches, for example, as GBS patch generation does no
 Another example could be patches that are applied on top of a secondary source tree, whose sources are not maintained
 in your git tree but only as a tarball in your packaging directory.
 
-In order to use this feature, you need to have your patch(es) in the packaging directory and listed in the spec.  In addition, you need to mark the patch to be ignored by the patch generation/importing by putting `# Gbp-Ingore-Patches: <patch numbers>` into the spec file. This will make GBS ignore the 'Patch:' tags and '%patch' macros of the listed patches when importing or generating patches.  An excerpt of an example spec file:
+In order to use this feature, you need to have your patch(es) in the packaging directory and listed in the spec.  In addition, you need to mark the patch to be ignored by the patch generation/importing by putting `# Gbp-Ignore-Patches: <patch numbers>` into the spec file. This will make GBS ignore the 'Patch:' tags and '%patch' macros of the listed patches when importing or generating patches.  An excerpt of an example spec file:
 
 ::
 
@@ -489,21 +489,20 @@ The input and output of gbs build are all repositories, the output repository wi
 Here's the basic workflow of gbs build
 
 ::
+   ____________________
+  |                    |      ___________
+  | Source Code (GIT)  |---->|           |      _________________________
+  |____________________|     |           |     |                         |
+                             |           |     |  Local repository of    |
+   ____________________      | GBS Build |---->|  build RPM packages     |
+  |                    |     |           |     |(~/GBS-ROOT/local/repos/)|
+  |Binary repositories |     |           |     |_________________________|
+  |in GBS conf         |---->|___________|                  |
+  |(Remote or Local)   |           ^                        |
+  |____________________|           |________________________|
 
-   ___________________
-  |                   |      ___________
-  |Remote repositories|---->|           |      _________________________
-  |___________________|     |           |     |                         |
-            .               |           |     |  local repository of    |
-            .               | GBS Build |---->|  build RPM packages     |
-   ___________________      |           |     |(~/GBS-ROOT/local/repos/)|
-  |                   |     |           |     |_________________________|
-  |Local repositories |---->|___________|                  |
-  |___________________|           ^                        |
-                                  |________________________|
 
-
-From the above diagram, we can see the input and input are all repositories, the output repository located at '~/GBS-ROOT/locals/repos/' by default, you can change the repos path by specifing different build root with --buildroot. Please note that the output repository will be take to build other packages by default. If you have old RPMs under that repos, that may cause build failure, you can specify --clean-repos while running gbs build to clean up local repos created by gbs before building.
+From the above diagram, we can see the input and input are all repositories, the output repository located at '~/GBS-ROOT/locals/repos/' by default, you can change the repos path by specifying different build root with --buildroot. Please note that the output repository will be take to build other packages by default. If you have old RPMs under that repos, that may cause build failure, you can specify --clean-repos while running gbs build to clean up local repos created by gbs before building.
 
 Local repos in gbs build root ('~/GBS-ROOT' by default) will affect build results, so you must ensure that repos don't contains old or unnecessary RPM packages. We recommend gbs user to set different gbs build root for different profiles. There are several ways:
 
@@ -514,7 +513,7 @@ Local repos in gbs build root ('~/GBS-ROOT' by default) will affect build result
 
 Input of gbs build
 ''''''''''''''''''
-The input of gbs build module is package repository, which can be remote, like tizen release or snapshort repositories, or local repository. Local repository supports two types:
+The input of gbs build module is package repository, which can be remote, like tizen release or snapshot repositories, or local repository. Local repository supports two types:
 - Standard repository with repodata exists
 - An normal directory contains RPM packages, gbs will find all RPM packages under this directory.
 
@@ -1383,7 +1382,7 @@ A: This is caused by missing `login` package while creating build root. You can 
 
 ::
 
-  $ echo "root:x:0:0:root:/root:/bin/bash" >>path/to/buildroot/ect/passwd
+  $ echo "root:x:0:0:root:/root:/bin/bash" >>path/to/buildroot/etc/passwd
   $ echo "root:x:0:" >>path/to/buildroot/etc/group
 
 Others
