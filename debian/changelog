@@ -1,4 +1,4 @@
-gbs (0.12-0.rc1) unstable; urgency=high
+gbs (0.12-0.rc3) unstable; urgency=high
   * upgrade to gbs v0.12, which contains the following bug fixing & features:
     * support build rpm packages for incremental build
     * --noinit support
