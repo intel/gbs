@@ -23,6 +23,8 @@ import os
 from gitbuildsys.errors import GbsError
 from gitbuildsys.cmd_export import get_packaging_dir
 from gitbuildsys.log import LOGGER as log
+from gitbuildsys.utils import Temp
+from gitbuildsys.conf import configmgr
 
 from gbp.scripts.import_srpm import main as gbp_import_srpm
 from gbp.scripts.import_orig_rpm import main as gbp_import_orig
@@ -37,10 +39,16 @@ def main(args):
 
     path = args.path
 
+    tmp = Temp(prefix='gbp_',
+               dirn=configmgr.get('tmpdir', 'general'),
+               directory=True)
+
     params = ["argv[0] placeholder",
               "--color-scheme=magenta:green:yellow:red",
               "--packaging-dir=%s" % get_packaging_dir(args),
-              "--upstream-branch=%s" % args.upstream_branch, path]
+              "--upstream-branch=%s" % args.upstream_branch, path,
+              "--tmp-dir=%s" % tmp.path,
+              ]
     if not args.no_pristine_tar and os.path.exists("/usr/bin/pristine-tar"):
         params.append("--pristine-tar")
 
