@@ -149,10 +149,6 @@ class TempCopy(object):
 
         self.stat = os.stat(self.name)
 
-    def update_stat(self):
-        """Updates stat info."""
-        self.stat = os.stat(self.name)
-
     def is_changed(self):
         """Check if temporary file has been changed."""
         return os.stat(self.name) != self.stat

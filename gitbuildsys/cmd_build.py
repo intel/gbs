@@ -24,7 +24,7 @@ import shutil
 import pwd
 import re
 
-from gitbuildsys import utils, runner
+from gitbuildsys.utils import Temp, RepoParser
 from gitbuildsys.errors import GbsError, Usage
 from gitbuildsys.conf import configmgr
 from gitbuildsys.safe_url import SafeURL
@@ -90,7 +90,7 @@ def prepare_repos_and_build_conf(args, arch, profile):
     '''generate repos and build conf options for depanneur'''
 
     cmd_opts = []
-    cache = utils.Temp(prefix=os.path.join(TMPDIR, 'gbscache'),
+    cache = Temp(prefix=os.path.join(TMPDIR, 'gbscache'),
                        directory=True)
     cachedir  = cache.path
     if not os.path.exists(cachedir):
@@ -114,7 +114,7 @@ def prepare_repos_and_build_conf(args, arch, profile):
     if not repos:
         raise GbsError('No package repository specified.')
 
-    repoparser = utils.RepoParser(repos, cachedir)
+    repoparser = RepoParser(repos, cachedir)
     repourls = repoparser.get_repos_by_arch(arch)
     if not repourls:
         raise GbsError('no available repositories found for arch %s under the '
@@ -186,41 +186,6 @@ def prepare_depanneur_opts(args):
     cmd_opts += ['--packaging-dir=%s' % get_packaging_dir(args)]
 
     return cmd_opts
-
-def get_processors():
-    """
-    get number of processors (online) based on
-    SC_NPROCESSORS_ONLN (returns 1 if config name does not exist).
-    """
-    try:
-        return os.sysconf('SC_NPROCESSORS_ONLN')
-    except ValueError:
-        return 1
-
-def find_binary_path(binary):
-    """
-    return full path of specified binary file
-    """
-    if os.environ.has_key("PATH"):
-        paths = os.environ["PATH"].split(":")
-    else:
-        paths = []
-        if os.environ.has_key("HOME"):
-            paths += [os.environ["HOME"] + "/bin"]
-        paths += ["/usr/local/sbin", "/usr/local/bin", "/usr/sbin",
-                  "/usr/bin", "/sbin", "/bin"]
-
-    for path in paths:
-        bin_path = "%s/%s" % (path, binary)
-        if os.path.exists(bin_path):
-            return bin_path
-    return None
-
-def is_statically_linked(binary):
-    """
-    check if binary is statically linked
-    """
-    return ", statically linked, " in runner.outs(['file', binary])
 
 def get_profile(args):
     """

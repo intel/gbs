@@ -21,7 +21,6 @@ Provides classes and functions to read and write gbs.conf.
 
 from __future__ import with_statement
 import os
-import ast
 import base64
 import shutil
 from collections import namedtuple
@@ -41,18 +40,6 @@ def decode_passwdx(passwdx):
 def encode_passwd(passwd):
     '''encode passwd by bz2 and base64'''
     return base64.b64encode(passwd.encode('bz2'))
-
-
-def evalute_string(string):
-    '''safely evaluate string'''
-    if string.startswith('"') or string.startswith("'"):
-        return ast.literal_eval(string)
-    return string
-
-
-def split_and_evaluate_string(string, sep=None, maxsplit=-1):
-    '''split a string and evaluate each of them'''
-    return [ evalute_string(i.strip()) for i in string.split(sep, maxsplit) ]
 
 
 class BrainConfigParser(SafeConfigParser):
