@@ -133,7 +133,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
                 remotename = remote_branch.split("/")[0]
         except GitRepositoryError:
             pass
-        reponame = urlparse(remotes[remotename][0]).path[1:]
+        reponame = urlparse(remotes[remotename][0]).path.lstrip('/')
 
     packaging_dir = get_packaging_dir(args)
     # Now, start constructing the argument list
