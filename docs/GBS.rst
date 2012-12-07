@@ -489,6 +489,7 @@ The input and output of gbs build are all repositories, the output repository wi
 Here's the basic workflow of gbs build
 
 ::
+
    ____________________
   |                    |      ___________
   | Source Code (GIT)  |---->|           |      _________________________
@@ -1391,3 +1392,37 @@ Others
 Q: [Fedora] gbs show error: "<user> is not in the sudoers file.  This incident will be reported".
 
 A: Update /etc/sudoers to give <user> sudo permission.
+
+Reporting issues
+================
+
+Please report bugs or feature requests at `JIRA <http://en.wikipedia.org/wiki/JIRA>`_: https://bugs.tizen.org.
+
+Detailed steps:
+
+- Click "create issue"
+- Select Projects: "Development Tools"
+- Select Components: "GBS"
+
+Source Code
+===========
+
+The source code is tracked at: https://github.com/01org/gbs
+
+
+License
+=======
+
+::
+
+ Copyright (c) 2012 Intel, Inc.
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the Free
+ Software Foundation; version 2 of the License
+ This program is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ You should have received a copy of the GNU General Public License along
+ with this program; if not, write to the Free Software Foundation, Inc., 59
+ Temple Place - Suite 330, Boston, MA 02111-1307, USA.
