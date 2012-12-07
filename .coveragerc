@@ -1,0 +1,3 @@
+[run]
+include = tools/gbs
+          gitbuildsys/*
