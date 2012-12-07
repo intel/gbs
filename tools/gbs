@@ -441,9 +441,6 @@ if __name__ == '__main__':
     except errors.Usage, usage:
         log.LOGGER.error(str(usage))
 
-    except errors.Abort, msg:
-        log.LOGGER.info(str(msg))
-
     except errors.CmdError, err:
         if log.LOGGER.level == log.DEBUG:
             import traceback

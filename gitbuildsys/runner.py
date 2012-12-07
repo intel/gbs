@@ -16,23 +16,28 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+"""
+API to call external programs using subprocess.
+NOTE!!! Called only once in cmd_buld
+Most probably can be easily replaced by subprocess.check_output there.
+"""
+
 import os
 import subprocess
 
 from gitbuildsys.errors import GbsError
-from gitbuildsys.log import LOGGER as log
 
 def runtool(cmdln_or_args, catch=1):
-    """ wrapper for most of the subprocess calls
-    input:
+    """Handy wrapper of Popen
+    Parameters:
         cmdln_or_args: can be both args and cmdln str (shell=True)
         catch: 0, quitely run
                1, only STDOUT
                2, only STDERR
                3, both STDOUT and STDERR
-    return:
-        (rc, output)
-        if catch==0: the output will always None
+    Returns:
+        tuple (rc, output)
+        (rc, None) if catch is 0
     """
 
     if catch not in (0, 1, 2, 3):
@@ -68,33 +73,6 @@ def runtool(cmdln_or_args, catch=1):
 
     return (process.returncode, out)
 
-def show(cmdln_or_args):
-    # show all the message using log.debug
-
-    rcode, out = runtool(cmdln_or_args, catch=3)
-
-    if isinstance(cmdln_or_args, list):
-        cmd = ' '.join(cmdln_or_args)
-    else:
-        cmd = cmdln_or_args
-
-    msg =  'running command: "%s"' % cmd
-    if out:
-        out = out.strip()
-    if out:
-        msg += ', with output::'
-        msg += '\n  +----------------'
-        for line in out.splitlines():
-            msg += '\n  | %s' % line
-        msg += '\n  +----------------'
-
-    log.debug(msg)
-    return rcode
-
 def outs(cmdln_or_args, catch=1):
-    # get the outputs of tools
+    """Get stripped output."""
     return runtool(cmdln_or_args, catch)[1].strip()
-
-def quiet(cmdln_or_args):
-    return runtool(cmdln_or_args, catch=0)[0]
-

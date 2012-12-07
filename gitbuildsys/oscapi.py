@@ -85,6 +85,7 @@ class OSC(object):
                        (method.func_name.split('_')[-1], url))
 
     def get_repos_of_project(self, project):
+        """Get dictionary name: list of archs for project repos"""
         repos = defaultdict(list)
         for repo in core.get_repos_of_project(self.apiurl, project):
             repos[repo.name].append(repo.arch)

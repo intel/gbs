@@ -16,6 +16,11 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+"""
+Custom global gbs exceptions. Almost useless as
+most of exceptions should be moved to modules where they raised.
+"""
+
 class CmdError(Exception):
     """An exception base class for all command calling errors."""
     keyword = ''
@@ -24,6 +29,7 @@ class CmdError(Exception):
         return self.keyword + str(self.args[0])
 
 class Usage(CmdError):
+    """Usage error. Raised only by remotebuild."""
     keyword = '<usage>'
 
     def __str__(self):
@@ -31,25 +37,20 @@ class Usage(CmdError):
                 ', please use "--help" for more info'
 
 class ConfigError(CmdError):
+    """Config parsing error. Raised only by conf module."""
     keyword = '<config>'
 
 class ObsError(CmdError):
+    """OBS error. Raised only by oscapi module."""
     keyword = '<obs>'
 
-class UnpackError(CmdError):
-    keyword = '<unpack>'
-
-class FormatError(CmdError):
-    keyword = '<format>'
-
-class QemuError(CmdError):
-    keyword = '<qemu>'
-
-class Abort(CmdError):
-    keyword = ''
-
 class UrlError(CmdError):
+    """Url grabber error. Raised only by utils.URLGrabber class."""
     keyword = '<url>'
 
 class GbsError(CmdError):
+    """
+    Most used exception. Should be base exception class as CmdError is
+    not directly raised anywhere.
+    """
     keyword = '<gbs>'

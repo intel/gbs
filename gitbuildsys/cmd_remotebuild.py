@@ -84,7 +84,6 @@ def main(args):
     if not (args.buildlog or args.status):
         utils.git_status_checker(repo, args)
 
-    # TODO: check ./packaging dir at first
     packaging_dir = get_packaging_dir(args)
 
     if args.commit:

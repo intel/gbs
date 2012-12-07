@@ -78,6 +78,26 @@ def make_log_entries(commits, git_repo):
         entries.append("- %s" % commit_info["subject"])
     return entries
 
+def get_first_commit(repo, changes, since):
+    """
+    Get first commit considering since parameter and latest
+    git revision mentioned in .changes file.
+    """
+    if since:
+        first = since
+    else:
+        first = get_latest_rev(changes)
+
+    if first:
+        try:
+            return repo.rev_parse(first)
+        except GitRepositoryError:
+            if since:
+                raise GbsError("Invalid commit: %s" % (first))
+            else:
+                raise GbsError("Can't find last commit ID in the log, "\
+                               "please specify it by '--since'")
+
 
 def main(args):
     """gbs changelog entry point."""
@@ -87,18 +107,16 @@ def main(args):
     except GitRepositoryError, err:
         raise GbsError(str(err))
 
-    project_root_dir = repo.path
-
     packaging_dir = get_packaging_dir(args)
-    changes_file_list = glob.glob("%s/%s/*.changes" % (project_root_dir,
+    changes_file_list = glob.glob("%s/%s/*.changes" % (repo.path,
                                                        packaging_dir))
 
     if args.spec or not changes_file_list:
         # Create .changes file with the same name as a spec
-        specfile = os.path.basename(guess_spec(project_root_dir,
+        specfile = os.path.basename(guess_spec(repo.path,
                                                packaging_dir, args.spec))
         fn_changes = os.path.splitext(specfile)[0] + ".changes"
-        fn_changes = os.path.join(project_root_dir, packaging_dir, fn_changes)
+        fn_changes = os.path.join(repo.path, packaging_dir, fn_changes)
     else:
         fn_changes = changes_file_list[0]
         if len(changes_file_list) > 1:
@@ -106,21 +124,7 @@ def main(args):
                            % (changes_file_list[0]))
 
     # get the commit start from the args.since
-    if args.since:
-        since = args.since
-    else:
-        since = get_latest_rev(fn_changes)
-
-    commitid_since = None
-    if since:
-        try:
-            commitid_since = repo.rev_parse(since)
-        except GitRepositoryError:
-            if args.since:
-                raise GbsError("Invalid commit: %s" % (since))
-            else:
-                raise GbsError("Can't find last commit ID in the log, "\
-                               "please specify it by '--since'")
+    commitid_since = get_first_commit(repo, fn_changes, args.since)
 
     commits = repo.get_commits(commitid_since, 'HEAD')
     if not commits:
@@ -129,11 +133,11 @@ def main(args):
     if args.message:
         author = repo.get_author_info()
         lines = ["- %s" % line for line in args.message.split(os.linesep) \
-                                            if line.strip()]
+                               if line.strip()]
         new_entries = ["* %s %s <%s> %s" % \
-                           (datetime.datetime.now().strftime("%a %b %d %Y"),
-                            author.name, author.email,
-                            get_version(repo, commits[0]))]
+                       (datetime.datetime.now().strftime("%a %b %d %Y"),
+                        author.name, author.email,
+                        get_version(repo, commits[0]))]
         new_entries.extend(lines)
     else:
         new_entries = make_log_entries(commits, repo)

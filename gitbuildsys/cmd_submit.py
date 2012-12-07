@@ -47,10 +47,9 @@ def main(args):
 
     workdir = args.gitdir
 
-    if args.msg is None:
+    message = args.msg
+    if message is None:
         message = get_message()
-    else:
-        message = args.msg
 
     if not message:
         raise GbsError("tag message is required")
@@ -74,29 +73,32 @@ def main(args):
             log.info("no upstream set for the current branch, using "
                        "'origin' as the remote server")
             args.remote = 'origin'
-    if not args.target:
+
+    target = args.target
+    if not target:
         if upstream and upstream.startswith(args.remote):
-            args.target = os.path.basename(upstream)
+            target = os.path.basename(upstream)
         else:
             log.warning("Can't find upstream branch for current branch "
                           "%s. Gbs uses the local branch name as the target. "
                           "Please consider to use git-branch --set-upstream "
                           "to set upstream remote branch." % current_branch)
-            args.target = current_branch
+            target = current_branch
 
-    try:
-        if args.target == 'master':
-            args.target = 'trunk'
-        tagname = 'submit/%s/%s' % (args.target, time.strftime( \
+    if target == 'master':
+        target = 'trunk'
+
+    tagname = 'submit/%s/%s' % (target, time.strftime( \
                                     '%Y%m%d.%H%M%S', time.gmtime()))
-        log.info('creating tag: %s' % tagname)
+    log.info('creating tag: %s' % tagname)
+    try:
         repo.create_tag(tagname, msg=message, commit=commit, sign=args.sign,
                         keyid=args.user_key)
     except GitRepositoryError, err:
         raise GbsError('failed to create tag %s: %s ' % (tagname, str(err)))
 
+    log.info("pushing tag to remote '%s'" % args.remote)
     try:
-        log.info("pushing tag to remote '%s'" % args.remote)
         repo.push_tag(args.remote, tagname)
     except GitRepositoryError, err:
         repo.delete_tag(tagname)

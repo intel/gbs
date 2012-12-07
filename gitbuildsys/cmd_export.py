@@ -68,10 +68,6 @@ def get_packaging_dir(args):
         path = configmgr.get('packaging_dir', 'general')
     return path.rstrip(os.sep)
 
-def transform_var_format_from_shell_to_python(whole):
-    '''replace string like ${xxx} with %(xxx)s'''
-    return re.sub(r'\$\{([^}]+)\}', r'%(\1)s', whole)
-
 def check_export_branches(repo, args):
     '''checking export related branches: pristine-tar, upstream.
     give warning if pristine-tar/upstream branch exist in remote
@@ -113,7 +109,9 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
         upstream_tag = args.upstream_tag
     else:
         upstream_tag = configmgr.get('upstream_tag', 'general')
-        upstream_tag = transform_var_format_from_shell_to_python(upstream_tag)
+        # transform variables from shell to python convention ${xxx} -> %(xxx)s
+        upstream_tag = re.sub(r'\$\{([^}]+)\}', r'%(\1)s', upstream_tag)
+
     log.debug("Using upstream branch: %s" % upstream_branch)
     log.debug("Using upstream tag format: '%s'" % upstream_tag)
 

@@ -28,8 +28,7 @@ from gitbuildsys import utils, runner
 from gitbuildsys.errors import GbsError, Usage
 from gitbuildsys.conf import configmgr
 from gitbuildsys.safe_url import SafeURL
-from gitbuildsys.cmd_export import transform_var_format_from_shell_to_python, \
-                                   get_packaging_dir
+from gitbuildsys.cmd_export import get_packaging_dir
 from gitbuildsys.log import LOGGER as log
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
@@ -68,21 +67,21 @@ SUPPORTEDARCHS = [
 
 # These two dicts maping come from osc/build.py
 CAN_ALSO_BUILD = {
-             'armv7l' :['armv4l', 'armv5l', 'armv6l', 'armv7l', 'armv5el', 'armv6el', 'armv7el'],
-             'armv7el':['armv4l', 'armv5l', 'armv6l', 'armv7l', 'armv5el', 'armv6el', 'armv7el'],
+             'armv7l' :['armv4l', 'armv5l', 'armv6l', 'armv7l', 'armv5el',
+                        'armv6el', 'armv7el'],
+             'armv7el':['armv4l', 'armv5l', 'armv6l', 'armv7l', 'armv5el',
+                        'armv6el', 'armv7el'],
              'armv8l' :['armv4l', 'armv5el', 'armv6el', 'armv7el', 'armv8el' ],
              'i586'   :['i586', 'i386'],
              'i686'   :['i686', 'i586', 'i386',],
              'x86_64' :['x86_64', 'i686', 'i586', 'i386'],
             }
 
-QEMU_CAN_BUILD = [ 'armv4l', 'armv5el', 'armv5l', 'armv6l', 'armv7l', 'armv6el', 'armv7el', 'armv7hl', 'armv8el',
-                   'sh4', 'mips', 'mipsel',
-                   'ppc', 'ppc64',
-                   's390', 's390x',
-                   'sparc64v', 'sparcv9v', 'sparcv9', 'sparcv8', 'sparc',
-                   'hppa'
-                ]
+QEMU_CAN_BUILD = ['armv4l', 'armv5el', 'armv5l', 'armv6l', 'armv7l',
+                  'armv6el', 'armv7el', 'armv7hl', 'armv8el', 'sh4', 'mips',
+                  'mipsel', 'ppc', 'ppc64', 's390', 's390x', 'sparc64v',
+                  'sparcv9v', 'sparcv9', 'sparcv8', 'sparc', 'hppa'
+                  ]
 
 USERID = pwd.getpwuid(os.getuid())[0]
 TMPDIR = os.path.join(configmgr.get('tmpdir', 'general'), '%s-gbs' % USERID)
@@ -284,7 +283,8 @@ def main(args):
     else:
         build_root = configmgr.get('buildroot', 'general')
     build_root = os.path.expanduser(build_root)
-    build_root = transform_var_format_from_shell_to_python(build_root)
+    # transform variables from shell to python convention ${xxx} -> %(xxx)s
+    build_root = re.sub(r'\$\{([^}]+)\}', r'%(\1)s', build_root)
     sanitized_profile_name = re.sub("[^a-zA-Z0-9:._-]", "_", profile.name)
     build_root = build_root % {'tmpdir': TMPDIR,
                                'profile': sanitized_profile_name}

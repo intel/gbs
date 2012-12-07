@@ -16,6 +16,8 @@
 # with this program; if not, write to the Free Software Foundation, Inc., 59
 # Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+"""Helpers, convenience utils, common APIs."""
+
 import os
 import glob
 import tempfile
@@ -36,6 +38,14 @@ from gbp.errors import GbpError
 
 
 class Workdir(object):
+    """
+    Context manager, which makes it easy to enter some directory
+    do something and return back.
+    Usage example:
+        with utils.Workdir(workdir):
+            # do something here
+        # here you're again in the same dir as before
+    """
     def __init__(self, path):
         self._newdir = path
         self._cwd = os.getcwd()
@@ -47,7 +57,7 @@ class Workdir(object):
         os.chdir(self._cwd)
 
 def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
-    '''guess spec file from project name if not given'''
+    """Guess spec file from project name if not given."""
     git_path = os.path.abspath(git_path)
 
     if commit_id == 'WC.UNTRACKED':
@@ -152,8 +162,8 @@ class TempCopy(object):
             os.unlink(self.name)
 
 
-class PageNotFound(UrlError):
-    'page not found error: 404'
+class PageNotFound(Exception):
+    """Custom exception to handle HTTP 404 error."""
 
 class URLGrabber(object):
     '''grab an url and save to local file'''
@@ -226,12 +236,12 @@ class URLGrabber(object):
             signal.signal(signal.SIGINT, original_handler)
 
     def __del__(self):
-        '''close Curl object'''
+        """Close curl object."""
         self.curl.close()
         self.curl = None
 
     def grab(self, url, filename, user=None, passwd=None):
-        '''grab url to filename'''
+        """Grab url to file."""
 
         log.debug("fetching %s => %s" % (url, filename))
 
@@ -241,8 +251,7 @@ class URLGrabber(object):
 
 
 class RepoParser(object):
-    """ Repository parser for generate real repourl and build config
-    """
+    """Repository parser for generate real repourl and build config."""
 
     def __init__(self, repos, cachedir):
         self.cachedir = cachedir
@@ -256,7 +265,10 @@ class RepoParser(object):
 
     @staticmethod
     def _parse_build_xml(build_xml):
-        '''parse build.xml returns a dict contains buildconf, repos and archs'''
+        """
+        Parse build.xml.
+        Returns: dictionary with buildconf, repos and archs.
+        """
         if not (build_xml and os.path.exists(build_xml)):
             return
 
@@ -292,7 +304,7 @@ class RepoParser(object):
         return meta
 
     def build_repos_from_buildmeta(self, baseurl, meta):
-        '''parse build.xml and pickup standard repos it contains'''
+        """Parse build.xml and pickup standard repos it contains."""
         archs = meta.get('archs', [])
         repos = meta.get('repos', [])
 
@@ -304,7 +316,10 @@ class RepoParser(object):
                     self.repourls[arch].append(repourl)
 
     def fetch(self, url):
-        '''return file name if fetch url success, else None'''
+        """
+        Fetch url.
+        Returns: file name if fetch succeds, else None.
+        """
         fname = os.path.join(self.cachedir, os.path.basename(url))
 
         try:
@@ -315,20 +330,20 @@ class RepoParser(object):
         return fname
 
     def is_standard_repo(self, repo):
-        '''Check if repo is standard repo with repodata/repomd.xml exist'''
+        """Check if repo is standard repo with repodata/repomd.xml exist."""
 
         repomd_url = repo.pathjoin('repodata/repomd.xml')
         return not not self.fetch(repomd_url)
 
     def _fetch_build_meta(self, latest_repo_url):
-        '''fetch build.xml and parse'''
+        """Fetch and parse build.xml."""
         buildxml_url = latest_repo_url.pathjoin('builddata/build.xml')
         build_xml = self.fetch(buildxml_url)
         if build_xml:
             return self._parse_build_xml(build_xml)
 
     def _fetch_build_conf(self, latest_repo_url, meta):
-        '''fetch build.conf whose file name is get from build.xml'''
+        """Get build.conf file name from build.xml and fetch it."""
         if self.buildconf:
             return
 
@@ -351,9 +366,9 @@ class RepoParser(object):
             self.buildconf = target_conf
 
     def parse(self, remotes):
-        '''parse each remote repo, try to fetch build.xml and build.conf'''
+        """Parse each remote repo, try to fetch build.xml and build.conf"""
         def deal_with_one_repo(repo):
-            'deal with one repo url'
+            """Deal with one repo url."""
             if self.is_standard_repo(repo):
                 self.standardrepos.append(repo)
 
@@ -380,7 +395,7 @@ class RepoParser(object):
 
     @staticmethod
     def split_out_local_repo(repos):
-        '''divide repos into two parts, local and remote'''
+        """Divide repos to local and remote parts."""
         local_repos = []
         remotes = []
 
@@ -396,7 +411,7 @@ class RepoParser(object):
         return local_repos, remotes
 
     def get_repos_by_arch(self, arch):
-        '''get repos by arch'''
+        """Get repos by arch."""
         repos = self.localrepos + self.standardrepos # local repos first
 
         if arch in ['ia32', 'i686', 'i586']:
@@ -420,6 +435,10 @@ class RepoParser(object):
 
 
 def git_status_checker(git, opts):
+    """
+    Perform git repository status check.
+    Warn user if repository is not clean or untracked files are found.
+    """
     try:
         if opts.commit:
             git.rev_parse(opts.commit)
@@ -453,7 +472,7 @@ def git_status_checker(git, opts):
                        ':\n   %s' % '\n   '.join(uncommitted_files))
 
 def hexdigest(fhandle, block_size=4096):
-    """Calculates hexdigest of file content."""
+    """Calculate hexdigest of file content."""
     md5obj = hashlib.new('md5')
     while True:
         data = fhandle.read(block_size)
@@ -464,8 +483,7 @@ def hexdigest(fhandle, block_size=4096):
 
 
 def show_file_from_rev(git_path, relative_path, commit_id):
-    '''return a single file content from given rev.'''
-
+    """Get a single file content from given git revision."""
     cmd = 'cd %s; git show %s:%s' % (git_path, commit_id, relative_path)
     try:
         return subprocess.check_output(cmd, shell=True)
@@ -476,8 +494,7 @@ def show_file_from_rev(git_path, relative_path, commit_id):
 
 
 def file_exists_in_rev(git_path, relative_path, commit_id):
-    '''return True if file exists in given rev'''
-
+    """Check if file exists in given given revision."""
     cmd = 'cd %s; git ls-tree --name-only %s %s' % (
         git_path, commit_id, relative_path)
 
@@ -491,7 +508,7 @@ def file_exists_in_rev(git_path, relative_path, commit_id):
 
 
 def glob_in_rev(git_path, pattern, commit_id):
-    '''glob pattern in given rev'''
+    """Glob pattern in given revision."""
 
     path = os.path.dirname(pattern)
     cmd = 'cd %s; git ls-tree --name-only %s %s/' % (
@@ -507,14 +524,15 @@ def glob_in_rev(git_path, pattern, commit_id):
 
 
 def edit(initial_content=None):
-    '''
-    launch an editor to get input from user. return the content that input.
-    '''
+    """
+    Launch an editor to get input from user.
+    Returns: content of user input.
+    """
     from gitbuildsys.conf import configmgr
-    EDITOR = configmgr.get('editor') or os.getenv('EDITOR') or 'vi'
+    editor = configmgr.get('editor') or os.getenv('EDITOR') or 'vi'
 
     temp = TempCopy(initial_content)
-    subprocess.call('%s %s' % (EDITOR, temp.name), shell=True)
+    subprocess.call('%s %s' % (editor, temp.name), shell=True)
 
     if temp.is_changed():
         with open(temp.name) as fobj:
@@ -523,11 +541,11 @@ def edit(initial_content=None):
 
 
 def edit_file(target_fname, initial_content=None):
-    '''
-    create temporary copy of target_fname with initial_content, then launch an
-        editor, update content back if user do some changes.
-    return True if content has been changed.
-    '''
+    """
+    Create temporary copy of target_fname with initial_content and  launch
+    an editor to edit it. Update content back if user changed it.
+    Returns: True if content has been changed.
+    """
     changes = edit(initial_content)
     if not changes:
         return False
