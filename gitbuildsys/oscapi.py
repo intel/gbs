@@ -161,13 +161,14 @@ class OSC(object):
 
         metatype = 'prj'
         path_args = [core.quote_plus(prj)]
-        if pkg:
-            metatype = 'pkg'
-            path_args.append(core.quote_plus(pkg))
         err = None
         try:
             core.meta_exists(metatype = metatype, path_args = tuple(path_args),
                              create_new = False, apiurl = self.apiurl)
+            if not pkg:
+                return True
+
+            return pkg in core.meta_get_packagelist(self.apiurl, prj)
         except urllib2.HTTPError, err:
             if err.code == 404:
                 return False
@@ -179,7 +180,7 @@ class OSC(object):
         if err:
             raise ObsError("can't check if %s/%s exists: %s" % (prj, pkg, err))
 
-        return True
+        return False
 
     def rebuild(self, prj, pkg, arch):
         """Rebuild package."""
