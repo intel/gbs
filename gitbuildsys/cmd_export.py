@@ -130,9 +130,9 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
         remotename = 'origin' if 'origin' in remotes else remotes.keys()[0]
         # Take the remote repo of current branch, if available
         try:
-            upstream_branch = repo.get_upstream_branch(repo.branch)
-            if upstream_branch:
-                remotename = upstream_branch.split("/")[0]
+            remote_branch = repo.get_upstream_branch(repo.branch)
+            if remote_branch:
+                remotename = remote_branch.split("/")[0]
         except GitRepositoryError:
             pass
         reponame = urlparse(remotes[remotename][0]).path[1:]
