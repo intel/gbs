@@ -376,10 +376,10 @@ url = http://download.tizen.org/releases/daily/trunk/ivi/latest/
 URL = namedtuple('URL', 'url user password')
 
 
-class OBSConf(object):
-    'Config items related to obs section'
+class SectionConf(object):
+    """Config items related to obs and repo sections."""
 
-    def __init__(self, parent, name, url, base, target):
+    def __init__(self, parent, name, url, base=None, target=None):
         self.parent = parent
         self.name = name
         self.base = base
@@ -393,7 +393,7 @@ class OBSConf(object):
             raise errors.ConfigError('%s for %s' % (str(err), url.url))
 
     def dump(self, fhandler):
-        'dump ini to file object'
+        """Dump ini to file object."""
         parser = BrainConfigParser()
         parser.add_section(self.name)
 
@@ -411,36 +411,6 @@ class OBSConf(object):
 
         if self.target:
             parser.set(self.name, 'target_prj', self.target)
-        parser.write(fhandler)
-
-
-class RepoConf(object):
-    'Config items related to repo section'
-
-    def __init__(self, parent, name, url):
-        self.parent = parent
-        self.name = name
-
-        user = url.user or parent.common_user
-        password = url.password or parent.common_password
-        try:
-            self.url = SafeURL(url.url, user, password)
-        except ValueError, err:
-            raise errors.ConfigError('%s for %s' % (str(err), url.url))
-
-    def dump(self, fhandler):
-        'dump ini to file object'
-        parser = BrainConfigParser()
-        parser.add_section(self.name)
-
-        parser.set(self.name, 'url', self.url)
-
-        if self.url.user and self.url.user != self.parent.common_user:
-            parser.set(self.name, 'user', self.url.user)
-
-        if self.url.passwd and self.url.passwd != self.parent.common_password:
-            parser.set(self.name, 'passwdx',
-                       encode_passwd(self.url.passwd))
         parser.write(fhandler)
 
 
@@ -567,10 +537,10 @@ class BizConfigManager(ConfigMgr):
                 raise errors.ConfigError('obs section name should start '
                                          'with string "obs.": %s' % obs)
 
-            obsconf = OBSConf(profile, obs,
-                              self._get_url_options(obs),
-                              self.get_optional_item(obs, 'base_prj'),
-                              self.get_optional_item(obs, 'target_prj'))
+            obsconf = SectionConf(profile, obs,
+                                  self._get_url_options(obs),
+                                  self.get_optional_item(obs, 'base_prj'),
+                                  self.get_optional_item(obs, 'target_prj'))
             profile.set_obs(obsconf)
 
         repos = self.get_optional_item(name, 'repos')
@@ -582,8 +552,8 @@ class BizConfigManager(ConfigMgr):
                                 'with string "repo."' % repo)
                     continue
 
-                repoconf = RepoConf(profile, repo,
-                                    self._get_url_options(repo))
+                repoconf = SectionConf(profile, repo,
+                                       self._get_url_options(repo))
                 profile.add_repo(repoconf)
 
         profile.buildroot = self.get_optional_item(name, 'buildroot')
@@ -637,9 +607,9 @@ class BizConfigManager(ConfigMgr):
             password = self.get_optional_item(sec, 'passwd')
             url = URL(addr, user, password)
 
-            obsconf = OBSConf(profile, 'obs.%s' % sec, url,
-                self.get_optional_item('remotebuild', 'base_prj'),
-                self.get_optional_item('remotebuild', 'target_prj'))
+            obsconf = SectionConf(profile, 'obs.%s' % sec, url,
+                        self.get_optional_item('remotebuild', 'base_prj'),
+                        self.get_optional_item('remotebuild', 'target_prj'))
             profile.set_obs(obsconf)
 
         repos = self._parse_build_repos()
@@ -648,7 +618,7 @@ class BizConfigManager(ConfigMgr):
                 raise errors.ConfigError("URL is not specified for %s" % key)
             url = URL(item['url'], item.get('user'), item.get('passwd'))
 
-            repoconf = RepoConf(profile, 'repo.%s' % key, url)
+            repoconf = SectionConf(profile, 'repo.%s' % key, url)
             profile.add_repo(repoconf)
 
         return profile
