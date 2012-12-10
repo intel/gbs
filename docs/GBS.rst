@@ -20,7 +20,7 @@ This section contains more detailed GBS information. We recommend reading the `S
 
 - `Installation or Upgrade </documentation/developer-guide/environment-setup>`_:  How to install or upgrade the tools
 - `Configuration File </documentation/reference/git-build-system/configuration-file>`_:  How to modify the configuration for GBS
-- `Upstream tarball and patch-generation support </documentation/reference/git-build-system/upstream-tarball-and-patch-generation-support>`_:  Describes how to manage native and non-native packages packages in a more proper way
+- `Upstream package management </documentation/reference/git-build-system/upstream-tarball-and-patch-generation-support>`_:  Describes how to manage native and non-native packages packages in a more proper way
 - `GBS Usage </documentation/reference/git-build-system/usage>`_:  Describes, in more detail, how to use GBS
 - `FAQ </documentation/reference/git-build-system/faqs>`_:  Frequently Asked Questions
 
@@ -482,9 +482,25 @@ For instructions on using the `build` subcommand, use this command: `gbs build -
 gbs build workflow
 ``````````````````
 
-The target of gbs is building all tizen packages and create image finally, and the build order of packages are resolved from package dependency specified in spec files, and build out RPM packages will participate building packages depend on them.
+Input of gbs build
+''''''''''''''''''
+Below is the input for gbs build:
 
-The input and output of gbs build are all repositories, the output repository will participate building packages, that's the feature of dependency build.
+- git project(s) which contains rpm packaging files
+- binary rpm repositories (remote or local)
+- project build configurations (macros, flags, etc)
+
+The binary rpm repositories contains all the binary rpm packages which used to create the chroot environment and build packages, which can be remote, like tizen release or snapshot repositories, or local repository. Local repository supports two types:
+
+- Standard repository with repodata exists
+- An normal directory contains RPM packages, gbs will find all RPM packages under this directory.
+
+Please refer to `Configuration File </documentation/reference/git-build-system/configuration-file>`_ part to configure repository.
+
+Build workflow
+''''''''''''''
+
+The input and output of gbs build are all repositories, and please note: all the rpm packages under the output repository(by default, it is ~/GBS-ROOT/local/repos/<VERSION>/) will participate building packages, that means all the packages understand the output repository will be applied to the build environment, so please make sure the output repository is clean if you don't want it.
 
 Here's the basic workflow of gbs build
 
@@ -503,22 +519,14 @@ Here's the basic workflow of gbs build
   |____________________|           |________________________|
 
 
-From the above diagram, we can see the input and input are all repositories, the output repository located at '~/GBS-ROOT/locals/repos/' by default, you can change the repos path by specifying different build root with --buildroot. Please note that the output repository will be take to build other packages by default. If you have old RPMs under that repos, that may cause build failure, you can specify --clean-repos while running gbs build to clean up local repos created by gbs before building.
+From the above diagram, we can see the input and input are all repositories, the output repository located at '~/GBS-ROOT/locals/repos/' by default, you can change the repos path by specifying different build root with '--buildroot'. 
 
-Local repos in gbs build root ('~/GBS-ROOT' by default) will affect build results, so you must ensure that repos don't contains old or unnecessary RPM packages. We recommend gbs user to set different gbs build root for different profiles. There are several ways:
+Local repos in gbs build root ('~/GBS-ROOT' by default) will affect build results, so you must ensure that repos don't contains old or unnecessary RPM packages. you can specify '--clean-repos' while running gbs build to clean up local repos which created by gbs before building. We recommend gbs user to set different gbs build root for different profiles. There are several ways:
 
 - By default, the GBS build will put all output files under ~/GBS-ROOT/.
 - If the environment variable TIZEN_BUILD_ROOT exists, ${TIZEN_BUILD_ROOT} will be used as output top dir
 - If -B option is specified, then the specified directory is used, even if ${TIZEN_BUILD_ROOT} exists
 
-
-Input of gbs build
-''''''''''''''''''
-The input of gbs build module is package repository, which can be remote, like tizen release or snapshot repositories, or local repository. Local repository supports two types:
-- Standard repository with repodata exists
-- An normal directory contains RPM packages, gbs will find all RPM packages under this directory.
-
-Please refer to `Configuration File </documentation/reference/git-build-system/configuration-file>`_ part to configure repository.
 
 Output of gbs build
 '''''''''''''''''''
@@ -548,157 +556,8 @@ Structure of GBS build root directory
   |       `-- tizen2.0
   `-- meta                         # meta data used by gbs
 
-Incremental build
-`````````````````
-
-Incremental Concept
-'''''''''''''''''''
-
-Starting from gbs 0.10, the `gbs build` subcommand supports incremental build, which can be enabled by specifying the `--incremental` option.
-
-This mode is designed for development and verification of single packages; it is not intending to replace the traditional mode.  Only one package can be built at a time using this mode.
-
-This mode will setup the build environment in multiple steps and finally mounts the local Git tree of a package in the chroot build environment.  This has the following benefits:
-
-1. Build environment is kept in tact and changes to source do not trigger a new build environment (in the chroot)
-2. The Git source tree becomes the source of the builds.  Any change done in the Git repository followed by invocation of the build script will build the changed sources
-3. If build fails for some reason, the build script will continue from the spot where it has failed after code has been changed to fix the problem causing the failure.
-
-This mode is in many ways similar to traditional code development where changes are done to sources followed by running `make` to test and compile the changes, however, it enables development using the build environment of the target instead of the host OS.
-
-This method has some limitations, mostly related to packaging and how the sources are maintained.  Among others, it depends on how the RPM spec file is composed:
-
-1. It does not support patches in spec file, all source has to be maintained as part of the Git tree
-2. It requires a clean packaging workflow.  Exotic workflows in the spec files might not work well, since this mode expects the following model:
-
-   a. Code preparation (%prep)
-   b. Code building (%build)
-   c. Code installation (%install)
-
-3. Since we run the %build section every time, if the %build script has configuration scripts (auto-tools), binaries might be regeneration causing a complete build every time.  To avoid this, you are encouraged to use the following macros which can be overridden using the `--no-configure` option:
-
-   a. %configure: runs the configure script with pre-defined paths and options.
-   b. %reconfigure: regenerates the scripts and runs %configure
-   c. %autogen: runs the autogen script
-
-
-Example
-'''''''
-
-In this example, we use `dlog` source code. We need build fist with --incremental, then just modify one source file, and trigger incremental build again. We will see only modified source code has been compiled during incremental build.
-
-::
-
-  $ cd dlog
-  # first build:
-  $ gbs build -A ia32 --incremental
-  $ vim log.c # change code
-  # second build:
-  $ gbs build -A ia32 --incremental
-  info: generate repositories ...
-  info: build conf has been downloaded at:
-  /var/tmp/test-gbs/tizen.conf
-  info: Start building packages from: /home/test/packages/dlog (git)
-  info: Prepare sources...
-  info: Retrieving repo metadata...
-  info: Parsing package data...
-  info: *** overwriting dlog-0.4.1-5.1 i586 ***
-  info: Next pass:
-  dlog
-  info: *** building dlog-0.4.1-5.1 i586 tizen (worker: 0) ***
-  info: Doing incremental build
-  [    0s] Memory limit set to 10854336KB
-  [    0s] Using BUILD_ROOT=/home/test/GBS-ROOT/local/scratch.i586.incremental
-  [    0s] Using BUILD_ARCH=i586:i686:noarch:
-  [    0s] test-desktop started "build dlog.spec" at Thu Sep 13 07:36:14 UTC 2012.
-  [    0s] -----------------------------------------------------------------
-  [    0s] ----- building dlog.spec (user abuild)
-  [    0s] -----------------------------------------------------------------
-  [    0s] -----------------------------------------------------------------
-  [    0s] + rpmbuild --short-circuit -bc /home/abuild/rpmbuild/SOURCES/dlog.spec
-  [    0s] Executing(%build): /bin/sh -e /var/tmp/rpm-tmp.XLz8je
-  [    0s] + umask 022
-  [    0s] + export LD_AS_NEEDED
-  [    4s] + make -j4
-  [    4s] make  all-am
-  [    4s] make[1]: Entering directory /home/abuild/rpmbuild/BUILD/dlog-0.4.1
-  [    4s] /bin/sh ./libtool --tag=CC   --mode=compile gcc -c -o log.lo log.c
-  [    4s] mv -f .deps/log.Tpo .deps/log.Plo
-  [    4s] /bin/sh ./libtool --tag=CC --mode=link gcc -o libdlog.la /usr/lib log.lo
-  [    4s] libtool: link: gcc -shared  .libs/log.o -o .libs/libdlog.so.0.0.0
-  [    4s] libtool: link: ar cru .libs/libdlog.a  log.o
-  [    4s] libtool: link: ranlib .libs/libdlog.a
-  [    4s] make[1]: Leaving directory /home/abuild/rpmbuild/BUILD/dlog-0.4.1
-  [    4s] + exit 0
-  [    4s] finished "build dlog.spec" at Thu Sep 13 07:36:18 UTC 2012.
-  [    4s]
-  info: finished incremental building dlog
-  info: Local repo can be found here:
-  /home/test/GBS-ROOT/local/repos/tizen/
-  info: Done
-
-From the buildlog, we can see only log.c has been re-compiled, that's the incremental build behavior.
-Currently limitation about incremental build
-
-Limitations of Incremental Build
-''''''''''''''''''''''''''''''''
-
-Incremental build don't support all packages. Here are some limitations:
-
-- Incremental build currently supports building only a single package
-- The tarball's name in the spec file should be %{name}-%{version}.{tar.gz|tar.bz2|zip|...}, otherwise GBS can't mount source code to build the root correctly
-- %prep section should only contains %setup macro to unpack tar ball, and should not contains other source code related operations, such as unpack another source, apply patches, etc.
-
-
-Multiple packages build (dependency build)
-``````````````````````````````````````````
-
-Multiple package build has been supported since gbs 0.10. If packages have dependency each other, gbs will build packages in correct order calculated by dependency relationship, and previous built out RPMs will be used to build following packages depend on them, which is the dependency build.
-
-**Examples about multiple**:
-
-1. Build all packages under a specified package directory
-
-::
-
-   $ mkdir tizen-packages
-   $ cp package1 package2 package3 ... tizen-packages/
-   $ gbs build -A ia32 tizen-packages # build all packages under tizen-packages
-
-2. Build multiple packages in parallel with `--threads`
-
-::
-
-   # current directory have multiple packages, --threads can be used to set the max build worker at the same time
-   $ gbs build -A armv7l --threads=4
-
-3. Select a group of packages to build
-
-`--binary-list` option can be used to specify a text file, which contains RPM binary name list you want to build, the format is one package per line
-
-::
-
-$ gbs build -A ia32 --binary-list=/path/to/packages.list
-
-4. If you want to exclude some packages, `--exclude` can be used to exclude one package.
-
-::
-
-    $ gbs build -A ia32 tizen-packages --exclude=<pkg1>
-    $ gbs build -A ia32 tizen-packages --exclude=<pkg1> --exclude=<pkg2>
-
-5. If you want to exclude many packages, you can use `--exclude-from-file` to specify a package list. The format is the same as `--binary-list`
-
-::
-
-    $ gbs build -A ia32 tizen-packages --exclude-from-file=<file>
-
-
-
-GBS Build Examples
-``````````````````
-
-Note: Starting from GBS 0.10, the GBS build supports build multiple packages, with dependency build and parallel build support.
+GBS Build Examples (Basic Usage)
+````````````````````````````````
 
 1. Build a single package.
 
@@ -796,6 +655,157 @@ Builds committed files only. All the modified files, which are not committed nor
     *.pyc
     *.patch*
 
+
+
+Incremental build
+`````````````````
+
+Incremental Concept
+'''''''''''''''''''
+
+Starting from gbs 0.10, the `gbs build` subcommand supports incremental build, which can be enabled by specifying the `--incremental` option.
+
+This mode is designed for development and verification of single packages; it is not intending to replace the standard mode.  Only one package can be built at a time using this mode.
+
+This mode will setup the build environment in multiple steps and finally mounts the local Git tree of a package in the chroot build environment. please **note**: because gbs will mount your git tree to the build root, so please be very careful when you remove your build root, you need to make sure you already umount source tree manually before you remove it.
+
+Incremental build has the following benefits:
+
+1. Build environment is kept in tact and changes to source do not trigger a new build environment (in the chroot)
+2. The Git source tree becomes the source of the builds.  Any change done in the Git repository followed by invocation of the build script will build the changed sources
+3. If build fails for some reason, the build script will continue from the spot where it has failed after code has been changed to fix the problem causing the failure.
+
+This mode is in many ways similar to traditional code development where changes are done to sources followed by running `make` to test and compile the changes, however, it enables development using the build environment of the target instead of the host OS.
+
+This method has some limitations, mostly related to packaging and how the sources are maintained.  Among others, it depends on how the RPM spec file is composed:
+
+1. It does not support patches in spec file, all source has to be maintained as part of the Git tree
+2. It requires a clean packaging workflow.  Exotic workflows in the spec files might not work well, since this mode expects the following model:
+
+   a. Code preparation (%prep)
+   b. Code building (%build)
+   c. Code installation (%install)
+
+3. Since we run the %build section every time, if the %build script has configuration scripts (auto-tools), binaries might be regeneration causing a complete build every time.  To avoid this, you are encouraged to use the following macros which can be overridden using the `--no-configure` option:
+
+   a. %configure: runs the configure script with pre-defined paths and options.
+   b. %reconfigure: regenerates the scripts and runs %configure
+   c. %autogen: runs the autogen script
+
+
+Example
+'''''''
+
+In this example, we use `dlog` source code. We need build fist with --incremental, then just modify one source file, and trigger incremental build again. We will see only modified source code has been compiled during incremental build.
+
+::
+
+  $ cd dlog
+  # first build:
+  $ gbs build -A ia32 --incremental
+  $ vim log.c # change code
+  # second build:
+  $ gbs build -A ia32 --incremental
+  info: generate repositories ...
+  info: build conf has been downloaded at:
+  /var/tmp/test-gbs/tizen.conf
+  info: Start building packages from: /home/test/packages/dlog (git)
+  info: Prepare sources...
+  info: Retrieving repo metadata...
+  info: Parsing package data...
+  info: *** overwriting dlog-0.4.1-5.1 i586 ***
+  info: Next pass:
+  dlog
+  info: *** building dlog-0.4.1-5.1 i586 tizen (worker: 0) ***
+  info: Doing incremental build
+  [    0s] Memory limit set to 10854336KB
+  [    0s] Using BUILD_ROOT=/home/test/GBS-ROOT/local/scratch.i586.incremental
+  [    0s] Using BUILD_ARCH=i586:i686:noarch:
+  [    0s] test-desktop started "build dlog.spec" at Thu Sep 13 07:36:14 UTC 2012.
+  [    0s] -----------------------------------------------------------------
+  [    0s] ----- building dlog.spec (user abuild)
+  [    0s] -----------------------------------------------------------------
+  [    0s] -----------------------------------------------------------------
+  [    0s] + rpmbuild --short-circuit -bc /home/abuild/rpmbuild/SOURCES/dlog.spec
+  [    0s] Executing(%build): /bin/sh -e /var/tmp/rpm-tmp.XLz8je
+  [    0s] + umask 022
+  [    0s] + export LD_AS_NEEDED
+  [    4s] + make -j4
+  [    4s] make  all-am
+  [    4s] make[1]: Entering directory /home/abuild/rpmbuild/BUILD/dlog-0.4.1
+  [    4s] /bin/sh ./libtool --tag=CC   --mode=compile gcc -c -o log.lo log.c
+  [    4s] mv -f .deps/log.Tpo .deps/log.Plo
+  [    4s] /bin/sh ./libtool --tag=CC --mode=link gcc -o libdlog.la /usr/lib log.lo
+  [    4s] libtool: link: gcc -shared  .libs/log.o -o .libs/libdlog.so.0.0.0
+  [    4s] libtool: link: ar cru .libs/libdlog.a  log.o
+  [    4s] libtool: link: ranlib .libs/libdlog.a
+  [    4s] make[1]: Leaving directory /home/abuild/rpmbuild/BUILD/dlog-0.4.1
+  [    4s] + exit 0
+  [    4s] finished "build dlog.spec" at Thu Sep 13 07:36:18 UTC 2012.
+  [    4s]
+  info: finished incremental building dlog
+  info: Local repo can be found here:
+  /home/test/GBS-ROOT/local/repos/tizen/
+  info: Done
+
+From the buildlog, we can see only log.c has been re-compiled, that's the incremental build behavior.
+Currently limitation about incremental build
+
+Limitations of Incremental Build
+''''''''''''''''''''''''''''''''
+
+Incremental build don't support all packages. Here are some limitations:
+
+- Incremental build currently supports building only a single package, doesn't support multiple packages build in parallel
+- The tarball's name in the spec file should be %{name}-%{version}.{tar.gz|tar.bz2|zip|...}, otherwise GBS can't mount source code to build the root correctly
+- %prep section should only contains %setup macro to unpack tar ball, and should not contains other source code related operations, such as unpack another source, apply patches, etc.
+
+
+Multiple packages build (dependency build)
+``````````````````````````````````````````
+
+Multiple package build has been supported since gbs 0.10. If packages have dependency each other, gbs will build packages in correct order calculated by dependency relationship, and previous built out RPMs will be used to build following packages depend on them, which is the dependency build.
+
+**Examples**:
+
+1. Build all packages under a specified package directory
+
+::
+
+   $ mkdir tizen-packages
+   $ cp package1 package2 package3 ... tizen-packages/
+   $ gbs build -A ia32 tizen-packages # build all packages under tizen-packages
+
+2. Build multiple packages in parallel with `--threads`
+
+::
+
+   # current directory have multiple packages, --threads can be used to set the max build worker at the same time
+   $ gbs build -A armv7l --threads=4
+
+3. Select a group of packages to build
+
+`--binary-list` option can be used to specify a text file, which contains RPM binary name list you want to build, the format is one package per line
+
+::
+
+$ gbs build -A ia32 --binary-list=/path/to/packages.list
+
+4. If you want to exclude some packages, `--exclude` can be used to exclude one package.
+
+::
+
+    $ gbs build -A ia32 tizen-packages --exclude=<pkg1>
+    $ gbs build -A ia32 tizen-packages --exclude=<pkg1> --exclude=<pkg2>
+
+5. If you want to exclude many packages, you can use `--exclude-from-file` to specify a package list. The format is the same as `--binary-list`
+
+::
+
+    $ gbs build -A ia32 tizen-packages --exclude-from-file=<file>
+
+
+
 Other useful options
 ````````````````````
 
@@ -837,9 +847,11 @@ $ gbs build pkg3 --noinit
 Fetch the project build conf and customize build root (for Advanced Users)
 ``````````````````````````````````````````````````````````````````````````
 
-- use gbs build to fetch the build conf
+Project build conf describle the project build configurations for the project, it includes pre-defined macros/packages/flags in the build environment, in Tizen release, the build conf is released together with the released repo, you can find an example at: http://download.tizen.org/releases/daily/trunk/ivi/latest/builddata/xxx-build.conf
 
-Starting from gbs 0.7.1, the build conf file used by gbs would be fetched from repos. Here's the build log:
+- gbs build will fetch the build conf automatically
+
+Starting from gbs 0.7.1, by default gbs will fetch the build conf from remote repo if you specify the remote Tizen repo, and then store it in your temp environment. Here's the build log:
 
 ::
 
@@ -850,25 +862,14 @@ Starting from gbs 0.7.1, the build conf file used by gbs would be fetched from r
     info: generate tar ball: packaging/acpid-2.0.14.tar.bz2
     [sudo] password for <user>:
 
-The build conf has been downloaded. You can save it:
+- build the package using your own project build conf, using the -D option
+
+
+You can save it and modify it, and then use it as your purpose:
 
 ::
 
  cp /var/tmp/<user>-gbs/tizen2.0.conf ~/tizen2.0.conf
-
-- use osc command to fetch project conf
-
-The following command can be used to fetch project conf
-
-::
-
- $ osc meta prjconf <OBS prj name>, example:
- $ osc meta prjconf Tizen:Base >tizen2.0.conf
-
-- build the package using your own project build conf, using the `-D` option
-
-::
-
  $ gbs build -A ia32 -D ~/tizen2.0.conf
 
 If you need to customize the build config, refer to: http://en.opensuse.org/openSUSE:Build_Service_prjconf
@@ -1259,8 +1260,8 @@ Examples:
  - cleanup specfile for packaging
  * Wed May 30 2012 - xxxx <xxxx@example.com> - 2.0.10
 
-Frequently Asked Questions
-==========================
+FAQ
+===
 
 This section contains frequently asked questions.
 
