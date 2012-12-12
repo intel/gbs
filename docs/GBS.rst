@@ -20,7 +20,7 @@ This section contains more detailed GBS information. We recommend reading the `S
 
 - `Installation or Upgrade </documentation/developer-guide/environment-setup>`_:  How to install or upgrade the tools
 - `Configuration File </documentation/reference/git-build-system/configuration-file>`_:  How to modify the configuration for GBS
-- `Upstream package management </documentation/reference/git-build-system/upstream-tarball-and-patch-generation-support>`_:  Describes how to manage native and non-native packages packages in a more proper way
+- `Upstream package management </documentation/reference/git-build-system/upstream-tarball-and-patch-generation-support>`_:  Describes how to manage native and non-native packages in a more proper way
 - `GBS Usage </documentation/reference/git-build-system/usage>`_:  Describes, in more detail, how to use GBS
 - `FAQ </documentation/reference/git-build-system/faqs>`_:  Frequently Asked Questions
 
@@ -31,23 +31,23 @@ The configuration file contains all the configuration settings required by gbs. 
 
 Configuration files used by GBS
 -------------------------------
-GBS will search the configuration file (.gbs.conf) from the folders below. If there are multiple configuration files found, gbs will load the files in this order:
+GBS will search for configuration files (.gbs.conf) within the folders below. If GBS finds multiple configuration files, it will load them in this order:
 
-- ``/etc/gbs.conf``         # for the global configuration, which exists in the package, not suggest to change
-- ``~/.gbs.conf``           # for user specific configuration
-- ``$PWD/.gbs.conf``        # for project/directory specific configuration
+- ``/etc/gbs.conf``         # for a global configuration, which exists in the package and which we suggest you don't change
+- ``~/.gbs.conf``           # for a user-specific configuration
+- ``$PWD/.gbs.conf``        # for a project/directory specific configuration
 
-Configuration values in a later file will override the values in previous one.
+Configuration values in a later file will override the values set in the previous ones.
 
 There is a global parameter `-c(--conf)` to specify the config file. If this option is used, GBS will load this config file and drop other config files in the default paths.
 
-If GBS can't find any config file, it will generate a config file into ~/.gbs.conf.
+If GBS can't find any config files, it will generate a config file into ~/.gbs.conf.
 
 Profile oriented style of configuration
 ---------------------------------------
-A profile can contain many items for GBS build and remote build. There could be many profiles in one config file, such as one for Mobile, one for IVI, and so on.
+A profile can contain many items for GBS build and remote build. There can be many profiles in one config file, such as one for Mobile, one for IVI, and so on.
 
-Default profile is defined in [general] section. If profile changed, all behaviors of GBS may be changed.
+The default profile is defined in the [general] section. If you change the profile, all GBS behaviors could change.
 
 The mandatory rules for the section names are:
 
@@ -56,10 +56,10 @@ The mandatory rules for the section names are:
 - OBS section name should started with `obs.`
 - Repository section name should started with `repo.`
 
-Common authentication info can be set in the profile level, no need to set them repeatedly in different obs and repo sections. If the authentication info is different for different obs or repos, it can be set by the **user** and **passwd** key in the individual section.
+Common authentication info can be set in the profile level, no need to set them repeatedly in different obs and repo sections. If the authentication info is different for a different obs or repo, it can be set by the **user** and **passwd** key in the individual section.
 
-Example of config file:
-```````````````````````
+Example of a config file
+````````````````````````
 ::
 
   [general]
@@ -88,13 +88,16 @@ Example of config file:
   #user =
   #passwd =
 
-Configure repo for 'gbs build'
-``````````````````````````````
+Configure repos for 'gbs build'
+```````````````````````````````
+
 Repos are configured as repo sections, and the section name must start with 'repo.' There are three types of keys supported for the repo section: url, user, and passwd.
 
-Note: When you specify the repo, please use the release folder instead of the snapshot folder. The images/repos under release folder are tested and released by release engineers. The images/repos under the snapshot folder are created by backend service automatically, quality is not guaranteed.
+**Note**: When you specify the repo, please use the release folder, instead of the snapshot folder. The images/repos under the release folder are tested and released by release engineers. The images/repos under the snapshot folder are created by backend service automatically. Quality is not guaranteed.
 
-You can specify multiple repos in the profile. Here's an example:
+You can specify multiple repos in a profile.
+
+Here's an example:
 
 ::
 
@@ -109,13 +112,13 @@ You can specify multiple repos in the profile. Here's an example:
   #local repo must be an absolute path
   url = /path/to/local/repo/
 
-**Note**: The local repo must be an absolute path. You don't need to run 'createrepo' for that local repo, and plaindir of RPM packages is enough.
+**Note**: The local repo must be an absolute path. You don't need to run 'createrepo' for that local repo, a plain directory of RPM packages is enough.
 
 
 Configure build root for 'gbs build'
 ````````````````````````````````````
 
-The default gbs build root is ~/GBS-ROOT/, but you can change it and set your own build root. gbs also supports setting different buildroot for different profile, as follows:
+The default gbs build root is ~/GBS-ROOT/, but you can change it and set your own build root. gbs also supports setting different build root directories for different profiles, as follows:
 
 ::
 
@@ -124,7 +127,7 @@ The default gbs build root is ~/GBS-ROOT/, but you can change it and set your ow
   repos = repo.tizen_latest
   buildroot = ~/GBS-ROOT/
 
-**Note**: The plaintext password will be automatically converted as an encoded passwd, so after running gbs, the configuration will be changed like below. To change the password, you can delete 'passwdx' and set a new password for 'passwd':
+**Note**: The plaintext password will be converted automatically as an encoded passwd, so after running gbs, the configuration will be changed as shown below. To change the password, you can delete 'passwdx' and set a new password for 'passwd':
 
 ::
 
@@ -148,18 +151,18 @@ You can configure multiple profiles in one configuration file, for example, one 
   [profile.ivi]
   ...
 
-Specify profile in command line
-```````````````````````````````
+Specify a profile in the command line
+`````````````````````````````````````
 
-Besides specifying the default profile in the configuration file, you can also specify in the command line by using the option `--profile/-P`. You can specify the whole profile name, such as 'profile.ivi', or just specify the name without 'profile', such as 'ivi' in the case above. For example:
+Besides specifying the default profile in the configuration file, you can also specify it in the command line by using the `--profile/-P` option . You can specify the whole profile name, such as 'profile.ivi', or just specify the name without 'profile', such as 'ivi' in the case above. For example:
 
 ::
 
   $ gbs build --profile=profile.mobile -A i586
   $ gbs remotebuild --profile=mobile -A i586   # given profile name without the "profile." prefix
 
-Specify config file in command line
-```````````````````````````````````
+Specify a config file in the command line
+`````````````````````````````````````````
 
 The option `--config/-C` allows developers to specify one from multiple predefined configuration files. Once '-C' is specified, the default configuration will be skipped.
 
@@ -173,7 +176,7 @@ Example for the command line:
 Upstream tarball and patch-generation support
 =============================================
 
-This section describes how to manage packages in a more proper way with GBS. "More proper" here meaning, if we (Tizen) are not the upstream of the package:
+This section describes how to manage packages more properly with GBS. "More properly" here meaning, if we (Tizen) are not the upstream of the package:
 
 - the source archive of the package (orig tarball) contains pristine upstream sources, not polluted with any local changes
 - local changes are presented as a series of patches, applied on top of the (pristine) orig archive
@@ -186,43 +189,43 @@ Native and non-native packages
 General concepts
 ````````````````
 
-From the package maintenance point of view we can divide the packages into two categories:
+From the package maintenance point of view, we can divide the packages into two categories:
 
-- **Native**: packages are packages where we/you/Tizen is the upstream and controls the source code repository. An example in Tizen context could be power-manager. For native packages we control the versioning and releasing and package maintenance is simpler. We can release a new version basically whenever we want.
-- **Non-native(or upstream)**: packages are packages for which we/you/Tizen is not the upstream. For example the linux kernel or zlib. For these packages we need to follow the releasing process and schedule of the upstream project. E.g. from developer and legal point of view it is very beneficial to clearly track the local modifications (i.e. separate upstream and local changes) both in the source code repository and the packaging level.
+- **Native**:  packages where we/you/Tizen is the upstream and controls the source code repository. An example in the context of Tizen could be power-manager. For native packages, we control the versioning and releasing, so package maintenance is simpler. We can release a new version basically whenever we want.
+- **Non-native(or upstream)**: packages for which we/you/Tizen is not the upstream. For example, the Linux kernel or zlib. For these packages, we need to follow the releasing process and schedule of the upstream project. For example, from a developer and legal point of view, it is very beneficial to clearly track the local modifications (that is, separate upstream and local changes) both in the source code repository and on the packaging level.
 
 
-Also GBS divides packages into these two categories. GBS determines a package as non-native, if the git repository has `upstream` branch. The actual name of the upstream branch can be configured using the 'upstream_branch' in option in the .gbs.conf file or with `--upstream-branch` command line option.
+Also GBS divides packages into these two categories. GBS determines a package as non-native, if the git repository has an `upstream` branch. The actual name of the upstream branch can be configured using the 'upstream_branch' in option in the .gbs.conf file or with `--upstream-branch` command line option.
 
-GBS build, remotebuild and export commands behave differently for native and non-native packages. Namely, the preparation of the packaging files for building differs.
+GBS build, remotebuild, and export commands behave differently for native and non-native packages. Namely, the preparation of the packaging files for building differs.
 
 **GBS and native packages**
 
-GBS simply creates a monolithic source tarball from the HEAD of the current branch. Packaging files from the packaging directory are copied as is. No patch generation is done. This is the 'old' model GBS has used for all packages until now.
+GBS simply creates a monolithic source tarball from the HEAD of the current branch. Packaging files, from the packaging directory, are copied as is. No patch generation is done. This is the 'old' model GBS has used for all packages until now.
 
 **GBS and non-native packages**
 
-For non-native packages GBS applies the new maintenance model. It tries to create a (real) upstream source tarball, generate patches from the local changes and update the spec file accordingly.
+For non-native packages, GBS applies the new maintenance model. It tries to create a (real) upstream source tarball, generate patches from the local changes, and update the spec file accordingly.
 The logic is the following:
 
 - Generate patches
 
   - Create patches between `upstream-tag..HEAD`, remove possible old patches
-  - Update the spec file: remove old 'Patch:' tags and '%patch' macros and replace them with ones corresponding the newly generated patches.
+  - Update the spec file: remove old 'Patch:' tags and '%patch' macros and replace them with ones that correspond with the newly generated patches.
 
 - Create upstream tarball if patch-generation was successful
 
   - If the git repository has `pristine-tar` branch (and you have the pristine-tar tool installed), GBS tries to checkout the source tarball with pristine-tar
-  - If the previous step fails GBS tries to create a source tarball from the correct `upstream tag`, matching the version taken from the .spec file.
+  - If the previous step fails, GBS tries to create a source tarball from the correct `upstream tag`, matching the version taken from the .spec file.
 
-- If source tarball or patch generation fails GBS reverts back to the old method (i.e. treats the package as native), creating just one monolithic tarball without patch generation.
+- If source tarball or patch generation fails GBS reverts back to the old method (that is, treats the package as native), creating just one monolithic tarball without patch generation.
 
-You shouldn't have any pre-existing patches in the packaging directory or spec file - otherwise GBS refuses to create patches. Please see `Advanced usage/Manually maintained patches` section for manually maintained patches.
+You shouldn't have any pre-existing patches in the packaging directory or spec file. Otherwise, GBS refuses to create patches. Please see `Advanced usage/Manually maintained patches` section for manually maintained patches.
 
 Building using upstream tarball and patch generation
 ----------------------------------------------------
 
-This is pretty straightforward and easy to use. In order to enable upstream source tarball and patch generation you should:
+This is pretty straightforward and easy to use. To enable upstream source tarball and patch generation you should:
 
 1. have `upstream branch` in the git repository, with untouched upstream sources
 
@@ -232,11 +235,11 @@ This is pretty straightforward and easy to use. In order to enable upstream sour
 
 4. all your local manually maintained patches (in packaging dir) applied in to your development branch and removed from the packaging directory
 
-Additionally you may have:
+Additionally, you may have:
 
 5. `pristine-tar branch` in the git repository for generating the upstream tarball with the pristine-tar tool
 
-You can do development just like before, just edit/commit/build on your development branch. GBS handles the tarball and patch generation plus updating the spec file. Running gbs should look something like this (using gbs export as an example here for the shorted output):
+You can do development just like before. Just edit/commit/build on your development branch. GBS handles the tarball and patch generation, plus updating the spec file. Running gbs should look something like this (using gbs export as an example here for the shorted output):
 
 ::
 
@@ -248,7 +251,7 @@ You can do development just like before, just edit/commit/build on your developm
  info: package files have been exported to:
      /home/test/src/zlib/export/zlib-1.2.7-0
 
-When trying out the patch generation for the first time you might want to do export first and examine the auto-updated spec file (in the export directory) to see that GBS updated it correctly. Please see `Advanced usage/Manually maintained patches` section for manually maintained patches.
+When trying out the patch generation for the first time, you might want to export first and examine the auto-updated spec file (in the export directory) to see that GBS updated it correctly. Please see `Advanced usage/Manually maintained patches` section for manually maintained patches.
 
 Reasons for the upstream tarball and/or patch generation failure may be e.g.
 
@@ -257,20 +260,20 @@ Reasons for the upstream tarball and/or patch generation failure may be e.g.
   * version is not present in your git repository
   * tag format is configured incorrectly
 
-- current branch is not descendant of the upstream version it claims to be derived from
+- current branch is not a descendant of the upstream version that it claims to be derived from
 
 Managing upstream sources
 -------------------------
 
 This section is only of interest to the package maintainers.
 
-In order to maintain packages using the model described above, you need to keep unmodified upstream sources in a separate branch in your git repository.
+To maintain packages using the model described above, you need to keep unmodified upstream sources in a separate branch in your git repository.
 GBS supports two models for this.
 
 Import upstream source archive to git
 `````````````````````````````````````
 
-In this model you import source tarballs (or zip files) from the upstream release to your git repository using the `gbs import` command.  GBS commits the sources in the upstream branch and creates a tag for the upstream release. An example of starting from scratch, i.e. importing to an empty repo:
+In this model, you import source tarballs (or zip files) from the upstream release to your git repository using the `gbs import` command.  GBS commits the sources in the upstream branch and creates a tag for the upstream release. An example of starting from scratch, that is importing to an empty repo:
 
 ::
 
@@ -283,7 +286,7 @@ In this model you import source tarballs (or zip files) from the upstream releas
  $ git tag
  upstream/1.2.6
 
-Now you could start development just by adding packaging files to the master branch. When you need to bump to a newer upstream version just use `gbs import` again:
+Now you could start development just by adding packaging files to the master branch. When you need to update to a newer upstream version, just use `gbs import` again:
 
 ::
 
@@ -292,14 +295,14 @@ Now you could start development just by adding packaging files to the master bra
  upstream/1.2.6
  upstream/1.2.7
 
-**NOTE** gbs currently automatically merges the new upstream version to your master branch. Thus, you need to update the version number in your spec file accordingly.
+**Note** Currently, GBS automatically merges the new upstream version to your master branch. Thus, you need to update the version number in your spec file accordingly.
 
 
 Tracking remote git
 ```````````````````
 
-In this model you directly track a remote (git) repository - you shouldn't use gbs import at all.
-GBS only needs to now the name of the upstream branch and the format of the upstream release tags.
+In this model, you directly track a remote (git) repository. You shouldn't use GBS import at all.
+GBS needs to know only the name of the upstream branch and the format of the upstream release tags.
 These are package dependent information so you should configure them in a package-specific .gbs.conf
 in the master branch. An example for starting a package from scratch, again:
 
@@ -322,9 +325,9 @@ The example configuration file would be:
 Pristine-tar support
 ````````````````````
 
-Optionally (but highly recommended!), you can use pristine-tar for storing/checking out the upstream tarballs (see http://joeyh.name/code/pristine-tar/). You can install it from the Tizen tools repository. Pristine-tar guarantees that the tarball generated by GBS is bit-identical to the real upstream release source tarball. GBS uses pristine-tar automatically if you have pristine-tar installed in your system. If you use gbs import for managing the upstream sources everything works out-of-the box, gbs import automatically commits new tarballs to the `pristine-tar branch`.
+Optionally (but highly recommended!), you can use pristine-tar for storing/checking out the upstream tarballs (see http://joeyh.name/code/pristine-tar/). You can install it from the Tizen tools repository. Pristine-tar guarantees that the tarball generated by GBS is bit-identical to the real upstream release source tarball. GBS uses pristine-tar automatically if you have pristine-tar installed in your system. If you use GBS import to manage the upstream sources everything works out-of-the box: GBS import automatically commits new tarballs to the `pristine-tar branch`.
 
-However, if you track a remote upstream repository directly, you need to commit the upstream source tarballs to pristine-tar branch manually. E.g. in our zlib example:
+However, if you track a remote upstream repository directly, you need to commit the upstream source tarballs to pristine-tar branch manually. So, like in our zlib example:
 
 ::
 
@@ -346,8 +349,8 @@ Converting existing repository to the new model
   a. If you are already tracking the upstream, just configure the upstream branch name and tag format in the package-specific .gbp.conf.
   b. If not, import upstream source tarball with `gbs import` or add the upstream remote to your repo and start tracking that.
 
-2. Recommended: if you're tracking the upstream git directly, you may want to do 'pristine-tar commit <tarball> <upstream-tag>'
-3. Rebase your current development branch on the correct upstream version (i.e. rebase on the upstream tag)
+2. Recommended: If you're tracking the upstream git directly, you may want to do 'pristine-tar commit <tarball> <upstream-tag>'
+3. Rebase your current development branch on the correct upstream version (that is, rebase on the upstream tag)
 4. Remove all local patches: apply and commit them on top of your development branch and then remove the patches from the packaging directory and preferably from the spec file, too.
 
 
@@ -360,9 +363,9 @@ Manually maintained patches
 GBS supports manually maintaining patches, that is, outside the automatic patch generation. This may be needed
 for architecture-dependent patches, for example, as GBS patch generation does not yet support conditional patches.
 Another example could be patches that are applied on top of a secondary source tree, whose sources are not maintained
-in your git tree but only as a tarball in your packaging directory.
+in your git tree, but only as a tarball in your packaging directory.
 
-In order to use this feature, you need to have your patch(es) in the packaging directory and listed in the spec.  In addition, you need to mark the patch to be ignored by the patch generation/importing by putting `# Gbp-Ignore-Patches: <patch numbers>` into the spec file. This will make GBS ignore the 'Patch:' tags and '%patch' macros of the listed patches when importing or generating patches.  An excerpt of an example spec file:
+To use this feature, you need to have your patch(es) in the packaging directory and listed in the spec.  In addition, you need to mark the patch to be ignored by the patch generation/importing by putting `# Gbp-Ignore-Patches: <patch numbers>` into the spec file. This will make GBS ignore the 'Patch:' tags and '%patch' macros of the listed patches when importing or generating patches.  An excerpt of an example spec file:
 
 ::
 
@@ -374,16 +377,16 @@ In order to use this feature, you need to have your patch(es) in the packaging d
  %description
  ...
 
-Actually, you can have this special marker anywhere in the spec file. And, it is case-insensitive so you might use e.g. "`GBP-IGNORE-PATCHES:` if you like it better. The reason for the GBP prefix is that GBS uses git-buildpackage (gbp) as the backend for patch generation.
+Actually, you can have this special marker anywhere in the spec file. And, it is case-insensitive, so you might use `GBP-IGNORE-PATCHES:`, for example, if you like it better. The reason for the GBP prefix is that GBS uses git-buildpackage (gbp) as the backend for patch generation.
 
-**NOTE!** In addition patch generation when building or exporting, also `gbs import` will ignore patches
+**Note:** In addition, pay attention to patch generation when building or exporting. Also `gbs import` will ignore patches
 marked for manual maintenance when importing source rpms.
 
 Patch macro location
 ````````````````````
 
 
-GBS tries to automatically find the correct location where to add the '%patch' macros in the spec file when updating it with the newly generated patches. This usually works fine but GBS can also guess wrong. You can manually mark the location for auto-generated '%patch' macros by adding a `# Gbp-Patch-Macros` marker line into the spec file.  An excerpt of an example spec file:
+GBS tries to automatically find the correct location to add the '%patch' macros in the spec file when updating it with the newly generated patches. This usually works fine, but GBS can also guess wrong. You can manually mark the location for auto-generated '%patch' macros by adding a `# Gbp-Patch-Macros` marker line into the spec file.  An excerpt of an example spec file:
 
 ::
 
@@ -404,9 +407,9 @@ GBS will put the new '%patch' macros after the marker line. This marker is case-
 Squashing commits
 `````````````````
 
-GBS supports squashing a range of commits into one monolithic diff when generating patches.
+When generating patches, GBS supports squashing a range of commits into one monolithic diff.
 Currently, one can only squash from `upstream-tag` up to a given commit-ish.
-An example use case could be squashing commits from upstream release up to a stable update
+An example use case could be squashing commits from an upstream release up to a stable update
 into a single diff (commits on top of the stable generate one patches normally).
 You can enable this with the 'squash_patches_until' config file option or with the
 '--squash-patches-until' command line option: the format for the option is <commit-ish>[:<filename-base>].
@@ -428,8 +431,7 @@ An example:
  info: package files have been exported to:
       /home/user/src/mypackage/packaging/mypackage-0.1.2-1.21
 
-**NOTE!** If you're planning to use this, it is highly recommended to configure it in the package-specific .gbs.conf file.
-This way all users (including the automatic build machinery) build/export the package in a similar way.
+**Note!** If you're planning to use this, it is highly recommended that you configure it in the package-specific .gbs.conf file. This way, all users (including the automatic build machinery) build/export the package in a similar way.
 
 
 
@@ -438,9 +440,9 @@ GBS Usage
 
 This section provides more details about GBS usage. You can also use `$ gbs --help` or `$ gbs <subcmd> --help` to get the help message.
 
-Usage for getting help:
+To get help:
 
-- For global options and command list
+- For global options and the command list
 
 ::
 
@@ -455,7 +457,7 @@ Usage for getting help:
 GBS provides several subcommands, including:
 
 
-- `gbs build  </documentation/reference/git-build-system/usage/gbs-build>`_: build rpm package from git repository at local development environment
+- `gbs build  </documentation/reference/git-build-system/usage/gbs-build>`_: build rpm package from git repositories at the local development environment
 
 - `gbs remotebuild  </documentation/reference/git-build-system/usage/gbs-remotebuild>`_: generate tarballs based on Git repositories, and upload to remote OBS to build rpm packages
 
@@ -465,7 +467,7 @@ GBS provides several subcommands, including:
 
 - `gbs import  </documentation/reference/git-build-system/usage/gbs-import/>`_: import source code to git repository, supporting these formats: source rpm, specfile, and tar ball
 
-- `gbs export  </documentation/reference/git-build-system/usage/gbs-export>`_: export files and prepare for building package, format of tar ball is from spec
+- `gbs export  </documentation/reference/git-build-system/usage/gbs-export>`_: export files and prepare for building package, the spec file defines the format of tar ball
 
 - `gbs changelog  </documentation/reference/git-build-system/usage/gbs-changelog>`_: update the changelog file with git commits message
 
@@ -490,19 +492,21 @@ Below is the input for gbs build:
 - binary rpm repositories (remote or local)
 - project build configurations (macros, flags, etc)
 
-The binary rpm repositories contains all the binary rpm packages which used to create the chroot environment and build packages, which can be remote, like tizen release or snapshot repositories, or local repository. Local repository supports two types:
+The binary rpm repositories contain all the binary rpm packages which are used to create the chroot environment and build packages, which can be remote, like tizen release or snapshot repositories, or local repository. Local repository supports two types:
 
 - Standard repository with repodata exists
-- An normal directory contains RPM packages, gbs will find all RPM packages under this directory.
+- A normal directory contains RPM packages. GBS will find all RPM packages under this directory.
 
-Please refer to `Configuration File </documentation/reference/git-build-system/configuration-file>`_ part to configure repository.
+Please refer to `Configuration File </documentation/reference/git-build-system/configuration-file>`_ part to configure a repository.
 
 Build workflow
 ''''''''''''''
 
-The input and output of gbs build are all repositories, and please note: all the rpm packages under the output repository(by default, it is ~/GBS-ROOT/local/repos/<VERSION>/) will participate building packages, that means all the packages understand the output repository will be applied to the build environment, so please make sure the output repository is clean if you don't want it.
+The input and output of gbs build are all repositories.
 
-Here's the basic workflow of gbs build
+**Note**: All the rpm packages under the output repository (by default, ~/GBS-ROOT/local/repos/<VERSION>/) will be used when building packages. That is, all the packages under the output repository will be applied to the build environment, so make sure the output repository is clean if you don't want this behavior.
+
+Here's the basic gbs build workflow
 
 ::
 
@@ -519,9 +523,9 @@ Here's the basic workflow of gbs build
   |____________________|           |________________________|
 
 
-From the above diagram, we can see the input and input are all repositories, the output repository located at '~/GBS-ROOT/locals/repos/' by default, you can change the repos path by specifying different build root with '--buildroot'. 
+From the above diagram, we can see the input and input are all repositories and the output repository located at '~/GBS-ROOT/locals/repos/' by default. You can change the repo path by using '--buildroot' to specify a different build root.
 
-Local repos in gbs build root ('~/GBS-ROOT' by default) will affect build results, so you must ensure that repos don't contains old or unnecessary RPM packages. you can specify '--clean-repos' while running gbs build to clean up local repos which created by gbs before building. We recommend gbs user to set different gbs build root for different profiles. There are several ways:
+Local repos in gbs build root ('~/GBS-ROOT' by default) will affect build results, so you must make sure that repos don't contains old or unnecessary RPM packages. While running gbs build, you can specify '--clean-repos' to clean up local repos, which gbs created, before building. We recommend that gbs users set different gbs build root directories for different profiles. There are several ways:
 
 - By default, the GBS build will put all output files under ~/GBS-ROOT/.
 - If the environment variable TIZEN_BUILD_ROOT exists, ${TIZEN_BUILD_ROOT} will be used as output top dir
@@ -531,7 +535,7 @@ Local repos in gbs build root ('~/GBS-ROOT' by default) will affect build result
 Output of gbs build
 '''''''''''''''''''
 
-Structure of GBS build root directory
+Structure of a GBS build root directory
 
 ::
 
@@ -573,7 +577,7 @@ GBS Build Examples (Basic Usage)
    $ gbs build -A armv7l      #build package for armv7l
    $ gbs build -A i586        #build package for i586
 
-3. Make a clean build by deleting old build root. This option must be specified if the repo has been changed, for example changed to another release.
+3. Make a clean build by deleting the old build root. This option must be specified if the repo has been changed, for example, changed to another release.
 
 ::
 
@@ -587,7 +591,7 @@ GBS Build Examples (Basic Usage)
 
 5. Use `--overwrite` to trigger a rebuild.
 
-If you have already built before, and want to rebuild, `--overwrite` should be specified, or the packages will be skipped to be built
+If you have already built before, and want to rebuild, `--overwrite` should be specified, or the packages will be skipped.
 
 ::
 
@@ -601,13 +605,21 @@ If you change the commit or specify `--include-all` option, it will always rebui
 
    $ gbs build -A ia32 --debug
 
-7. Building against a local repository. You can config the local repo at .gbs.conf file or through the command line.
+7. Build against a local repository. You can config the local repo at .gbs.conf file or through the command line.
 
 ::
 
    $ gbs build -R /path/to/repo/dir/ -A i586
 
-8. Building with all uncommitted changes using `--include-all`.
+8. Use `--noinit` to build package in offline mode
+`--noinit` option can only be used if build root is ready. With `--noinit` option, gbs will not connect the remote repo, and skip parsing & checking repo and initialize build environment. `rpmbuild` will be used to build package directly. Here's an example:
+
+::
+
+  $ gbs build -A i586           # build first and create build environment
+  $ gbs build -A i586 --noinit  # use --noinit to start building directly
+
+9. Build with all uncommitted changes using `--include-all`.
 
 For example, there are one modified file and two extra files in the git tree:
 
@@ -618,7 +630,7 @@ For example, there are one modified file and two extra files in the git tree:
    ?? base.repo
    ?? main.repo
 
-- Building without the `--include-all` option
+- Build without the `--include-all` option
 
 Builds committed files only. All the modified files, which are not committed nor added, will NOT be built:
 
@@ -633,7 +645,7 @@ Builds committed files only. All the modified files, which are not committed nor
     /home/test/GBS-ROOT/local/scratch.i686.0/home/abuild/rpmbuild/RPMS/
     info: Done
 
-- Building with the `--include-all` option builds all the files:
+- Build with the `--include-all` option builds all the files:
 
 ::
 
@@ -663,30 +675,32 @@ Incremental build
 Incremental Concept
 '''''''''''''''''''
 
-Starting from gbs 0.10, the `gbs build` subcommand supports incremental build, which can be enabled by specifying the `--incremental` option.
+Starting from gbs 0.10, the gbs build subcommand supports building incrementally, which can be enabled by specifying the '--incremental' option.
 
-This mode is designed for development and verification of single packages; it is not intending to replace the standard mode.  Only one package can be built at a time using this mode.
+This mode is designed for development and verification of single packages. It is not intending to replace the standard mode. Only one package can be built at a time using this mode.
 
-This mode will setup the build environment in multiple steps and finally mounts the local Git tree of a package in the chroot build environment. please **note**: because gbs will mount your git tree to the build root, so please be very careful when you remove your build root, you need to make sure you already umount source tree manually before you remove it.
+This mode will set up the build environment in multiple steps, finishing by mounting the local Git tree of a package in the chroot build environment.
 
-Incremental build has the following benefits:
+**Note**: Because gbs will mount your git tree to the build root, be very careful when you remove your build root. You need to make sure you've already umounted the source tree manually before you remove it.
 
-1. Build environment is kept in tact and changes to source do not trigger a new build environment (in the chroot)
-2. The Git source tree becomes the source of the builds.  Any change done in the Git repository followed by invocation of the build script will build the changed sources
-3. If build fails for some reason, the build script will continue from the spot where it has failed after code has been changed to fix the problem causing the failure.
+This has the following benefits:
 
-This mode is in many ways similar to traditional code development where changes are done to sources followed by running `make` to test and compile the changes, however, it enables development using the build environment of the target instead of the host OS.
+1. The build environment uses the latest source code and changes to source do not trigger a new build environment (in the chroot).
+2. The Git source tree becomes the source of the builds.  Any change made in the Git repository followed by invocation of the build script will build the changed sources
+3. If the build fails for some reason, the build script will continue from the spot where it has failed, once the code has been changed to fix the problem causing the failure.
+
+This mode is, in many ways, similar to traditional code development, where changes are made to sources, followed by running `make` to test and compile the changes. However, it enables development using the build environment of the target, instead of the host OS.
 
 This method has some limitations, mostly related to packaging and how the sources are maintained.  Among others, it depends on how the RPM spec file is composed:
 
-1. It does not support patches in spec file, all source has to be maintained as part of the Git tree
-2. It requires a clean packaging workflow.  Exotic workflows in the spec files might not work well, since this mode expects the following model:
+1. It does not support patches in the spec file. All source has to be maintained as part of the Git tree
+2. It requires a clean packaging workflow.  Exotic workflows in the spec files might not work well, because this mode expects the following model:
 
    a. Code preparation (%prep)
    b. Code building (%build)
    c. Code installation (%install)
 
-3. Since we run the %build section every time, if the %build script has configuration scripts (auto-tools), binaries might be regeneration causing a complete build every time.  To avoid this, you are encouraged to use the following macros which can be overridden using the `--no-configure` option:
+3. Because we run the %build section every time, if the %build script has configuration scripts (auto-tools), binaries might be regenerated, causing a complete build every time.  To avoid this, you are encouraged to use the following macros, which can be overridden using the `--no-configure` option:
 
    a. %configure: runs the configure script with pre-defined paths and options.
    b. %reconfigure: regenerates the scripts and runs %configure
@@ -696,7 +710,7 @@ This method has some limitations, mostly related to packaging and how the source
 Example
 '''''''
 
-In this example, we use `dlog` source code. We need build fist with --incremental, then just modify one source file, and trigger incremental build again. We will see only modified source code has been compiled during incremental build.
+In this example, we use `dlog` source code. First, we need to build with --incremental, then just modify one source file, and trigger the incremental build again. We will see that only modified source code has been compiled during the incremental build.
 
 ::
 
@@ -748,15 +762,23 @@ In this example, we use `dlog` source code. We need build fist with --incrementa
   /home/test/GBS-ROOT/local/repos/tizen/
   info: Done
 
-From the buildlog, we can see only log.c has been re-compiled, that's the incremental build behavior.
+From the buildlog, we can see that only log.c has been re-compiled. That's the incremental build behavior.
 Currently limitation about incremental build
+
+`--noinit` option can be used together with `--incremental` to make build more quickly, like:
+
+::
+
+  $ gbs build --incremental --noinit
+
+
 
 Limitations of Incremental Build
 ''''''''''''''''''''''''''''''''
 
 Incremental build don't support all packages. Here are some limitations:
 
-- Incremental build currently supports building only a single package, doesn't support multiple packages build in parallel
+- Incremental build currently supports building only a single package. It doesn't support building multiple packages in parallel
 - The tarball's name in the spec file should be %{name}-%{version}.{tar.gz|tar.bz2|zip|...}, otherwise GBS can't mount source code to build the root correctly
 - %prep section should only contains %setup macro to unpack tar ball, and should not contains other source code related operations, such as unpack another source, apply patches, etc.
 
@@ -764,7 +786,7 @@ Incremental build don't support all packages. Here are some limitations:
 Multiple packages build (dependency build)
 ``````````````````````````````````````````
 
-Multiple package build has been supported since gbs 0.10. If packages have dependency each other, gbs will build packages in correct order calculated by dependency relationship, and previous built out RPMs will be used to build following packages depend on them, which is the dependency build.
+Multiple package build has been supported since gbs 0.10. If packages have dependencies on each other, gbs will build packages in the correct order calculated by dependency relationship. Previously built out RPMs will be used to build the following packages that depend on them, which is the dependency build.
 
 **Examples**:
 
@@ -785,7 +807,7 @@ Multiple package build has been supported since gbs 0.10. If packages have depen
 
 3. Select a group of packages to build
 
-`--binary-list` option can be used to specify a text file, which contains RPM binary name list you want to build, the format is one package per line
+`--binary-list` option can be used to specify a text file, which contains the RPM binary name list you want to build, the format is one package per line
 
 ::
 
@@ -821,13 +843,13 @@ Install extra packages to build root
 Keep all packages in build root
 '''''''''''''''''''''''''''''''
 
-Generally, `gbs build` will remove unnecessary packages in build root while transferring to build another package, you can use `--keep-packs` to keep all unnecessary packages, and just install missing build required packages. This option can be used to speed up build multiple packages.
+Generally, `gbs build` will remove unnecessary packages in build root. While transferring to build another package, you can use `--keep-packs` to keep all unnecessary packages, and just install missing build required packages. This option can be used to speed up build multiple packages.
 
 ::
 
   $ gbs build --keep-packs
 
-`--keep-packs` can be used to create one build root for building multiple packages. Once the build root ready, you can use --noinit to build these packages quickly.
+`--keep-packs` can be used to create one build root for building multiple packages. Once the build root is ready, you can use --noinit to build these packages quickly.
 
 ::
 
@@ -835,7 +857,7 @@ $ gbs build pkg1/ --keep-packs -A i586
 $ gbs build pkg2/ --keep-packs -A i586
 $ gbs build pkg3/ --keep-packs -A i586
 
-Now, the build root (~/GBS-ROOT/local/scratch.i686.0) are ready for building pkg1, pkg2 and pkg3. You can use --noinit to build them offline, and don't need waste time to check repo updates and build root.
+Now, the build root (~/GBS-ROOT/local/scratch.i686.0) is ready for building pkg1, pkg2, and pkg3. You can use --noinit to build them offline, and don't need waste time to check repo updates and build root.
 
 ::
 
@@ -847,11 +869,11 @@ $ gbs build pkg3 --noinit
 Fetch the project build conf and customize build root (for Advanced Users)
 ``````````````````````````````````````````````````````````````````````````
 
-Project build conf describle the project build configurations for the project, it includes pre-defined macros/packages/flags in the build environment, in Tizen release, the build conf is released together with the released repo, you can find an example at: http://download.tizen.org/releases/daily/trunk/ivi/latest/builddata/xxx-build.conf
+Project build conf describes the project build configurations for the project, including pre-defined macros/packages/flags in the build environment. In Tizen releases, the build conf is released together with the released repo. You can find an example at: http://download.tizen.org/releases/daily/trunk/ivi/latest/builddata/xxx-build.conf
 
 - gbs build will fetch the build conf automatically
 
-Starting from gbs 0.7.1, by default gbs will fetch the build conf from remote repo if you specify the remote Tizen repo, and then store it in your temp environment. Here's the build log:
+Starting from gbs 0.7.1, by default, gbs will fetch the build conf from a remote repo, if you specify the remote Tizen repo, and then store it in your temp environment. Here's the build log:
 
 ::
 
@@ -865,7 +887,7 @@ Starting from gbs 0.7.1, by default gbs will fetch the build conf from remote re
 - build the package using your own project build conf, using the -D option
 
 
-You can save it and modify it, and then use it as your purpose:
+You can save it and modify it, and then use it for your purposes:
 
 ::
 
@@ -949,8 +971,8 @@ You can get the usage of subcommand `submit` by:
  $ gbs submit --help
 
 
-Examples:
-`````````
+Examples
+````````
 1) Create a tag on a current working branch and submit it directly.
 
 ::
@@ -1181,7 +1203,7 @@ If you want to merge imported upstream branch to master automatically, `--merge`
    1f157c3 Imported Upstream version 4.2.0
    482ef23 Imported vendor release 4.1.5-1
    fc76416 Imported Upstream version 4.1.5
-  
+
 
 GBS Export
 ----------
@@ -1270,7 +1292,7 @@ Installation Related Issues
 
 Q: I'm unable to get zypper to refresh from http://download.tizen.org/tools/openSUSE12.1/, but I'm not getting an error of repo issue
 
-A: This may because there is a cached version at the proxy server. Try running the commands below to clean the cache:
+A: This may be because there is a cached version at the proxy server. Try running the commands below to clean the cache:
 
 ::
 
@@ -1281,7 +1303,7 @@ A: This may because there is a cached version at the proxy server. Try running t
 
 Q: I installed gbs from the official repo, but it is trying to use source code from /usr/local/lib/python*.
 
-A: This may because you have installed gbs from source code before. Please remove the old gbs version.
+A: This may be because you have installed gbs from source code before. Please remove the old gbs version.
 
 Q: How do I update GBS and its dependencies?
 
@@ -1314,7 +1336,7 @@ A: The package you are trying to build is missing a dependency in the repo you s
 
 Q: 'gbs build' exits unexpectedly when installing packages to create build root.
 
-A: This maybe caused by a remote repo having been changed. You can specify `--clean` while running gbs build, like:
+A: This may be caused by a remote repo having been changed. You can specify `--clean` while running gbs build, like:
 
 ::
 
@@ -1322,7 +1344,7 @@ A: This maybe caused by a remote repo having been changed. You can specify `--cl
 
 Q: 'gbs build' exits unexpectedly with errors: file XXXX from install of YYYYY conflicts with file from package ZZZZZ.
 
-A: This may be caused by a remote repo having been changed, you can specify `--clean` while running gbs build, like:
+A: This may be caused by a remote repo having been changed. You can specify `--clean` while running gbs build, like:
 
 ::
 
@@ -1330,7 +1352,7 @@ A: This may be caused by a remote repo having been changed, you can specify `--c
 
 Q: 'gbs build' exits with errors: have choice for `XXXX` needed by packagename: package1 package2.
 
-A: This may be caused by a remote repo having two packages provide `XXXX`, and gbs don't know which one to use. In this case you need download build config and Add one line like:
+A: This may be caused by a remote repo having two packages provide `XXXX`, and gbs don't know which one to use. In this case, you need download the build config and add one line like this:
 
 ::
 
@@ -1342,11 +1364,11 @@ or
 
  Prefer: package2
 
-About how to download and customize build config, please refer to gbs build usage page.
+To see how to download and customize build config, please refer to the gbs build usage page.
 
 Q: 'gbs build' fails to create an arm build env on Ubuntu 11.10
 
-A: This may be caused by qemu. 'qemu-user-static' has some issues with the ubuntu official repo, so please remove 'qemu-user-static' and install 'qemu-arm-static' from the Tizen tools repo.
+A: This may be caused by qemu. 'qemu-user-static' has some issues with the Ubuntu official repo. Remove 'qemu-user-static' and install 'qemu-arm-static' from the Tizen tools repo.
 You can use this command:
 
 ::
@@ -1360,7 +1382,7 @@ gbs Remote build Related Issues
 
 Q: I cannot access the remote build server (OBS) during a remote build
 
-A: This requires that you have username and passwd and set them correctly in the configuration file. Also, make sure the build server api and proxy settings are correct for your environment.
+A: This requires that you have an username and passwd and that you set them correctly in the configuration file. Also, make sure the build server api and proxy settings are correct for your environment.
 Proxy Related Issues
 
 Q: export no_proxy="localhost; 127.0.0.1; .company.com" does not work on Ubuntu

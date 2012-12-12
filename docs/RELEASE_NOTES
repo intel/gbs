@@ -1,6 +1,8 @@
 Release notes for gbs 0.12
 ==========================
 
+- Release Date: 2012-12-13
+
 - 11 new features added:
   1. --noinit support, just like offline mode of `osc build`
   2. support building RPM package for incremental build
@@ -14,18 +16,20 @@ Release notes for gbs 0.12
   10.enable importing patches while importing packages
   11.show build progress for multiple packages build
 
-- 5 bug fixes included:
+- 6 bug fixes included:
   1. [remotebuiold] OBS empty response traceback for remotebuild
   2. [remotebuiold] remove hardcode of default base project (-B), but you can still set default in gbs.conf
   3. warning user and try again if umount failed for incremental build
   4. request passwd again if one package build for a long time(>10 mins) on openSUSE
   5. lock shared vars operations to avoid race condition
+  6. gbs remotebuild failed for link project if working package only exists in linked project.
 
-- 4 other changes:
+- 5 other changes:
   1. add --merge option to replace --no-merge for gbs import, and not-merging is the default behavior
   2. modify changelog order to follow default order of git log
   3. show correct RPM/SRPM output directory for gbs build
   4. give warning if build arch not compatible
+  5. add reST format document: docs/GBS.rst, which can be converted to html, man, and pdf formats.
 
 - Dependencies
   - git-core
