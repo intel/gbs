@@ -123,14 +123,18 @@ def build_parser(parser):
 
     parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
                         default=os.getcwd(),
-                        help='path to git repository')
+                        help='git repository path, which can contain multiple '
+                        'packages, in this case, all packages will be built in '
+                        'dependency order')
 
     parser.add_argument('-D', '--dist',
-                        help='specify distribution configuration file, '
-                        'which should be a full path')
+                        help='specify distribution (build) configuration file')
     parser.add_argument('-R', '--repository', dest='repositories',
                         action="append", help='specify package repositories, '
                         'only rpm-md format is supported')
+    parser.add_argument('--skip-conf-repos', action="store_true",
+                        help='skip repositories mentioned in config file, '
+                        'and only use repos from command line -R option')
     parser.add_argument('-B', '--buildroot',
                         help='specify build root to setup chroot environment. '
                         'By default, ~/GBS-ROOT/ will be used, and if no '
@@ -140,83 +144,91 @@ def build_parser(parser):
     parser.add_argument('-P', '--profile',
                         help='profile to be used for building, can be given '
                              'without the "profile." prefix')
-    parser.add_argument('-C', '--clean', action='store_true',
-                        help='delete old build root before initialization')
-    parser.add_argument('--clean-repos', action='store_true',
-                        help='clean up local repos created by gbs build '
-                        'before building packages')
-    parser.add_argument('--ccache', action="store_true",
-                        help='use ccache to speed up rebuilds')
-    parser.add_argument('--skip-conf-repos', action="store_true",
-                        help='skip repositories mentioned in config file')
-    parser.add_argument('-c', '--commit', help='specify a commit ID to build')
-    parser.add_argument('--spec', type=basename_type,
-                        help='specify a spec file to use. It should be a file '
-                        'name that GBS will find it in packaging dir')
-    parser.add_argument('--extra-packs',
-                        help='specify extra packages to install to build root '
-                        'multiple packages can be separated by comma')
-    parser.add_argument('--include-all', action='store_true',
+    parser.add_argument('--overwrite', action='store_true',
+                        help='overwrite existing binaries and build '
+                        'them anyway')
+    parser.add_argument('--define', action="append",
+                        help='define macro X with value Y with format "X Y"')
+    parser.add_argument('--debug', action='store_true', help='debug output')
+
+    group = parser.add_argument_group('export build-tree options')
+    group.add_argument('-c', '--commit', help='specify a commit ID to build')
+    group.add_argument('--include-all', action='store_true',
                         help='uncommitted changes and untracked files would be '
                         'included while generating tar ball')
-    parser.add_argument('--upstream-branch', help='upstream branch')
-    parser.add_argument('--upstream-tag',
+    group.add_argument('--packaging-dir',
+                        help='directory containing packaging files')
+    group.add_argument('--spec', type=basename_type,
+                        help='specify a spec file to use. It should be a file '
+                        'name that GBS will find it in packaging dir')
+    group.add_argument('--upstream-branch', help='upstream branch')
+    group.add_argument('--upstream-tag',
                         help="upstream tag format, '${upstreamversion}' is "
-                       "expanded to the version in the spec file. "
+                        "expanded to the version in the spec file. "
                         "E.g. 'v${upstreamversion}'")
-    parser.add_argument('--squash-patches-until',
+    group.add_argument('--squash-patches-until',
                         help='when generating patches, squash patches up '
                         'to given commit-ish into one monolithic diff file. '
                         'Format is the commit-ish optionally followed by a '
                         'colon and diff filename base.')
-    parser.add_argument('--packaging-dir',
-                        help='directory containing packaging files')
 
-    # depanneur special options
-    parser.add_argument('--clean-once', action='store_true',
-                        help='clean the build environment only once when you '
-                        'start building multiple packages, after that use '
-                        'existing environment for all packages.')
-    parser.add_argument('--overwrite', action='store_true',
-                        help='overwrite existing binaries and build '
-                        'them anyway')
-    parser.add_argument('--incremental', action='store_true',
+    group = parser.add_argument_group('incremental build options')
+    group.add_argument('--incremental', action='store_true',
                        help='build a package from the local git tree '
                         'incremental. If the build fails, changes can be done '
                         'directly to the source and build can continue from '
                         'where it stopped')
-    parser.add_argument('--debug', action='store_true', help='debug output')
-    parser.add_argument('--binary-list',
-                        help='specify a binary list file. Packages listed in '
-                       'this file will be selected to be built. The format '
-                       'of binary-list file is one package for one line, '
-                       'and only binary RPM name is accepted')
-    parser.add_argument('--threads', type=int, default=1,
-                        help='number of threads to build package in parallel')
-    parser.add_argument('--exclude', action="append",
-                        help='specify a package to be excluded to be built')
-    parser.add_argument('--exclude-from-file',
-                        help='specify an exclude package list text file, the '
-                        'format is one package in one line, and only binary '
-                        'RPM package name is accepted. Packages listed in '
-                        'this file will be skipped to be built.')
-    parser.add_argument('--keepgoing', action='store_true',
-                        help='if a package build fails, do not abort and '
-                        'continue building other packages in the queue')
-    parser.add_argument('--no-configure', action='store_true',
+    group.add_argument('--no-configure', action='store_true',
                         help='this option disables running configure scripts '
                         'and auto generation of auto-tools to make incremental '
                         'build possible. This requires the configure scripts '
                         'in the spec to be referenced using the %%configure, '
                         '%%reconfigure and %%autogen macros')
-    parser.add_argument('--noinit', action='store_true',
-                        help='start building directly')
-    parser.add_argument('--keep-packs', action='store_true',
+
+    group = parser.add_argument_group('build root env options')
+    group.add_argument('-C', '--clean', action='store_true',
+                        help='delete old build root before initialization')
+    group.add_argument('--clean-once', action='store_true',
+                        help='clean the build environment only once when you '
+                        'start building multiple packages, after that use '
+                        'existing environment for all packages.')
+    group.add_argument('--noinit', action='store_true',
+                        help='working in offline mode. Start building directly')
+    group.add_argument('--extra-packs',
+                        help='specify extra packages to install to build root, '
+                        'Multiple packages can be separated by comma(,)')
+    group.add_argument('--keep-packs', action='store_true',
                         help='keep unused packages in build root. without '
                         'this option, unused packages will be removed from '
                         'build root')
-    parser.add_argument('--define', action="append",
-                        help='define macro X with value Y with format "X Y"')
+
+    group = parser.add_argument_group('package selection options')
+    group.add_argument('--binary-list',
+                        help='specify a binary list file. Packages listed in '
+                       'this file will be selected to be built. The format '
+                       'of binary-list file is one package for one line, '
+                       'and only binary RPM name is accepted')
+    group.add_argument('--exclude',
+                        help='specify a package list to be excluded for '
+                        'building. Multiple packages can be separated by '
+                        'comma(,)')
+    group.add_argument('--exclude-from-file',
+                        help='specify an exclude package list text file, the '
+                        'format is one package in one line, and only binary '
+                        'RPM package name is accepted. Packages listed in '
+                        'this file will be skipped to be built.')
+
+    group = parser.add_argument_group('speed up building options')
+    group.add_argument('--threads', type=int, default=1,
+                        help='number of threads to build multiple packages '
+                        'in parallel')
+    group.add_argument('--ccache', action="store_true",
+                        help='use ccache to speed up rebuilds')
+
+    group = parser.add_argument_group('build env clean up options')
+    group.add_argument('--clean-repos', action='store_true',
+                        help='clean up local repos created by gbs build '
+                        'before building packages')
 
     parser.set_defaults(alias="lb")
     return parser

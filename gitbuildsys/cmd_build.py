@@ -158,7 +158,7 @@ def prepare_depanneur_opts(args):
 
     cmd_opts = []
     if args.exclude:
-        cmd_opts += ['--exclude=%s' % i for i in args.exclude]
+        cmd_opts += ['--exclude=%s' % i for i in args.exclude.split(',')]
     if args.exclude_from_file:
         cmd_opts += ['--exclude-from-file=%s' % args.exclude_from_file]
     if args.overwrite:
@@ -171,8 +171,6 @@ def prepare_depanneur_opts(args):
         cmd_opts += ['--debug']
     if args.incremental:
         cmd_opts += ['--incremental']
-    if args.keepgoing:
-        cmd_opts += ['--keepgoing']
     if args.no_configure:
         cmd_opts += ['--no-configure']
     if args.keep_packs:
