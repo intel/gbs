@@ -53,8 +53,16 @@ def main(args):
         params.append("--verbose")
     if not args.no_pristine_tar and os.path.exists("/usr/bin/pristine-tar"):
         params.append("--pristine-tar")
+    if args.filter:
+        params += [('--filter=%s' % f) for f in args.filter]
 
     if path.endswith('.src.rpm') or path.endswith('.spec'):
+        if args.allow_same_version:
+            params.append("--allow-same-version")
+        if args.native:
+            params.append("--native")
+        if args.no_patch_import:
+            params.append("--no-patch-import")
         ret = gbp_import_srpm(params)
         if ret == 2:
             log.warning("Importing of patches into packaging branch failed! "
@@ -64,6 +72,8 @@ def main(args):
         elif ret:
             raise GbsError("Failed to import %s" % path)
     else:
+        if args.upstream_vcs_tag:
+            params.append('--upstream-vcs-tag=%s' % args.upstream_vcs_tag)
         if args.merge:
             params.append('--merge')
         else:

@@ -125,7 +125,7 @@ class TestImport(unittest.TestCase):
     @with_data("ail-0.2.29-2.3.src.rpm")
     def test_specify_upstream(self, srcrpm):
         """Test --upstream command line option."""
-        eq_(GBS(argv=["gbs", "import", "--upstream=upstream",
+        eq_(GBS(argv=["gbs", "import", "--upstream-branch=upstream",
                       srcrpm]), None)
         repo = GitRepository("./ail")
         eq_(repo.get_local_branches(), ['master', 'pristine-tar', 'upstream'])

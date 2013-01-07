@@ -43,10 +43,8 @@ def import_parser(parser):
 
     parser.add_argument('--author-name', help='author name of git commit')
     parser.add_argument('--author-email', help='author email of git commit')
-    parser.add_argument('--upstream_branch', default='upstream',
+    parser.add_argument('--upstream-branch', default='upstream',
                         help='specify upstream branch for new package version')
-    parser.add_argument('--merge', action='store_true',
-                         help='merge new upstream branch to master')
     parser.add_argument('--packaging-dir',
                         help='directory containing packaging files')
     parser.add_argument('--no-pristine-tar', action='store_true',
@@ -54,6 +52,24 @@ def import_parser(parser):
                         'pristine-tar only support import *tar.{gz,bz2,xz} '
                         'sources, this option can be specified to import '
                         'other format sources')
+    parser.add_argument('--filter', action="append",
+                        help='files to filter out during import(can be given '
+                        'multiple times)')
+    group = parser.add_argument_group('only for importing srpms and spec file '
+                        'options')
+    group.add_argument('--allow-same-version', action='store_true',
+                         help='allow to import already imported version')
+    group.add_argument('--native', action='store_true',
+                       help='this is a dist native package, no separate '
+                       'upstream')
+    group.add_argument('--no-patch-import', action='store_true',
+                       help='don\'t import patches automatically')
+    group = parser.add_argument_group('only for importing upstream tar ball '
+                        'options')
+    group.add_argument('--merge', action='store_true',
+                         help='merge new upstream branch to master')
+    group.add_argument('--upstream-vcs-tag',
+                        help='upstream VCS tag add to the merge commit')
 
     parser.set_defaults(alias="im")
     return parser
