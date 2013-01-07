@@ -231,10 +231,6 @@ def main(args):
     utils.git_status_checker(repo, args)
     workdir = repo.path
 
-    packaging_dir = get_packaging_dir(args)
-    if not os.path.exists(os.path.join(workdir, packaging_dir)):
-        raise GbsError("No packaging directory '%s/', so there is nothing to "
-                       "export." % packaging_dir)
 
     # Only guess spec filename here, parse later when we have the correct
     # spec file at hand
@@ -244,6 +240,7 @@ def main(args):
         commit = 'WC.UNTRACKED'
     else:
         commit = 'HEAD'
+    packaging_dir = get_packaging_dir(args)
     relative_spec = utils.guess_spec(workdir, packaging_dir, args.spec, commit)
 
     if args.outdir:

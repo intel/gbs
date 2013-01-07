@@ -61,15 +61,20 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
     git_path = os.path.abspath(git_path)
 
     if commit_id == 'WC.UNTRACKED':
-        check = lambda fname: os.path.exists(os.path.join(git_path, fname))
+        check = lambda fname, dir_only=False: os.path.exists(os.path.join( \
+                       git_path, fname))
         glob_ = lambda pattern: [ name.replace(git_path+'/', '')
             for name in glob.glob(os.path.join(git_path, pattern)) ]
         msg = 'No such spec file %s'
     else:
-        check = lambda fname: file_exists_in_rev(git_path, fname, commit_id)
+        check = lambda fname, dir_only=False : file_exists_in_rev(git_path, \
+                       fname, commit_id, dir_only=dir_only)
         glob_ = lambda pattern: glob_in_rev(git_path, pattern, commit_id)
         msg = "No such spec file %%s in %s" % commit_id
 
+    if not check(packaging_dir, True):
+        raise GbsError("No packaging directory: '%s/', so there is nothing to "
+                       "export." % packaging_dir)
     if given_spec:
         spec = os.path.join(packaging_dir, given_spec)
         if not check(spec):
@@ -489,10 +494,13 @@ def show_file_from_rev(git_path, relative_path, commit_id):
     return None
 
 
-def file_exists_in_rev(git_path, relative_path, commit_id):
+def file_exists_in_rev(git_path, relative_path, commit_id, dir_only=False):
     """Check if file exists in given given revision."""
-    cmd = 'cd %s; git ls-tree --name-only %s %s' % (
-        git_path, commit_id, relative_path)
+    git_opts = ['--name-only']
+    if dir_only:
+       git_opts += ['-d']
+    cmd = 'cd %s; git ls-tree %s %s %s' % (
+        git_path, ' '.join(git_opts), commit_id, relative_path)
 
     try:
         output = subprocess.check_output(cmd, shell=True)
