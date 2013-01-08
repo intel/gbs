@@ -152,7 +152,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
 
     if args.debug:
         argv.append("--git-verbose")
-    if force_native or is_native_pkg(repo, args):
+    if force_native or is_native_pkg(repo, args) or args.no_patch_export:
         argv.extend(["--git-no-patch-export",
                      "--git-upstream-tree=%s" % commit])
     else:

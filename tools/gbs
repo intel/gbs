@@ -97,6 +97,10 @@ def export_parser(parser):
                         'would be included while generating tar ball')
     parser.add_argument('--source-rpm', action='store_true',
                         help='generate source rpm')
+    parser.add_argument('--no-patch-export', action='store_true',
+                        help='don\'t create patches between upstream and '
+                        'export-treeish, and create tar ball from the '
+                        'export-treeish instead of upstream branch')
     parser.add_argument('--upstream-branch', help='upstream branch')
     parser.add_argument('--upstream-tag',
                         help="upstream tag format, '${upstreamversion}' is "
@@ -187,6 +191,10 @@ def build_parser(parser):
                         'to given commit-ish into one monolithic diff file. '
                         'Format is the commit-ish optionally followed by a '
                         'colon and diff filename base.')
+    group.add_argument('--no-patch-export', action='store_true',
+                        help='don\'t create patches between upstream and '
+                        'export-treeish, and create tar ball from the '
+                        'export-treeish instead of upstream branch')
 
     group = parser.add_argument_group('incremental build options')
     group.add_argument('--incremental', action='store_true',
