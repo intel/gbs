@@ -248,6 +248,9 @@ def main(args):
     else:
         outdir = os.path.join(workdir, packaging_dir)
     outdir = os.path.abspath(outdir)
+    if not os.access(outdir, os.W_OK|os.X_OK):
+        raise GbsError('no write permission to outdir: %s' % outdir)
+
     mkdir_p(outdir)
     tmpdir     = configmgr.get('tmpdir', 'general')
     tempd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_export_'), \
@@ -270,10 +273,14 @@ def main(args):
     else:
         outdir = "%s/%s-%s-%s" % (outdir, spec.name, spec.upstreamversion,
                                   spec.release)
+    if os.path.exists(outdir):
+        if not os.access(outdir, os.W_OK|os.X_OK):
+            raise GbsError('no permission to update outdir: %s' % outdir)
         shutil.rmtree(outdir, ignore_errors=True)
-        shutil.move(export_dir, outdir)
-        if args.source_rpm:
-            log.info('source rpm generated to:\n     %s/%s.src.rpm' % \
-                       (outdir, os.path.basename(outdir)))
+
+    shutil.move(export_dir, outdir)
+    if args.source_rpm:
+        log.info('source rpm generated to:\n     %s/%s.src.rpm' % \
+                   (outdir, os.path.basename(outdir)))
 
     log.info('package files have been exported to:\n     %s' % outdir)
