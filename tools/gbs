@@ -121,23 +121,14 @@ def export_parser(parser):
 def build_parser(parser):
     """local build package
     Examples:
-      $ mkdir tizen-packages
-      $ cp package1 package2 package3 ... tizen-packages/
-      $ gbs build -A ia32 tizen-packages # build all packages from tizen-packages
-      $ cd tizen-packages/
-      $ gbs build -A ia32 # build all packages under current dir
-      $ gbs build -A ia32 --overwrite --include-all
-      $ gbs build -A i586 --threads=2
-      $ gbs build -A i586 --threads=2 --exclude=dlog --exclude=eglibc
-      $ gbs build -A i586 --threads=4 --binary-list=/path/to/pkgs.list
-      $ cd package1/
-      $ gbs build -A i586 --incremental # only support build one package
-
-      # Use repos specified from command line
-      $ gbs build -R http://user:passwd@example.org -R ... --skip-conf-repos
-      # Use repos specified from command line and gbs.conf
-      $ gbs build -R http://user:passwd@example.org -R ...
-
+      $ gbs build -A i586   # build all packages under current dir for i586
+      $ gbs build -A armv7l # build all packages under current dir for armv7l
+      $ gbs build -A i586 --overwrite   # rebuild the packages
+      $ gbs build -A i586 --include-all # build packages including un-commit changes
+      $ gbs build -A i586 --incremental # incremental build
+      $ gbs build -A i586 --noinit      # build with offline mode
+      $ gbs build -A i586 --clean       # clean build by deleting the old build root
+      $ gbs build -A i586 <gitdir>      # build all packages under <gitdir>
 
     """
 
@@ -147,31 +138,72 @@ def build_parser(parser):
                         'packages, in this case, all packages will be built in '
                         'dependency order')
 
-    parser.add_argument('-D', '--dist',
-                        help='specify distribution (build) configuration file')
-    parser.add_argument('-R', '--repository', dest='repositories',
+    group = parser.add_argument_group('build configuration options')
+    group.add_argument('-A', '--arch', help='build target arch ')
+    group.add_argument('-D', '--dist',
+                        help='specify project (build) configuration file')
+    group.add_argument('-P', '--profile',
+                        help='profile to be used for building, it is defined '
+                             'in .gbs.conf, can be given without the '
+                             '"profile." prefix')
+    group.add_argument('-R', '--repository', dest='repositories',
                         action="append", help='specify package repositories, '
                         'only rpm-md format is supported')
-    parser.add_argument('--skip-conf-repos', action="store_true",
+    group.add_argument('--skip-conf-repos', action="store_true",
                         help='skip repositories mentioned in config file, '
                         'and only use repos from command line -R option')
-    parser.add_argument('-B', '--buildroot',
+    group.add_argument('--overwrite', action='store_true',
+                        help='overwrite existing binaries and build '
+                        'them anyway')
+    group.add_argument('--define', action="append",
+                        help='define macro X with value Y with format "X Y"')
+    group.add_argument('--debug', action='store_true', help='debug output')
+
+    group = parser.add_argument_group('build env options')
+    group.add_argument('-B', '--buildroot',
                         help='specify build root to setup chroot environment. '
                         'By default, ~/GBS-ROOT/ will be used, and if no '
                         '-B option, but TIZEN_BUILD_ROOT env exists, then '
                         '${TIZEN_BUILD_ROOT} will used as build root')
-    parser.add_argument('-A', '--arch', help='build target arch ')
-    parser.add_argument('-P', '--profile',
-                        help='profile to be used for building, can be given '
-                             'without the "profile." prefix')
-    parser.add_argument('--overwrite', action='store_true',
-                        help='overwrite existing binaries and build '
-                        'them anyway')
-    parser.add_argument('--define', action="append",
-                        help='define macro X with value Y with format "X Y"')
-    parser.add_argument('--debug', action='store_true', help='debug output')
+    group.add_argument('-C', '--clean', action='store_true',
+                        help='delete old build root before initialization')
+    group.add_argument('--clean-once', action='store_true',
+                        help='clean the build environment only once when you '
+                        'start building multiple packages, after that use '
+                        'existing environment for all packages.')
+    group.add_argument('--clean-repos', action='store_true',
+                        help='clean up local repos created by gbs build '
+                        'before building packages')
+    group.add_argument('--extra-packs',
+                        help='specify extra packages to install to build root, '
+                        'Multiple packages can be separated by comma(,)')
+    group.add_argument('--keep-packs', action='store_true',
+                        help='keep unused packages in build root. without '
+                        'this option, unused packages will be removed from '
+                        'build root')
 
-    group = parser.add_argument_group('export build-tree options')
+    group = parser.add_argument_group('speed up building options')
+    group.add_argument('--incremental', action='store_true',
+                       help='build a package from the local git tree '
+                        'incremental. If the build fails, changes can be done '
+                        'directly to the source and build can continue from '
+                        'where it stopped')
+    group.add_argument('--no-configure', action='store_true',
+                        help='this option disables running configure scripts '
+                        'and auto generation of auto-tools to make incremental '
+                        'build possible. This requires the configure scripts '
+                        'in the spec to be referenced using the %%configure, '
+                        '%%reconfigure and %%autogen macros')
+    group.add_argument('--noinit', action='store_true',
+                        help='working in offline mode. Start building directly')
+    group.add_argument('--ccache', action="store_true",
+                        help='use ccache to speed up rebuilds')
+    group.add_argument('--threads', type=int, default=1,
+                        help='number of threads to build multiple packages '
+                        'in parallel')
+
+
+    group = parser.add_argument_group('git-tree options')
     group.add_argument('-c', '--commit', help='specify a commit ID to build')
     group.add_argument('--include-all', action='store_true',
                         help='uncommitted changes and untracked files would be '
@@ -196,42 +228,12 @@ def build_parser(parser):
                         'export-treeish, and create tar ball from the '
                         'export-treeish instead of upstream branch')
 
-    group = parser.add_argument_group('incremental build options')
-    group.add_argument('--incremental', action='store_true',
-                       help='build a package from the local git tree '
-                        'incremental. If the build fails, changes can be done '
-                        'directly to the source and build can continue from '
-                        'where it stopped')
-    group.add_argument('--no-configure', action='store_true',
-                        help='this option disables running configure scripts '
-                        'and auto generation of auto-tools to make incremental '
-                        'build possible. This requires the configure scripts '
-                        'in the spec to be referenced using the %%configure, '
-                        '%%reconfigure and %%autogen macros')
-
-    group = parser.add_argument_group('build root env options')
-    group.add_argument('-C', '--clean', action='store_true',
-                        help='delete old build root before initialization')
-    group.add_argument('--clean-once', action='store_true',
-                        help='clean the build environment only once when you '
-                        'start building multiple packages, after that use '
-                        'existing environment for all packages.')
-    group.add_argument('--noinit', action='store_true',
-                        help='working in offline mode. Start building directly')
-    group.add_argument('--extra-packs',
-                        help='specify extra packages to install to build root, '
-                        'Multiple packages can be separated by comma(,)')
-    group.add_argument('--keep-packs', action='store_true',
-                        help='keep unused packages in build root. without '
-                        'this option, unused packages will be removed from '
-                        'build root')
-
     group = parser.add_argument_group('package selection options')
     group.add_argument('--binary-list',
-                        help='specify a binary list file. Packages listed in '
-                       'this file will be selected to be built. The format '
-                       'of binary-list file is one package for one line, '
-                       'and only binary RPM name is accepted')
+                        help='specify a binary package list file. Packages '
+                       'listed in this file will be selected to be built. '
+                       'The format of binary-list file is one package for one '
+                       'line, and only binary RPM name is accepted')
     group.add_argument('--exclude',
                         help='specify a package list to be excluded for '
                         'building. Multiple packages can be separated by '
@@ -241,18 +243,6 @@ def build_parser(parser):
                         'format is one package in one line, and only binary '
                         'RPM package name is accepted. Packages listed in '
                         'this file will be skipped to be built.')
-
-    group = parser.add_argument_group('speed up building options')
-    group.add_argument('--threads', type=int, default=1,
-                        help='number of threads to build multiple packages '
-                        'in parallel')
-    group.add_argument('--ccache', action="store_true",
-                        help='use ccache to speed up rebuilds')
-
-    group = parser.add_argument_group('build env clean up options')
-    group.add_argument('--clean-repos', action='store_true',
-                        help='clean up local repos created by gbs build '
-                        'before building packages')
 
     parser.set_defaults(alias="lb")
     return parser
