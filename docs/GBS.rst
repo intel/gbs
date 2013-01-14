@@ -545,14 +545,14 @@ Structure of a GBS build root directory
   |   |-- repos                    # generated local repo top directory
   |   |   |-- tizen                # distro one: tizen
   |   |   |   |-- armv7l           # store armv7l RPM packages
-  |   |   |   |-- i686             # store x86 RPM packages
+  |   |   |   |-- i586             # store x86 RPM packages
   |   |   `-- tizen2.0             # build for distro two: tizen2.0
-  |   |       `-- i686             # the same as above
+  |   |       `-- i586             # the same as above
   |   |-- scratch.armv7l.0         # first build root for arm build
-  |   |-- scratch.i686.0           # second build root for x86 build
-  |   |-- scratch.i686.1           # third build root for x86 build
-  |   |-- scratch.i686.2           # fourth build root for x86 build
-  |   |-- scratch.i686.3           # fifth build root for x86 build
+  |   |-- scratch.i586.0           # second build root for x86 build
+  |   |-- scratch.i586.1           # third build root for x86 build
+  |   |-- scratch.i586.2           # fourth build root for x86 build
+  |   |-- scratch.i586.3           # fifth build root for x86 build
   |   |                            # The above build root dir can be used by gbs chroot <build root dir>
   |   `-- sources                  # sources generated for build, including tarball, spec, patches, etc.
   |       |-- tizen
@@ -567,7 +567,7 @@ GBS Build Examples (Basic Usage)
 ::
 
    $ cd package1
-   $ gbs build -A ia32
+   $ gbs build -A i586
 
 2. Build the package for a different architecture.
 
@@ -594,7 +594,7 @@ If you have already built before, and want to rebuild, `--overwrite` should be s
 
 ::
 
-   $ gbs build -A ia32 --overwrite
+   $ gbs build -A i586 --overwrite
 
 If you change the commit or specify `--include-all` option, it will always rebuild, so `--overwrite` is not needed.
 
@@ -602,7 +602,7 @@ If you change the commit or specify `--include-all` option, it will always rebui
 
 ::
 
-   $ gbs build -A ia32 --debug
+   $ gbs build -A i586 --debug
 
 7. Build against a local repository. You can config the local repo at .gbs.conf file or through the command line.
 
@@ -635,20 +635,20 @@ Builds committed files only. All the modified files, which are not committed nor
 
 ::
 
-    $ gbs build -A ia32
+    $ gbs build -A i586
     warning: the following untracked files would NOT be included: base.repo main.repo
     warning: the following uncommitted changes would NOT be included: ail.pc.in
     warning: you can specify '--include-all' option to include these uncommitted and untracked files.
     ....
     info: Binaries RPM packages can be found here:
-    /home/test/GBS-ROOT/local/scratch.i686.0/home/abuild/rpmbuild/RPMS/
+    /home/test/GBS-ROOT/local/scratch.i586.0/home/abuild/rpmbuild/RPMS/
     info: Done
 
 - Build with the `--include-all` option builds all the files:
 
 ::
 
-    $ gbs build -A ia32 --include-all
+    $ gbs build -A i586 --include-all
     info: the following untracked files would be included: base.repo main.repo
     info: the following un-committed changes would be included: ail.pc.in
     info: export tar ball and packaging files
@@ -715,10 +715,10 @@ In this example, we use `dlog` source code. First, we need to build with --incre
 
   $ cd dlog
   # first build:
-  $ gbs build -A ia32 --incremental
+  $ gbs build -A i586 --incremental
   $ vim log.c # change code
   # second build:
-  $ gbs build -A ia32 --incremental
+  $ gbs build -A i586 --incremental
   info: generate repositories ...
   info: build conf has been downloaded at:
   /var/tmp/test-gbs/tizen.conf
@@ -726,14 +726,14 @@ In this example, we use `dlog` source code. First, we need to build with --incre
   info: Prepare sources...
   info: Retrieving repo metadata...
   info: Parsing package data...
-  info: *** overwriting dlog-0.4.1-5.1 i686 ***
+  info: *** overwriting dlog-0.4.1-5.1 i586 ***
   info: Next pass:
   dlog
-  info: *** building dlog-0.4.1-5.1 i686 tizen (worker: 0) ***
+  info: *** building dlog-0.4.1-5.1 i586 tizen (worker: 0) ***
   info: Doing incremental build
   [    0s] Memory limit set to 10854336KB
-  [    0s] Using BUILD_ROOT=/home/test/GBS-ROOT/local/scratch.i686.0
-  [    0s] Using BUILD_ARCH=i586:i686:noarch:
+  [    0s] Using BUILD_ROOT=/home/test/GBS-ROOT/local/scratch.i586.0
+  [    0s] Using BUILD_ARCH=i686:i586:i486:i386:noarch
   [    0s] test-desktop started "build dlog.spec" at Thu Sep 13 07:36:14 UTC 2012.
   [    0s] -----------------------------------------------------------------
   [    0s] ----- building dlog.spec (user abuild)
@@ -795,7 +795,7 @@ Multiple package build has been supported since gbs 0.10. If packages have depen
 
    $ mkdir tizen-packages
    $ cp package1 package2 package3 ... tizen-packages/
-   $ gbs build -A ia32 tizen-packages # build all packages under tizen-packages
+   $ gbs build -A i586 tizen-packages # build all packages under tizen-packages
 
 2. Build multiple packages in parallel with `--threads`
 
@@ -810,20 +810,20 @@ Multiple package build has been supported since gbs 0.10. If packages have depen
 
 ::
 
-$ gbs build -A ia32 --binary-list=/path/to/packages.list
+$ gbs build -A i586 --binary-list=/path/to/packages.list
 
 4. If you want to exclude some packages, `--exclude` can be used to exclude one package.
 
 ::
 
-    $ gbs build -A ia32 tizen-packages --exclude=<pkg1>
-    $ gbs build -A ia32 tizen-packages --exclude=<pkg1> --exclude=<pkg2>
+    $ gbs build -A i586 tizen-packages --exclude=<pkg1>
+    $ gbs build -A i586 tizen-packages --exclude=<pkg1> --exclude=<pkg2>
 
 5. If you want to exclude many packages, you can use `--exclude-from-file` to specify a package list. The format is the same as `--binary-list`
 
 ::
 
-    $ gbs build -A ia32 tizen-packages --exclude-from-file=<file>
+    $ gbs build -A i586 tizen-packages --exclude-from-file=<file>
 
 
 
@@ -856,7 +856,7 @@ $ gbs build pkg1/ --keep-packs -A i586
 $ gbs build pkg2/ --keep-packs -A i586
 $ gbs build pkg3/ --keep-packs -A i586
 
-Now, the build root (~/GBS-ROOT/local/scratch.i686.0) is ready for building pkg1, pkg2, and pkg3. You can use --noinit to build them offline, and don't need waste time to check repo updates and build root.
+Now, the build root (~/GBS-ROOT/local/scratch.i586.0) is ready for building pkg1, pkg2, and pkg3. You can use --noinit to build them offline, and don't need waste time to check repo updates and build root.
 
 ::
 
@@ -876,7 +876,7 @@ Starting from gbs 0.7.1, by default, gbs will fetch the build conf from a remote
 
 ::
 
-    $ gbs build -A ia32
+    $ gbs build -A i586
     info: generate repositories ...
     info: build conf has been downloaded at:
     /var/tmp/<user>-gbs/tizen2.0.conf
@@ -891,7 +891,7 @@ You can save it and modify it, and then use it for your purposes:
 ::
 
  cp /var/tmp/<user>-gbs/tizen2.0.conf ~/tizen2.0.conf
- $ gbs build -A ia32 -D ~/tizen2.0.conf
+ $ gbs build -A i586 -D ~/tizen2.0.conf
 
 If you need to customize the build config, refer to: http://en.opensuse.org/openSUSE:Build_Service_prjconf
 
@@ -1027,17 +1027,17 @@ Examples:
 
 For more gbs build options, please refer to gbs build page.
 
-- Chroot to buildroot, example: chroot to ~/GBS-ROOT/local/scratch.i686.0/
+- Chroot to buildroot, example: chroot to ~/GBS-ROOT/local/scratch.i586.0/
 
 ::
 
- $ gbs chroot ~/GBS-ROOT/local/scratch.i686.0/
+ $ gbs chroot ~/GBS-ROOT/local/scratch.i586.0/
 
 - Chroot as 'root' user
 
 ::
 
- $ gbs chroot -r ~/GBS-ROOT/local/scratch.i686.0/
+ $ gbs chroot -r ~/GBS-ROOT/local/scratch.i586.0/
 
 If gbs chroot failed with error:'su: user root does not exist', which is caused by tizen pacakge: `login`, which should be fixed from repository. Currently, you can add root user manually by:
 
@@ -1053,7 +1053,7 @@ With this update, gbs chroot should work.
 ::
 
   chroot as 'root':
-  $ gbs chroot -r ~/GBS-ROOT/local/scratch.i686.0/
+  $ gbs chroot -r ~/GBS-ROOT/local/scratch.i586.0/
   Configure tizen repo in the chroot env:
   # zypper ar http://user:passwd@download.tizen.org/releases/daily/<release_id>/repos/main/ia32/packages tizen-main
   # zypper ar http://user:passwd@download.tizen.org/releases/daily/<release_id>/repos/base/ia32/packages tizen-base
