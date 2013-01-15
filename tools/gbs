@@ -412,6 +412,8 @@ def pull_parser(parser):
     parser.add_argument('--force', action='store_true',
                         help='force branch update even if unable to '
                             'fast-forward, WARNING: local changes may be lost')
+    parser.add_argument('--all', action='store_true',
+                        help='update all branches')
     return parser
 
 def main(argv):

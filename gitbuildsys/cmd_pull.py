@@ -51,6 +51,8 @@ def main(args):
         gbp_args.append('--depth=%s' % args.depth)
     if args.force:
         gbp_args.append('--force=clean')
+    if args.all:
+        gbp_args.append('--all')
     if args.debug:
         gbp_args.append("--verbose")
 
