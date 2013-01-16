@@ -46,7 +46,7 @@ def mkdir_p(path):
         if exc.errno == errno.EEXIST:
             pass
         else:
-            raise
+            raise GbsError('failed to create %s: %s' % (path, exc.strerror))
 
 def is_native_pkg(repo, args):
     """
@@ -248,10 +248,12 @@ def main(args):
     else:
         outdir = os.path.join(workdir, packaging_dir)
     outdir = os.path.abspath(outdir)
-    if not os.access(outdir, os.W_OK|os.X_OK):
-        raise GbsError('no write permission to outdir: %s' % outdir)
+    if os.path.exists(outdir):
+        if not os.access(outdir, os.W_OK|os.X_OK):
+            raise GbsError('no write permission to outdir: %s' % outdir)
+    else:
+        mkdir_p(outdir)
 
-    mkdir_p(outdir)
     tmpdir     = configmgr.get('tmpdir', 'general')
     tempd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_export_'), \
                        directory=True)
