@@ -72,9 +72,6 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
         glob_ = lambda pattern: glob_in_rev(git_path, pattern, commit_id)
         msg = "No such spec file %%s in %s" % commit_id
 
-    if not check(packaging_dir, True):
-        raise GbsError("No packaging directory: '%s/', so there is nothing to "
-                       "export." % packaging_dir)
     if given_spec:
         spec = os.path.join(packaging_dir, given_spec)
         if not check(spec):
@@ -83,7 +80,8 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
 
     specs = glob_(os.path.join(packaging_dir, '*.spec'))
     if not specs:
-        raise GbsError("can't find any spec file")
+        raise GbsError("can't find any spec file under packaging dir: "
+                       "%s" % packaging_dir)
 
     project_name =  os.path.basename(git_path)
     spec = os.path.join(packaging_dir, '%s.spec' % project_name)
