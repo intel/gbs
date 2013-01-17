@@ -397,6 +397,23 @@ def clone_parser(parser):
     parser.set_defaults(alias="cl")
     return parser
 
+@subparser
+def pull_parser(parser):
+    """Update a package git repository
+    Examples:
+      $ gbs pull
+      $ gbs pull --upstream-branch=orig
+    """
+
+    parser.add_argument('--upstream-branch', default='upstream',
+                        help='upstream branch')
+    parser.add_argument('--depth',
+                        help='git history depth, for creating shallow clones')
+    parser.add_argument('--force', action='store_true',
+                        help='force branch update even if unable to '
+                            'fast-forward, WARNING: local changes may be lost')
+    return parser
+
 def main(argv):
     """Script entry point."""
 
