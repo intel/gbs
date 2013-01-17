@@ -74,22 +74,25 @@ def main(args):
                        "'origin' as the remote server")
             args.remote = 'origin'
 
-    target = args.target
-    if not target:
-        if upstream and upstream.startswith(args.remote):
-            target = os.path.basename(upstream)
-        else:
-            log.warning("Can't find upstream branch for current branch "
-                          "%s. Gbs uses the local branch name as the target. "
-                          "Please consider to use git-branch --set-upstream "
-                          "to set upstream remote branch." % current_branch)
-            target = current_branch
 
-    if target == 'master':
-        target = 'trunk'
-
-    tagname = 'submit/%s/%s' % (target, time.strftime( \
+    if args.tag:
+        tagname = args.tag
+    else:
+        target = args.target
+        if not target:
+            if upstream and upstream.startswith(args.remote):
+                target = os.path.basename(upstream)
+            else:
+                log.warning("Can't find upstream branch for current branch "
+                            "%s. Gbs uses the local branch name as the target. "
+                            "Please consider to use git-branch --set-upstream "
+                            "to set upstream remote branch." % current_branch)
+                target = current_branch
+        if target == 'master':
+            target = 'trunk'
+        tagname = 'submit/%s/%s' % (target, time.strftime( \
                                     '%Y%m%d.%H%M%S', time.gmtime()))
+
     log.info('creating tag: %s' % tagname)
     try:
         repo.create_tag(tagname, msg=message, commit=commit, sign=args.sign,

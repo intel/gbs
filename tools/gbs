@@ -362,6 +362,9 @@ def submit_parser(parser):
                         default=os.getcwd(),
                         help='path to git repository')
 
+    parser.add_argument('--tag', help='create tag using specified tag name. '
+                        'This option can be used for group submission, and '
+                        'submissions with same tag can be seen as one group')
     parser.add_argument('-m', '--msg', help='specify tag message info')
     parser.add_argument('-c', '--commit', default='HEAD',
                         help='specify a commit ID to submit')
