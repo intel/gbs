@@ -379,6 +379,24 @@ def submit_parser(parser):
     parser.set_defaults(alias="sr")
     return parser
 
+@subparser
+def clone_parser(parser):
+    """Clone a git repository
+    Examples:
+      $ gbs clone git://example.com/repos/package.git
+      $ gbs clone --upstream-branch=orig ../package.git
+    """
+
+    parser.add_argument('uri', help='path/uri to a git repository')
+    parser.add_argument('--upstream-branch', default='upstream',
+                        help='upstream branch')
+    parser.add_argument('--all', action='store_true',
+                        help='track all remote branches')
+    parser.add_argument('--depth',
+                        help='git history depth, for creating shallow clones')
+    parser.set_defaults(alias="cl")
+    return parser
+
 def main(argv):
     """Script entry point."""
 
