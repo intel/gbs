@@ -205,9 +205,9 @@ class OSC(object):
         old is a list of remote filenames
         changed, not changed and new are lists of local filepaths
         """
-
         # Get list of files from the OBS
-        rfiles = core.meta_get_filelist(self.apiurl, prj, pkg, verbose=True)
+        rfiles = core.meta_get_filelist(self.apiurl, prj, pkg, verbose=True,\
+                                        expand=True)
 
         old, not_changed, changed, new = [], [], [], []
 
@@ -241,7 +241,8 @@ class OSC(object):
 
         query = {'cmd'    : 'commitfilelist',
                  'user'   : conf.get_apiurl_usr(self.apiurl),
-                 'comment': message}
+                 'comment': message,
+                 'keeplink': 1}
         url = core.makeurl(self.apiurl, ['source', prj, pkg], query=query)
 
         xml = "<directory>"
