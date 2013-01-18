@@ -1,3 +1,24 @@
+* Wed Jan 23 2013 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.13
+  * upgrade to gbs v0.13, which contains the following bug fixing & features:
+    * tab completion support
+    * five new import options support:
+      * --filters: files to filter out during import
+      * --allow-same-version: allow to import already imported version
+      * --native: A dist native package, no separate upstream
+      * --upstream-vcs-tag: upstream VCS tag add to the merge commit
+    * --no-patch-export support for export/remotebuild/build modules
+    * Re-orgnize and group gbs help information
+    * supported arches clean up
+    * new subcommands 'clone/pull' added, which can be used for developers
+      to clone tizen source code, and upstream/pristine-tar branches can be
+      tracked automatically
+    * add --tag option for submit module to support group submission
+    * bug fix:
+      - traceback occurs if specified outdir has no write permission
+      - fix misleading error handling while no spec file found
+      - break link structure if package is a link in OBS
+      - crash if specify a non-exist specfile with --spec option
+
 * Mon Nov 26 12 2012 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.12
   * upgrade to gbs v0.12, which contains the following bug fixing & features:
     * support build rpm packages for incremental build
