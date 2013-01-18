@@ -275,6 +275,10 @@ def remotebuild_parser(parser):
                         help='specify a spec file to use. It should be a file '
                         'name that GBS will find it in packaging dir')
     parser.add_argument('-c', '--commit', help='specify a commit ID to build')
+    parser.add_argument('--no-patch-export', action='store_true',
+                        help='don\'t create patches between upstream and '
+                        'export-treeish, and create tar ball from the '
+                        'export-treeish instead of upstream branch')
     parser.add_argument('--buildlog', action='store_true',
                         help='get buildlog from build sever')
     parser.add_argument('--status', action='store_true',
