@@ -40,6 +40,8 @@ rm -rf $RPM_BUILD_ROOT
 %else
 %{__python} setup.py install --root=$RPM_BUILD_ROOT -O1
 %endif
+mkdir -p %{buildroot}%{_sysconfdir}/bash_completion.d
+install -pm 644 data/gbs-completion.bash %{buildroot}%{_sysconfdir}/bash_completion.d/gbs
 
 #mkdir -p %{buildroot}/%{_prefix}/share/man/man1
 #install -m644 doc/gbs.1 %{buildroot}/%{_prefix}/share/man/man1
@@ -52,3 +54,4 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_datadir}/%{name}
 %{_datadir}/%{name}/*
 %{_bindir}/*
+%{_sysconfdir}/bash_completion.d

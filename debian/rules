@@ -2,6 +2,7 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
+GBS =$(shell pwd)/debian/gbs
 build: build-stamp
 build-stamp:
 	dh_testdir
@@ -19,12 +20,13 @@ install: build
 	dh_clean -k
 	dh_installdirs
 	# Installing package
-	mkdir -p $(CURDIR)/debian/gbs $(CURDIR)/debian/gbs/usr/bin $(CURDIR)/debian/gbs/usr/share/doc/gbs
-	install -m644 docs/RELEASE_NOTES $(CURDIR)/debian/gbs/usr/share/doc/gbs
-	#make DESTDIR=$(CURDIR)/debian/gbs installman
-	#make DESTDIR=$(CURDIR)/debian/gbs installconf
-	#make DESTDIR=$(CURDIR)/debian/gbs installsymlinks
-	python setup.py install --root=$(CURDIR)/debian/gbs --prefix=/usr --install-layout=deb
+	mkdir -p '$(GBS)' '$(GBS)'/usr/bin '$(GBS)'/usr/share/doc/gbs
+	install -m644 docs/RELEASE_NOTES '$(GBS)'/usr/share/doc/gbs
+	# Bash completion
+	install -d -m0755 '$(GBS)'/etc/bash_completion.d
+	install -m0644 data/gbs-completion.bash \
+	  '$(GBS)'/etc/bash_completion.d/gbs
+	python setup.py install --root=$(GBS) --prefix=/usr --install-layout=deb
 
 binary-indep: build install
 	dh_testdir
