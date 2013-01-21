@@ -51,7 +51,5 @@ install -pm 644 data/gbs-completion.bash %{buildroot}%{_sysconfdir}/bash_complet
 %doc README.rst docs/RELEASE_NOTES
 #%{_mandir}/man1/*
 %{python_sitelib}/*
-%dir %{_datadir}/%{name}
-%{_datadir}/%{name}/*
 %{_bindir}/*
 %{_sysconfdir}/bash_completion.d

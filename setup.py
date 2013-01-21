@@ -54,5 +54,4 @@ setup(name='gbs',
       url='https://git.tizen.org/',
       scripts=['tools/gbs'],
       packages=[MOD_NAME],
-      data_files = [('/usr/share/gbs', glob.glob('data/*'))],
 )
