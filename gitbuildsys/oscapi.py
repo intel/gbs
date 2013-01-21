@@ -23,6 +23,7 @@ Only APIs which are required by cmd_remotebuild present here.
 """
 
 import os
+import re
 import urllib2
 import M2Crypto
 from M2Crypto.SSL.Checker import SSLVerificationError
@@ -325,8 +326,16 @@ class OSC(object):
                            % (prj, pkg, str(err)))
 
         for res in build_status:
-            repo, arch, status = res.split()
-            results[repo][arch] = status
+            # This regular expression is created for parsing the
+            # results of of core.get_results()
+            stat_re = re.compile(r'^(?P<repo>\S+)\s+(?P<arch>\S+)\s+'
+                                  '(?P<status>\S*)$')
+            mo = stat_re.match(res)
+            if mo:
+                results[mo.group('repo')][mo.group('arch')] = mo.group('status')
+            else:
+                logger.warning('not valid build status received: %s' % res)
+
         return results
 
     def get_buildlog(self, prj, pkg, repo, arch):

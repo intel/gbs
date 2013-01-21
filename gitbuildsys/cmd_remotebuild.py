@@ -186,8 +186,11 @@ def main(args):
                 for arch in status[build_repo]:
                     stat = status[build_repo][arch]
                     results.append('%-15s%-15s%-15s' % (build_repo, arch, stat))
-            log.info('build results from build server:\n%s' \
-                       % '\n'.join(results))
+            if results:
+                log.info('build results from build server:\n%s' \
+                          % '\n'.join(results))
+            else:
+                log.info('no build results from build server')
             return 0
 
     except OSCError, err:
