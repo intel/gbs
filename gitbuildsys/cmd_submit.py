@@ -19,6 +19,7 @@
 """Implementation of subcmd: submit"""
 
 import os
+import re
 import time
 
 from gitbuildsys.utils import edit
@@ -77,6 +78,11 @@ def main(args):
 
     if args.tag:
         tagname = args.tag
+        tag_re = re.compile(r'^submit/\S+/\d{8}\.\d{6}$')
+        if not tag_re.match(tagname):
+            raise GbsError("invalid tag %s, valid tag format is "
+                           "submit/$target/$date.$time. For example:\n      "
+                           "submit/trunk/20130128.022439 " % tagname)
     else:
         target = args.target
         if not target:
