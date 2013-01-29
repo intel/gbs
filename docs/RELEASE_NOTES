@@ -24,13 +24,6 @@ Release notes for gbs 0.13
     - break link structure if package is a link in OBS
     - crash if specify a non-exist specfile with --spec option
 
-- 5 other changes:
-  1. add --merge option to replace --no-merge for gbs import, and not-merging is the default behavior
-  2. modify changelog order to follow default order of git log
-  3. show correct RPM/SRPM output directory for gbs build
-  4. give warning if build arch not compatible
-  5. add reST format document: docs/GBS.rst, which can be converted to html, man, and pdf formats.
-
 - Dependencies
   - git-core
   - python >= 2.7

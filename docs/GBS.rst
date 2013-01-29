@@ -457,6 +457,10 @@ To get help:
 GBS provides several subcommands, including:
 
 
+- `gbs clone  </documentation/reference/git-build-system/usage/gbs-clone>`_: clone a git repository representing a package managed with gbs
+
+- `gbs pull  </documentation/reference/git-build-system/usage/gbs-pull>`_: update a git repository representing a package managed with gbs
+
 - `gbs build  </documentation/reference/git-build-system/usage/gbs-build>`_: build rpm package from git repositories at the local development environment
 
 - `gbs remotebuild  </documentation/reference/git-build-system/usage/gbs-remotebuild>`_: generate tarballs based on Git repositories, and upload to remote OBS to build rpm packages
@@ -465,11 +469,111 @@ GBS provides several subcommands, including:
 
 - `gbs chroot  </documentation/reference/git-build-system/usage/gbs-chroot>`_: chroot to build root
 
-- `gbs import  </documentation/reference/git-build-system/usage/gbs-import/>`_: import source code to git repository, supporting these formats: source rpm, specfile, and tar ball
+- `gbs import  </documentation/reference/git-build-system/usage/gbs-import/>`_: import source code to git repository, supporting these formats: source rpm, specfile, and tarball
 
-- `gbs export  </documentation/reference/git-build-system/usage/gbs-export>`_: export files and prepare for building package, the spec file defines the format of tar ball
+- `gbs export  </documentation/reference/git-build-system/usage/gbs-export>`_: export files and prepare for building package, the spec file defines the format of tarball
 
 - `gbs changelog  </documentation/reference/git-build-system/usage/gbs-changelog>`_: update the changelog file with git commits message
+
+GBS clone
+---------
+The `gbs clone` command makes it more convenient  for a developer to clone a git repository being maintained with gbs. The benefit of using `gbs clone` (instead of `git clone`) is that it automatically starts to track all relevant branches, the upstream and pristine-tar branches in the case of non-native packages. The clone subcommand also sets up local copies of all these branches.
+
+For instructions on using the clone subcommand, type:
+
+::
+
+  $ gbs clone --help
+
+
+Example: clone a tizen package using gbs clone
+
+::
+
+  $ gbs clone review.tizen.org:toolchains/zlib.git
+  info: cloning review.tizen.org:toolchains/zlib.git
+  .......
+  info: finished
+  $ cd zlib/
+  $ git branch
+  * master
+  $
+
+Special options
+```````````````
+The `--all` option can be used to track and create a local copy of all remote branches. Example:
+
+::
+
+  $ gbs clone --all review.tizen.org:toolchains/zlib.git
+  info: cloning review.tizen.org:toolchains/zlib.git
+  .......
+  Branch 1.0_post set up to track remote branch 1.0_post from origin.
+  Branch 2.0alpha set up to track remote branch 2.0alpha from origin.
+  info: finished
+  $ cd zlib/
+  $ git branch
+    1.0_post
+    2.0alpha
+  * master
+
+You can use the `--depth` command line option to create shallow clones of the remote repository. This can be used to preserve space and potentially greatly speed up the clone operation if you're only interested in the most recent changes of a project.
+
+GBS pull
+--------
+
+The `pull` command makes it more convenient for a developer to update from a remote git repository being maintained with gbs. The benefit of using gbs pull is that it automatically updates all relevant branches, the upstream and pristine-tar branches in the case of non-native packages.
+
+The `pull` subcommand will update all local branch HEADs that can be fast-forwarded. It will print a warning for branches that could not be fast-forwarded. See the `--force` option below to override this. It is recommended to always do your local development on feature/development brances, and keep the master/upstream branches untouched and always in sync with the remote by using the gbs pull command.
+
+For instructions on using the pull subcommand, type:
+
+::
+
+  $ gbs pull --help
+
+Example: update a tizen package repo using gbs pull
+
+::
+
+  $ gbs pull
+  info: updating from remote
+  .....
+  info: Updating 'master'
+  Updating 30e59a6..7ae7fc7
+  Fast-forward
+  info: finished
+
+Special options
+```````````````
+
+The `--all` option can be used to update all remote branches. Using this will update all remote-tracking branches that have identical name in the remote repository.
+
+Using the `--depth` one can deepen shallow clones, that is, fetch deeper history from the remote.
+
+With the --force option the developer can force update the local branch HEADs to match the remote repo. 
+
+**WARNING**: Use the `--force` option with care. It will discard all local changes to the updated branches! This effectively does a `git reset --hard` for the local branches. Example:
+
+::
+
+  $ gbs pull --all
+  info: updating from remote
+  .....
+  info: Branch '1.0_post' is already up to date.
+  warning: Skipping non-fast forward of '2.0alpha' - use --force or update manually
+  info: Updating 'master'
+  Updating 30e59a6..7ae7fc7
+  Fast-forward
+  error: Failed to update some of the branches!
+  $ gbs pull --all --force
+  info: updating from remote
+  ......
+  info: Branch '1.0_post' is already up to date.
+  info: Checking out clean copy of '2.0alpha' due to --force=clean
+  info: Updating '2.0alpha'
+  info: Branch 'master' is already up to date.
+  info: finished
 
 GBS build
 ---------
@@ -494,7 +598,7 @@ Below is the input for gbs build:
 
 The binary rpm repositories contain all the binary rpm packages which are used to create the chroot environment and build packages, which can be remote, like tizen release or snapshot repositories, or local repository. Local repository supports two types:
 
-- Standard repository with repodata exists
+- A standard repository with repodata exists
 - A normal directory contains RPM packages. GBS will find all RPM packages under this directory.
 
 Please refer to `Configuration File </documentation/reference/git-build-system/configuration-file>`_ part to configure a repository.
@@ -611,7 +715,7 @@ If you change the commit or specify `--include-all` option, it will always rebui
    $ gbs build -R /path/to/repo/dir/ -A i586
 
 8. Use `--noinit` to build package in offline mode
-`--noinit` option can only be used if build root is ready. With `--noinit` option, gbs will not connect the remote repo, and skip parsing & checking repo and initialize build environment. `rpmbuild` will be used to build package directly. Here's an example:
+`--noinit` option can only be used if build root is ready. With `--noinit` option, gbs will not connect the remote repo, and skip parsing & checking repo and initialize build environment. `rpmbuild` will be used to build the package directly. Here's an example:
 
 ::
 
@@ -620,7 +724,7 @@ If you change the commit or specify `--include-all` option, it will always rebui
 
 9. Build with all uncommitted changes using `--include-all`.
 
-For example, there are one modified file and two extra files in the git tree:
+For example, the git tree contains one modified file and two extra files:
 
 ::
 
@@ -676,7 +780,7 @@ Incremental Concept
 
 Starting from gbs 0.10, the gbs build subcommand supports building incrementally, which can be enabled by specifying the '--incremental' option.
 
-This mode is designed for development and verification of single packages. It is not intending to replace the standard mode. Only one package can be built at a time using this mode.
+This mode is designed for development and verification of single packages. It is not intended to replace the standard mode. Only one package can be built at a time using this mode.
 
 This mode will set up the build environment in multiple steps, finishing by mounting the local Git tree of a package in the chroot build environment.
 
@@ -762,9 +866,8 @@ In this example, we use `dlog` source code. First, we need to build with --incre
   info: Done
 
 From the buildlog, we can see that only log.c has been re-compiled. That's the incremental build behavior.
-Currently limitation about incremental build
 
-`--noinit` option can be used together with `--incremental` to make build more quickly, like:
+`--noinit` option can be used together with `--incremental` to make a build more quickly, like:
 
 ::
 
@@ -775,11 +878,11 @@ Currently limitation about incremental build
 Limitations of Incremental Build
 ''''''''''''''''''''''''''''''''
 
-Incremental build don't support all packages. Here are some limitations:
+Incremental build doesn't support all packages. Here are some limitations:
 
 - Incremental build currently supports building only a single package. It doesn't support building multiple packages in parallel
 - The tarball's name in the spec file should be %{name}-%{version}.{tar.gz|tar.bz2|zip|...}, otherwise GBS can't mount source code to build the root correctly
-- %prep section should only contains %setup macro to unpack tar ball, and should not contains other source code related operations, such as unpack another source, apply patches, etc.
+- %prep section should only contains %setup macro to unpack tarball, and should not contains other source code related operations, such as unpack another source, apply patches, etc.
 
 
 Multiple packages build (dependency build)
@@ -1075,7 +1178,7 @@ Notes:
 GBS import
 ----------
 
-The subcommand will help to import source code into the git repository. Most of the time, it is used for initializing a git repository or for upgrading packages. It supports these formats: source rpm, specfile, and tar ball.
+The subcommand will help to import source code or existing source rpm packages into the git repository. Most of the time, it is used for initializing a git repository or for upgrading packages. It supports these formats: source rpm, specfile, and tarball.
 
 For instructions on using the `import` subcommand, use this command: `gbs import --help`
 
@@ -1083,10 +1186,11 @@ For instructions on using the `import` subcommand, use this command: `gbs import
 
 $ gbs import --help
 
-Examples for running 'gbs import':
+Importing source packages
+`````````````````````````
 
 Import from a source rpm
-````````````````````````
+''''''''''''''''''''''''
 
 ::
 
@@ -1110,11 +1214,11 @@ Import from a source rpm
 
 
 Import from spec file
-`````````````````````
+'''''''''''''''''''''
 
 ::
 
-  $ gbs import sed-4.1.5-1/sed-4.1.5-1.src.rpm
+  $ gbs import sed-4.1.5-1/sed.spec
   info: No git repository found, creating one.
   Initialized empty Git repository in /home/test/sed/.git/
   info: Tag upstream/4.1.5 not found, importing Upstream upstream sources
@@ -1132,7 +1236,10 @@ Import from spec file
   upstream/4.1.5
   vendor/4.1.5-1
 
-If spec file contains patches, gbs will try to apply patches on top of master branch:
+Special options for importing source packages
+'''''''''''''''''''''''''''''''''''''''''''''
+
+If the source package contains patches, gbs will try to apply patches on top of master branch:
 
 ::
 
@@ -1169,11 +1276,18 @@ If spec file contains patches, gbs will try to apply patches on top of master br
   %description
   ...
 
+The `--no-patch-import` option disabled automatic patch import, i.e. gbs does not try to apply patches on top of the master branch. You should apply patches manually or mark them as manually maintained (see `manually maintained patches </documentation/reference/git-build-system/upstream-tarball-and-patch-generation-support>`_)
 
-Import a new tar ball
-`````````````````````
+With `--native` command line option you can specify the package as a native package, with no separate upstream. No upstream git branch is created and it is assumed that all content, including packaging files are found in the source tarball inside the source package.
 
-Import tar ball can be used to upgrade a package. `gbs import` can only work if `upstream` branch exists. Here `upstream` branch can be defined in .gbs.conf or `--upstream-branch`. Once `gbs import` succeeded, new tar ball will be unpacked and import to `upstream` branch. If `pristine-tar` branch exists, tar ball is also be imported to pristine-tar branch.
+Using the `--allow-same-version` option you can re-import an already imported version of the package. This will not re-import the upstream sources, it'll only re-import the packaging files to the master branch.
+
+You can use the `--packaging-dir` option to define the directory for packaging files, i.e. some other than the default 'packaging/'. This may be needed e.g. if the upstream source sources already have a directory named 'packaging'. If you use this option you sould also define this setting in the package-specific .gbs.conf file (in all relevant branches) so that the remote repository and all other users get the correct setting, too.
+
+Importing upstream sources
+``````````````````````````
+
+Importing source tarball  can be used to upgrade a package. `gbs import` can only work if `upstream` branch exists. Once `gbs import` succeeded, new tarball will be unpacked and import to `upstream` branch. If `pristine-tar` branch exists, tarball is also be imported to pristine-tar branch.
 
 ::
 
@@ -1200,6 +1314,9 @@ Import tar ball can be used to upgrade a package. `gbs import` can only work if 
    7d44dad pristine-tar data for sed-4.2.0.tar.gz
    71ee336 pristine-tar data for sed-4.1.5.tar.gz
 
+Special options for importing upstream sources
+''''''''''''''''''''''''''''''''''''''''''''''
+
 If you want to merge imported upstream branch to master automatically, `--merge` can be used:
 
 ::
@@ -1220,12 +1337,25 @@ If you want to merge imported upstream branch to master automatically, `--merge`
    482ef23 Imported vendor release 4.1.5-1
    fc76416 Imported Upstream version 4.1.5
 
+You can use the `--upstream-vcs-tag` option in case you track upstream git directly, but still want to import the official release tarballs. Using this option, you get the complete git history of the upstream git in to your upstream branch. And, the diff between the real upstream git tag and the release tarball (e.g. added autotools macros) is shown as one commit on top of the real upstream git tag.
+
+Common options for importing source packages and upstream sources
+`````````````````````````````````````````````````````````````````
+
+This section describes the advanced command line options that are applicable for importing both source packages and upstream source archives.
+
+The `--upstream-branch` option may be used to define the upstream branch name. If you do this, you sould also define that in the package-specific .gbs.conf file (in all relevant branches), similarly to the '--packaging-dir' option.
+
+The `--no-pristine-tar` option disables the use of the pristine-tar tool. That is, gbs will not import the upstream
+source tarball to pristine-tar branch.
+
+With the `--filter` option one can filter out files from the upstream source archive. For example, you may need to filter out the .git directory from the upstream tarball (with `--filter=.git`). This option can be given multiple times.
 
 GBS Export
 ----------
 
 
-Use 'gbs export' to export git tree to tar ball and spec file.  You can see how to use the `export` subcommand by using this command:
+Use 'gbs export' to export git tree to tarball and spec file.  You can see how to use the `export` subcommand by using this command:
 
 ::
 
@@ -1253,7 +1383,7 @@ Examples:
   > %patch0 -p1
 
 
-From the log we can see patches has been generated, and tar ball is created from `pristine-tar` branch.
+From the log we can see patches has been generated, and tarball is created from `pristine-tar` branch. `--no-patch-export` option can be used to disable this feature, and tarball will be generated from current branch directly.
 
 
 - Use -o option to generate packaging files to specified path
