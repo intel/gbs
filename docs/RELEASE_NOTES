@@ -6,6 +6,8 @@ Release notes for gbs 0.13
 - new features added:
     - add --tag option for submit module to support group submission
     - tab completion support
+    - no password needed during gbs build
+    - enhance gbs build module to avoid removing source code unexpectedly
     - five new import options support:
       * --filters: files to filter out during import
       * --allow-same-version: allow to import already imported version
@@ -15,14 +17,18 @@ Release notes for gbs 0.13
     - Re-orgnize and group gbs help information
     - supported arches clean up
     - new subcommands 'clone/pull' added, which can be used for developers
-      to clone tizen source code, and upstream/pristine-tar branches can be
+      to clone Tizen source code, and upstream/pristine-tar branches can be
       tracked automatically
+    - use Tizen rpm, instead of host rpm, to parse spec file
 
 - bug fixes:
     - traceback occurs if specified outdir has no write permission
     - fix misleading error handling while no spec file found
     - break link structure if package is a link in OBS
     - crash if specify a non-exist specfile with --spec option
+    - generate i386/i686 RPM instead of i586 on some system
+    - build root can't be shared by different developer caused by different
+      GID/UID
 
 - Dependencies
   - git-core
