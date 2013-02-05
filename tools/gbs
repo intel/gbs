@@ -243,6 +243,12 @@ def build_parser(parser):
                         'format is one package in one line, and only binary '
                         'RPM package name is accepted. Packages listed in '
                         'this file will be skipped to be built.')
+    group.add_argument('--deps', action='store_true',
+                        help='build specified packages and all packages '
+                        'they depend on')
+    group.add_argument('--rdeps', action='store_true',
+                        help='build specified packages and all packages '
+                        'depend on them')
 
     parser.set_defaults(alias="lb")
     return parser

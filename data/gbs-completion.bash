@@ -104,7 +104,7 @@ __gbs ()
     ch_opts="--message= --since= --packaging-dir="
     cr_opts="--root"
     lbex_opts="--no-configure --exclude-from-file= --exclude= --binary-list= --threads=\
-        --incremental --overwrite --clean-once --debug $lb_opts"
+        --incremental --overwrite --clean-once --debug --deps --rdeps $lb_opts"
     cl_opts="--upstream-branch= --all --depth="
     pull_opts="--upstream-branch= --force --depth="
 

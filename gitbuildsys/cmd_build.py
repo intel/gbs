@@ -176,6 +176,10 @@ def prepare_depanneur_opts(args):
             raise GbsError('specified binary list file %s not exists' % \
                         args.binary_list)
         cmd_opts += ['--binary=%s' % args.binary_list]
+    if args.deps:
+        cmd_opts += ['--deps']
+    if args.rdeps:
+        cmd_opts += ['--rdeps']
     cmd_opts += ['--threads=%s' % args.threads]
     cmd_opts += ['--packaging-dir=%s' % get_packaging_dir(args)]
 
