@@ -16,7 +16,11 @@ Requires:   osc >= 0.136.0
 Requires:   tizen-gbp-rpm >= 20130123
 Requires:   depanneur >= 0.4
 Requires:   pristine-tar
+%if 0%{?suse_version} >= 1210 || 0%{?fedora} >= 18
+Recommends: librpm-tizen >= 4.10.91.tizen20121215
+%else
 Requires:   librpm-tizen >= 4.10.91.tizen20121215
+%endif
 
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
