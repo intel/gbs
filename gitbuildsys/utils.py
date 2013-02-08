@@ -483,9 +483,10 @@ def hexdigest(fhandle, block_size=4096):
 
 def show_file_from_rev(git_path, relative_path, commit_id):
     """Get a single file content from given git revision."""
-    cmd = 'cd %s; git show %s:%s' % (git_path, commit_id, relative_path)
+    args = ['git', 'show', '%s:%s' % (commit_id, relative_path)]
     try:
-        return subprocess.check_output(cmd, shell=True)
+        with Workdir(git_path):
+            return  subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
     except (subprocess.CalledProcessError, OSError), err:
         log.debug('failed to checkout %s from %s:%s' % (relative_path,
                                                         commit_id, str(err)))
@@ -497,11 +498,12 @@ def file_exists_in_rev(git_path, relative_path, commit_id, dir_only=False):
     git_opts = ['--name-only']
     if dir_only:
        git_opts += ['-d']
-    cmd = 'cd %s; git ls-tree %s %s %s' % (
-        git_path, ' '.join(git_opts), commit_id, relative_path)
+    args = ['git', 'ls-tree', commit_id, relative_path]
+    args.extend(git_opts)
 
     try:
-        output = subprocess.check_output(cmd, shell=True)
+        with Workdir(git_path):
+            output = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
     except (subprocess.CalledProcessError, OSError), err:
         raise GbsError('failed to check existence of %s in %s:%s' % (
             relative_path, commit_id, str(err)))
@@ -513,11 +515,11 @@ def glob_in_rev(git_path, pattern, commit_id):
     """Glob pattern in given revision."""
 
     path = os.path.dirname(pattern)
-    cmd = 'cd %s; git ls-tree --name-only %s %s/' % (
-        git_path, commit_id, path)
+    args = ['git', 'ls-tree', '--name-only', commit_id, '%s/' % path]
 
     try:
-        output = subprocess.check_output(cmd, shell=True)
+        with Workdir(git_path):
+            output = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
     except (subprocess.CalledProcessError, OSError), err:
         raise GbsError('failed to glob %s in %s:%s' % (
             pattern, commit_id, str(err)))
