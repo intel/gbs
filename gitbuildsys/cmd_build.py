@@ -172,10 +172,13 @@ def prepare_depanneur_opts(args):
     if args.keep_packs:
         cmd_opts += ['--keep-packs']
     if args.binary_list:
-        if not os.path.exists(args.binary_list):
+        blist = [ i.strip() for i in args.binary_list.split(',') ]
+        cmd_opts += ['--binary-list=%s' % ','.join(blist)]
+    if args.binary_from_file:
+        if not os.path.exists(args.binary_from_file):
             raise GbsError('specified binary list file %s not exists' % \
-                        args.binary_list)
-        cmd_opts += ['--binary=%s' % args.binary_list]
+                        args.binary_from_file)
+        cmd_opts += ['--binary-from-file=%s' % args.binary_from_file]
     if args.deps:
         cmd_opts += ['--deps']
     if args.rdeps:

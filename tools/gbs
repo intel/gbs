@@ -230,6 +230,10 @@ def build_parser(parser):
 
     group = parser.add_argument_group('package selection options')
     group.add_argument('--binary-list',
+                       help='specify a package list to be built. Multiple '
+                       'packages can be separated by comma(,). Note: package '
+                       'names are from spec files, not the package dir name')
+    group.add_argument('--binary-from-file',
                         help='specify a binary package list file. Packages '
                        'listed in this file will be selected to be built. '
                        'The format of binary-list file is one package for one '
