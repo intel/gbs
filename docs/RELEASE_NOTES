@@ -1,3 +1,21 @@
+Release notes for gbs 0.14
+==========================
+
+- Release Date: 2013-02
+
+- New features added:
+    * Add --binary-from-file option to specify a package list file
+    * Change --binary-list option, accept a packages list separated by comma(,).
+    * Add --deps to build specified packages and all packages they depend
+    * Add --rdeps to build specified packages and all packages depend on them
+    * bug fix:
+      - gbs remotebuild does not work with linked package(not branch package)
+
+- New distributions support:
+    * CentOS 6.3
+    * Fedora 18
+
+
 Release notes for gbs 0.13
 ==========================
 

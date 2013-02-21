@@ -1,3 +1,14 @@
+gbs (0.14-1) unstable; urgency=high
+  * upgrade to gbs v0.14, which contains the following bug fixing & features:
+    * Add --binary-from-file option to specify a package list file
+    * Change --binary-list option, accept a packages list separated by comma(,).
+    * Add --deps to build specified packages and all packages they depend
+    * Add --rdeps to build specified packages and all packages depend on them
+    * bug fix:
+      - gbs remotebuild does not work with linked package(not branch package)
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Fri, 22 Feb 2013 10:56:15 +0800
+
 gbs (0.13-1) unstable; urgency=high
   * upgrade to gbs v0.13, which contains the following bug fixing & features:
     * tab completion support
