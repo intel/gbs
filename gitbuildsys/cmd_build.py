@@ -45,17 +45,9 @@ CHANGE_PERSONALITY = {
             'sparcv8': 'linux32',
           }
 
-DEPRECATEDARCHES = [
-            'ia32',
-            'i686',
-            'i386',
-          ]
 SUPPORTEDARCHS = [
             'x86_64',
-            'ia32',
-            'i686',
             'i586',
-            'i386',
             'armv6l',
             'armv7hl',
             'armv7l',
@@ -230,10 +222,6 @@ def main(args):
     if not buildarch in SUPPORTEDARCHS:
         raise GbsError('arch %s not supported, supported archs are: %s ' % \
                        (buildarch, ','.join(SUPPORTEDARCHS)))
-    if buildarch in DEPRECATEDARCHES:
-        log.warning('build arch: %s is deprecated, and will not be supportted '
-                    'in next gbs version, please use i586 instead' % buildarch)
-        buildarch = 'i586'
 
     if buildarch not in CAN_ALSO_BUILD.get(hostarch, []):
         if buildarch not in QEMU_CAN_BUILD:

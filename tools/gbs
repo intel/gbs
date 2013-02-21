@@ -27,6 +27,7 @@ from gitbuildsys import __version__
 from gitbuildsys import errors
 from gitbuildsys.parsing import subparser, GbsHelpFormatter, basename_type
 from gitbuildsys import log
+from gitbuildsys import cmd_build
 
 
 @subparser
@@ -139,7 +140,8 @@ def build_parser(parser):
                         'dependency order')
 
     group = parser.add_argument_group('build configuration options')
-    group.add_argument('-A', '--arch', help='build target arch ')
+    group.add_argument('-A', '--arch', help='build target arch. Supported arch '
+                       'types are: %s' % ' '.join(cmd_build.SUPPORTEDARCHS))
     group.add_argument('-D', '--dist',
                         help='specify project (build) configuration file')
     group.add_argument('-P', '--profile',
