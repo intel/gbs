@@ -1,4 +1,5 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
+%{!?python_version: %define python_version %(%{__python} -c "import sys; sys.stdout.write(sys.version[:3])")}
 Name:       gbs
 Summary:    The command line tools for Tizen package developers
 Version:    0.13
@@ -8,7 +9,7 @@ License:    GPLv2
 BuildArch:  noarch
 URL:        http://www.tizen.org
 Source0:    %{name}_%{version}.tar.gz
-Requires:   python >= 2.7
+Requires:   python >= 2.6
 Requires:   python-pycurl
 Requires:   git-core
 Requires:   sudo
@@ -16,6 +17,9 @@ Requires:   osc >= 0.136.0
 Requires:   tizen-gbp-rpm >= 20130123
 Requires:   depanneur >= 0.4
 Requires:   pristine-tar
+%if "%{?python_version}" < "2.7"
+Requires:   python-argparse
+%endif
 %if 0%{?suse_version} >= 1210 || 0%{?fedora} >= 18
 Recommends: librpm-tizen >= 4.10.91.tizen20121215
 %else
