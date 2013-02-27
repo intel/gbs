@@ -20,11 +20,7 @@ Requires:   pristine-tar
 %if "%{?python_version}" < "2.7"
 Requires:   python-argparse
 %endif
-%if 0%{?suse_version} >= 1210
-Recommends: librpm-tizen >= 4.10.91.tizen20121215
-%else
-Requires:   librpm-tizen >= 4.10.91.tizen20121215
-%endif
+Requires:   librpm-tizen = 4.10.91.tizen20121215-tizen20130226
 
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
