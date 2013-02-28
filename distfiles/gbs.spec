@@ -16,7 +16,8 @@ Requires:   sudo
 Requires:   osc >= 0.136.0
 Requires:   tizen-gbp-rpm >= 20130221
 Requires:   depanneur >= 0.5
-Requires:   pristine-tar
+Requires:   tizen-pristine-tar >= 1.26-tizen20130122
+
 %if "%{?python_version}" < "2.7"
 Requires:   python-argparse
 %endif
