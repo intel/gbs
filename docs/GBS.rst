@@ -907,28 +907,42 @@ Multiple package build has been supported since gbs 0.10. If packages have depen
    # current directory have multiple packages, --threads can be used to set the max build worker at the same time
    $ gbs build -A armv7l --threads=4
 
-3. Select a group of packages to build
+3. Select a group of packages to be built
 
-`--binary-list` option can be used to specify a text file, which contains the RPM binary name list you want to build, the format is one package per line
+The --binary-from-file option specifies a text file that contains a name list of RPM packages to be built. The format in the text file is one package per line.
 
-::
+The --binary-list option specifies a list in which the package names are separated by comma.
 
-$ gbs build -A i586 --binary-list=/path/to/packages.list
-
-4. If you want to exclude some packages, `--exclude` can be used to exclude one package.
+When the number of packages is small, thus the packages can be clearly presented in command line, it is recommended to use the --binary-list option for simplicity.
 
 ::
 
-    $ gbs build -A i586 tizen-packages --exclude=<pkg1>
-    $ gbs build -A i586 tizen-packages --exclude=<pkg1> --exclude=<pkg2>
+  $ gbs build -A i586 --binary-from-file=/path/to/packages.list
+  $ gbs build -A i586 --binary-list=<pkg1>,<pkg2>
 
-5. If you want to exclude many packages, you can use `--exclude-from-file` to specify a package list. The format is the same as `--binary-list`
+4. Exclude certain packages.
+
+The --exclude option specifies a list in which the names of packages to be ignored are separated by comma.
+The --exclude-from-file option specifies a text file  that contains a name list of packages to be ignored.
 
 ::
 
-    $ gbs build -A i586 tizen-packages --exclude-from-file=<file>
+  $ gbs build -A i586 tizen-packages --exclude=<pkg1>
+  $ gbs build -A i586 tizen-packages --exclude=<pkg1>,<pkg2>
+  $ gbs build -A i586 tizen-packages --exclude-from-file=/path/to/packages.list
 
+5. Build packages based on dependencies.
+The --deps option enables GBS to build specific packages, together with all the related packages on which they depend.The --rdep option enables GBS to build specific packages, together with all the related packages that depend on them.  
 
+The specific packages can be included by the --binary-from-file option or the --binary-list option, and be excluded by the --exclude option or the --exclude-from-file option.
+
+These two options are compatible. When added at the same time, besides the specific packages, GBS will build not only the related packages on which they depend, but also all the related packages that depend on them.
+
+::
+
+  $ gbs build -A i586 --binary-list=<pkg1>,<pkg2> --deps
+  $ gbs build -A i586 --binary-list=<pkg1>,<pkg2> --rdeps
+  $ gbs build -A i586 --binary-list=<pkg1>,<pkg2> --deps --rdeps
 
 Other useful options
 ````````````````````

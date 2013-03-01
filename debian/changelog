@@ -1,4 +1,4 @@
-gbs (0.14-0.rc2) unstable; urgency=high
+gbs (0.14-0.rc3) unstable; urgency=high
   * upgrade to gbs v0.14, which contains the following bug fixing & features:
     * Add --binary-from-file option to specify a package list file
     * Change --binary-list option, accept a packages list separated by comma(,).
