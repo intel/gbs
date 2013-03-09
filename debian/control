@@ -17,7 +17,7 @@ Depends: ${misc:Depends}, ${python:Depends},
  git-buildpackage-rpm (>= 0.6.0git20121124-tizen20130221),
  depanneur (>= 0.5),
  pristine-tar
-Recommends: librpm-tizen (>= 4.10.91.tizen20121215-tizen20130226)
+Recommends: librpm-tizen (>= 4.11.0.1.tizen20130304-tizen20130307)
 Description: The command line tools for Tizen package developers
   The command line tools for Tizen package developers will
   be used to do packaging related tasks.

@@ -21,7 +21,7 @@ Requires:   tizen-pristine-tar >= 1.26-tizen20130122
 %if "%{?python_version}" < "2.7"
 Requires:   python-argparse
 %endif
-Requires:   librpm-tizen = 4.10.91.tizen20121215-tizen20130226
+Requires:   librpm-tizen >= 4.11.0.1.tizen20130304-tizen20130307
 
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
