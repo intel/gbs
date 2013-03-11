@@ -92,7 +92,8 @@ class OSC(object):
             repos[repo.name].append(repo.arch)
         return repos
 
-    def create_project(self, target, src=None, rewrite=False):
+    def create_project(self, target, src=None, rewrite=False,
+                       linkto='', linkedbuild=''):
         """
         Create new OBS project based on existing project.
         Copy config and repositories from src project to target
@@ -113,13 +114,19 @@ class OSC(object):
         meta = '<project name="%s"><title></title><description></description>'\
                '<person role="maintainer" userid="%s"/>' % \
                (target, conf.get_apiurl_usr(self.apiurl))
+        if linkto:
+            meta += '<link project="%s"/>' % linkto
 
         # Collect source repos if src project exist
         if src:
             # Copy repos to target
             repos = self.get_repos_of_project(src)
             for name in repos:
-                meta += '<repository name="%s">' % name
+                if linkedbuild:
+                    meta += '<repository name="%s" linkedbuild="%s">' % \
+                                (name, linkedbuild)
+                else:
+                    meta += '<repository name="%s">' % name
                 meta += '<path project="%s" repository="%s" />' % (src, name)
                 for arch in repos[name]:
                     meta += "<arch>%s</arch>\n" % arch
