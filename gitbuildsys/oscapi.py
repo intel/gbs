@@ -165,6 +165,19 @@ class OSC(object):
             raise ObsError("can't copy config from %s to %s: %s" \
                            % (src, target, err))
 
+    def delete_project(self, prj, force=False, msg=None):
+        """Delete OBS project."""
+        query = {}
+        if force:
+            query['force'] = "1"
+        if msg:
+            query['comment'] = msg
+        url = core.makeurl(self.apiurl, ['source', prj], query)
+        try:
+            self.core_http(core.http_DELETE, url)
+        except OSCError, err:
+            raise ObsError("can't delete project %s: %s" % (prj, err))
+
     def exists(self, prj, pkg=''):
         """Check if project or package exists."""
 
