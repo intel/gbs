@@ -13,7 +13,7 @@ Requires:   python >= 2.6
 Requires:   python-pycurl
 Requires:   git-core
 Requires:   sudo
-Requires:   osc >= 0.136.0
+Requires:   osc >= 0.139.0
 Requires:   tizen-gbp-rpm >= 20130221
 Requires:   depanneur >= 0.5
 Requires:   tizen-pristine-tar >= 1.26-tizen20130122
