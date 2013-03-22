@@ -11,7 +11,6 @@ URL:        http://www.tizen.org
 Source0:    %{name}_%{version}.tar.gz
 Requires:   python >= 2.6
 Requires:   python-pycurl
-Requires:   git-core
 Requires:   sudo
 Requires:   osc >= 0.139.0
 Requires:   tizen-gbp-rpm >= 20130221
