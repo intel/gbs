@@ -1,3 +1,21 @@
+* Mon Mar 25 2013 Qiang Zhang <qiang.z.zhang@intel.com> - 0.15
+  * upgrade to gbs v0.15, which contains the following bug fixing & features:
+    * depend on new osc / osc-build
+    * tizen system support
+    * more osc api added: linked projects support, project deletion
+    * bug fix:
+      - consistency issue about package cache and sources
+      - spec parser issue on ubuntu system
+
+* Fri Feb 22 2013 Qiang Zhang <qiang.z.zhang@intel.com> - 0.14
+  * upgrade to gbs v0.14, which contains the following bug fixing & features:
+    * Add --binary-from-file option to specify a package list file
+    * Change --binary-list option, accept a packages list separated by comma(,).
+    * Add --deps to build specified packages and all packages they depend
+    * Add --rdeps to build specified packages and all packages depend on them
+    * bug fix:
+      - gbs remotebuild does not work with linked package(not branch package)
+
 * Wed Jan 23 2013 Qiang Zhang  <qiang.z.zhang@intel.com> - 0.13
   * upgrade to gbs v0.13, which contains the following bug fixing & features:
     * tab completion support
