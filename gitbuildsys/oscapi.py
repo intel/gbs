@@ -93,7 +93,7 @@ class OSC(object):
         return repos
 
     def create_project(self, target, src=None, rewrite=False,
-                       linkto='', linkedbuild=''):
+                       description='', linkto='', linkedbuild=''):
         """
         Create new OBS project based on existing project.
         Copy config and repositories from src project to target
@@ -111,9 +111,10 @@ class OSC(object):
                 return
 
         # Create target meta
-        meta = '<project name="%s"><title></title><description></description>'\
+        meta = '<project name="%s"><title></title>'\
+	       '<description>%s</description>'\
                '<person role="maintainer" userid="%s"/>' % \
-               (target, conf.get_apiurl_usr(self.apiurl))
+               (target, description, conf.get_apiurl_usr(self.apiurl))
         if linkto:
             meta += '<link project="%s"/>' % linkto
 
