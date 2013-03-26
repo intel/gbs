@@ -32,6 +32,8 @@ import ssl
 from collections import defaultdict
 from urllib import quote_plus, pathname2url
 
+from xml.etree import cElementTree as ET
+
 from gitbuildsys.utils import hexdigest
 from gitbuildsys.errors import ObsError
 from gitbuildsys.log import waiting
@@ -181,15 +183,10 @@ class OSC(object):
 
     def exists(self, prj, pkg=''):
         """Check if project or package exists."""
-
-        metatype = 'prj'
-        path_args = [core.quote_plus(prj)]
-        if pkg:
-            metatype = 'pkg'
-            path_args.append(core.quote_plus(pkg))
+        metatype, path_args = self.get_path(prj, pkg)
         err = None
         try:
-            core.meta_exists(metatype = metatype, path_args = tuple(path_args),
+            core.meta_exists(metatype = metatype, path_args = path_args,
                              create_new = False, apiurl = self.apiurl)
         except urllib2.HTTPError, err:
             if err.code == 404:
@@ -334,3 +331,38 @@ class OSC(object):
 
         return log.translate(None, "".join([chr(i) \
                                             for i in range(10) + range(11,32)]))
+
+    @staticmethod
+    def get_path(prj, pkg=None):
+        """Helper to get path_args out of prj and pkg."""
+        metatype = 'prj'
+        path_args = [quote_plus(prj)]
+        if pkg:
+            metatype = 'pkg'
+            path_args.append(quote_plus(pkg))
+        return metatype, tuple(path_args)
+
+    def get_meta(self, prj, pkg=None):
+        """Get project/package meta."""
+        metatype, path_args = self.get_meta(prj, pkg)
+        url = core.make_meta_url(metatype, path_args, self.apiurl)
+        return self.core_http(core.http_GET, url)
+
+    def set_meta(self, meta, prj, pkg=None):
+        """Set project/package meta."""
+        metatype, path_args = self.get_path(prj, pkg)
+        url = core.make_meta_url(metatype, path_args, self.apiurl)
+        return self.core_http(core.http_PUT, url, data=meta)
+
+    def get_description(self, prj, pkg=None):
+        """Get project/package description."""
+        meta = self.get_meta(prj, pkg)
+        result = ET.fromstring(meta).find('description')
+        return result or result.text
+
+    def set_description(self, description, prj, pkg=None):
+        """Set project/package description."""
+        meta = ET.fromstring(self.get_meta(prj, pkg))
+        dsc = meta.find('description')
+        dsc.text = description
+        self.set_meta(ET.tostring(meta), prj, pkg)
