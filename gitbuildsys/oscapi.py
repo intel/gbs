@@ -225,7 +225,7 @@ class OSC(object):
         changed, not changed and new are lists of local filepaths
         """
         # Get list of files from the OBS
-        rfiles = core.meta_get_filelist(self.apiurl, prj, pkg, verbose=True,\
+        rfiles = core.meta_get_filelist(self.apiurl, prj, pkg, verbose=True,
                                         expand=True)
 
         old, not_changed, changed, new = [], [], [], []
@@ -306,14 +306,15 @@ class OSC(object):
             raise ObsError("can't get %s/%s build results: %s" \
                            % (prj, pkg, str(err)))
 
-        for res in build_status:
-            # This regular expression is created for parsing the
-            # results of of core.get_results()
-            stat_re = re.compile(r'^(?P<repo>\S+)\s+(?P<arch>\S+)\s+'
+        # This regular expression is created for parsing the
+        # results of of core.get_results()
+        stat_re = re.compile(r'^(?P<repo>\S+)\s+(?P<arch>\S+)\s+'
                                   '(?P<status>\S*)$')
-            mo = stat_re.match(res)
-            if mo:
-                results[mo.group('repo')][mo.group('arch')] = mo.group('status')
+        for res in build_status:
+            match = stat_re.match(res)
+            if match:
+                results[match.group('repo')][match.group('arch')] = \
+                    match.group('status')
             else:
                 logger.warning('not valid build status received: %s' % res)
 
