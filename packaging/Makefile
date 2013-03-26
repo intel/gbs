@@ -4,14 +4,14 @@ PKG_VERSION := $(shell grep '^Version: ' $(SPECFILE)|awk '{print $$2}')
 
 TARBALL := $(PKG_NAME)_$(PKG_VERSION).tar.gz
 
-dsc:tarball
+dsc: $(TARBALL)
 	@sed  -i 's/ [a-f0-9]\+ [0-9]\+ $(TARBALL)/ $(shell md5sum $(TARBALL) | sed "s/  / $(shell stat -c '%s' $(TARBALL)) /")/' $(PKG_NAME).dsc
 
-tarball:
+$(TARBALL):
 	@cd .. && git archive --prefix $(PKG_NAME)-$(PKG_VERSION)/ HEAD \
 		| gzip > packaging/$(TARBALL)
 
 clean:
 	@rm -f *.tar.gz
 
-all: clean tarball dsc
+all: clean dsc
