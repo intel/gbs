@@ -1,7 +1,7 @@
 Format: 1.0
 Source: gbs
 Version: 0.15
-Binary: gbs
+Binary: gbs, gbs-api
 Maintainer: Jian-feng Ding <jian-feng.ding@intel.com>
 Architecture: all
 Standards-Version: 3.7.1

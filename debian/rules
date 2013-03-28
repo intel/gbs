@@ -2,7 +2,7 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
-GBS =$(shell pwd)/debian/gbs
+GBS =$(shell pwd)/debian/tmp
 build: build-stamp
 build-stamp:
 	dh_testdir

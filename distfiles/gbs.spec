@@ -23,6 +23,7 @@ Requires:   python-argparse
 %if ! 0%{?tizen_version:1}
 Requires:   librpm-tizen >= 4.11.0.1.tizen20130304-tizen20130307
 %endif
+Requires:   %{name}-api = %{version}
 
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
@@ -31,6 +32,17 @@ BuildRoot:  %{_tmppath}/%{name}-%{version}-build
 The command line tools for Tizen package developers will
 be used to do packaging related tasks. 
 
+%package api
+Summary:       GBS APIs
+Conflicts:     gbs < 0.15
+Requires:      python
+Requires:      python-pycurl
+Requires:      osc >= 0.139.0
+Requires:      git-buildpackage-rpm
+
+%description api
+This package contains gbs APIs, which can be used by
+external software.
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -57,6 +69,19 @@ install -pm 644 data/gbs-completion.bash %{buildroot}%{_sysconfdir}/bash_complet
 %defattr(-,root,root,-)
 %doc README.rst docs/RELEASE_NOTES
 #%{_mandir}/man1/*
-%{python_sitelib}/*
+%{python_sitelib}/gitbuildsys/cmd_*.py*
+%{python_sitelib}/gitbuildsys/conf.py*
+%{python_sitelib}/gitbuildsys/parsing.py*
 %{_bindir}/*
 %{_sysconfdir}/bash_completion.d
+
+%files api
+%defattr(-,root,root,-)
+%dir %{python_sitelib}/gitbuildsys
+%{python_sitelib}/gitbuildsys/__init__.py*
+%{python_sitelib}/gitbuildsys/oscapi.py*
+%{python_sitelib}/gitbuildsys/errors.py*
+%{python_sitelib}/gitbuildsys/log.py*
+%{python_sitelib}/gitbuildsys/safe_url.py*
+%{python_sitelib}/gitbuildsys/utils.py*
+%{python_sitelib}/gbs-*-py*.egg-info

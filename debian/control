@@ -14,9 +14,22 @@ Depends: ${misc:Depends}, ${python:Depends},
  sudo,
  osc (>= 0.139.0),
  git-buildpackage-rpm (>= 0.6.0git20121124-tizen20130308),
+ gbs-api (= ${binary:Version}),
  depanneur (>= 0.6),
  pristine-tar (>= 1.26)
 Recommends: librpm-tizen (>= 4.11.0.1.tizen20130304-tizen20130307)
 Description: The command line tools for Tizen package developers
-  The command line tools for Tizen package developers will
-  be used to do packaging related tasks.
+ The command line tools for Tizen package developers will
+ be used to do packaging related tasks.
+
+Package: gbs-api
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends},
+ python-pycurl,
+ osc (>= 0.139.0),
+ git-buildpackage-rpm
+Conflicts: gbs (<< 0.15)
+Replaces: gbs (<< 0.15)
+Description: GBS API
+ This package contains gbs APIs, which can be used by
+ external software.
