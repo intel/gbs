@@ -163,6 +163,9 @@ def prepare_depanneur_opts(args):
         cmd_opts += ['--no-configure']
     if args.keep_packs:
         cmd_opts += ['--keep-packs']
+    if args.baselibs:
+        cmd_opts += ['--baselibs']
+
     if args.binary_list:
         blist = [ i.strip() for i in args.binary_list.split(',') ]
         cmd_opts += ['--binary-list=%s' % ','.join(blist)]
