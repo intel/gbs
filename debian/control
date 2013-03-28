@@ -13,7 +13,7 @@ Depends: ${misc:Depends}, ${python:Depends},
  python-pycurl,
  sudo,
  osc (>= 0.139.0),
- git-buildpackage-rpm (>= 0.6.0git20121124-tizen20130221),
+ git-buildpackage-rpm (>= 0.6.0git20121124-tizen20130308),
  depanneur (>= 0.6),
  pristine-tar (>= 1.26)
 Recommends: librpm-tizen (>= 4.11.0.1.tizen20130304-tizen20130307)
