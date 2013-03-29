@@ -84,7 +84,7 @@ __gbs ()
         --arch= --repository= --dist= --buildroot= --clean
         --include-all --extra-packs= --spec= --commit= --cache
         --skip-conf-repos --profile= --noinit --keep-packs
-        --clean-repos --define
+        --clean-repos --define --baselibs
     "
     rb_opts="
         --base-obsprj= --target-obsprj= --spec= --commit= --include-all

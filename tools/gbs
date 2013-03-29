@@ -160,6 +160,8 @@ def build_parser(parser):
     group.add_argument('--define', action="append",
                         help='define macro X with value Y with format "X Y"')
     group.add_argument('--debug', action='store_true', help='debug output')
+    group.add_argument('--baselibs', action='store_true', help='create -32bit'
+                       '/-64bit/-x86 rpms for other architectures')
 
     group = parser.add_argument_group('build env options')
     group.add_argument('-B', '--buildroot',
