@@ -1,3 +1,23 @@
+Release notes for gbs 0.15
+==========================
+
+- Release Date: 2013-03
+
+- New features added:
+    * Add --baselibs option to support creating -32bit/-64bit/-x86 rpms for other arches
+    * Add more osc api added: linked projects support, project deletion
+    * bug fix:
+      - consistency issue about package cache and sources
+      - spec parser issue on ubuntu system
+      - fix arm build segmentation fault issue on CentOS 6.3(32bit)
+
+- Dependency upgrade:
+    * Upgrade qemu to latest 1.4.0 version
+    * Upgrade osc to 0.139
+    * Upgrade obs-build to 2013.03.11
+    * Upgrade crypt-ssleay to 0.64
+
+
 Release notes for gbs 0.14
 ==========================
 
