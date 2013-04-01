@@ -93,7 +93,7 @@ def main(args):
     else:
         commit = 'HEAD'
 
-    relative_spec = utils.guess_spec(workdir, packaging_dir, args.spec, commit)
+    relative_spec = utils.guess_spec(workdir, packaging_dir, args.spec, commit)[0]
 
     if args.include_all:
         # include_all means to use work copy,

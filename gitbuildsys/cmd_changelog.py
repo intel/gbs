@@ -114,7 +114,7 @@ def main(args):
     if args.spec or not changes_file_list:
         # Create .changes file with the same name as a spec
         specfile = os.path.basename(guess_spec(repo.path,
-                                               packaging_dir, args.spec))
+                                               packaging_dir, args.spec)[0])
         fn_changes = os.path.splitext(specfile)[0] + ".changes"
         fn_changes = os.path.join(repo.path, packaging_dir, fn_changes)
     else:

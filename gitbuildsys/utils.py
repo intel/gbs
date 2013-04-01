@@ -76,7 +76,7 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
         spec = os.path.join(packaging_dir, given_spec)
         if not check(spec):
             raise GbsError(msg % spec)
-        return spec
+        return [spec, []]
 
     specs = glob_(os.path.join(packaging_dir, '*.spec'))
     if not specs:
@@ -85,7 +85,9 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
 
     project_name =  os.path.basename(git_path)
     spec = os.path.join(packaging_dir, '%s.spec' % project_name)
-    return spec if spec in specs else specs[0]
+    spec = spec if spec in specs else specs[0]
+    specs.remove(spec)
+    return [spec, specs]
 
 
 class Temp(object):

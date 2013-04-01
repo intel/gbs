@@ -22,6 +22,7 @@
 import os
 import re
 import shutil
+import glob
 import errno
 from urlparse import urlparse
 
@@ -158,7 +159,6 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
     else:
         argv.extend(["--git-patch-export",
                      "--git-patch-export-compress=100k",
-                     "--git-force-create",
                      "--git-patch-export-squash-until=%s" %
                         squash_patches_until,
                      "--git-patch-export-ignore-path=^(%s/.*|.gbs.conf)" %
@@ -241,7 +241,7 @@ def main(args):
     else:
         commit = 'HEAD'
     packaging_dir = get_packaging_dir(args)
-    relative_spec = utils.guess_spec(workdir, packaging_dir, args.spec, commit)
+    main_spec, rest_specs = utils.guess_spec(workdir, packaging_dir, args.spec, commit)
 
     if args.outdir:
         outdir = args.outdir
@@ -262,9 +262,24 @@ def main(args):
     check_export_branches(repo, args)
 
     with utils.Workdir(workdir):
-        export_sources(repo, commit, export_dir, relative_spec, args)
+        export_sources(repo, commit, export_dir, main_spec, args)
 
-    specfile = os.path.basename(relative_spec)
+        # also update other spec files if no --spec option specified
+        if not args.spec and rest_specs:
+            # backup updated spec file
+            specbakd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_export_'),\
+                               directory=True)
+            shutil.copy(os.path.join(export_dir,
+                        os.path.basename(main_spec)), specbakd.path)
+            for spec in rest_specs:
+                export_sources(repo, commit, export_dir, spec, args)
+                shutil.copy(os.path.join(export_dir,
+                            os.path.basename(spec)), specbakd.path)
+            # restore updated spec files
+            for spec in glob.glob(os.path.join(specbakd.path, "*.spec")):
+                shutil.copy(spec, export_dir)
+
+    specfile = os.path.basename(main_spec)
     try:
         spec = rpm.parse_spec(os.path.join(export_dir, specfile))
     except GbpError, err:
