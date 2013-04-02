@@ -98,7 +98,7 @@ def check_export_branches(repo, args):
                     'patch-generation ' % upstream_branch)
 
 def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
-                           force_native=False):
+                           force_native=False, create_tarball=True):
     """
     Construct the cmdline argument list for git-buildpackage export
     """
@@ -151,6 +151,10 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
             "--git-upstream-tag=%s" % upstream_tag,
             "--git-spec-vcs-tag=%s#%%(tagname)s" % reponame]
 
+    if create_tarball:
+        argv.append("--git-force-create")
+    else:
+        argv.append("--git-no-create-orig")
     if args.debug:
         argv.append("--git-verbose")
     if force_native or is_native_pkg(repo, args) or args.no_patch_export:
@@ -183,7 +187,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
 
     return argv
 
-def export_sources(repo, commit, export_dir, spec, args):
+def export_sources(repo, commit, export_dir, spec, args, create_tarball=True):
     """
     Export packaging files using git-buildpackage
     """
@@ -191,7 +195,7 @@ def export_sources(repo, commit, export_dir, spec, args):
                             directory=True)
 
     gbp_args = create_gbp_export_args(repo, commit, export_dir, tmp.path,
-                                      spec, args)
+                                      spec, args, create_tarball=create_tarball)
     try:
         ret = gbp_build(gbp_args)
         if ret == 2 and not is_native_pkg(repo, args):
@@ -208,7 +212,8 @@ def export_sources(repo, commit, export_dir, spec, args):
                        "monolithic source archive")
             gbp_args = create_gbp_export_args(repo, commit, export_dir,
                                               tmp.path, spec, args,
-                                              force_native=True)
+                                              force_native=True,
+                                              create_tarball=create_tarball)
             ret = gbp_build(gbp_args)
         if ret:
             raise GbsError("Failed to export packaging files from git tree")
@@ -272,7 +277,8 @@ def main(args):
             shutil.copy(os.path.join(export_dir,
                         os.path.basename(main_spec)), specbakd.path)
             for spec in rest_specs:
-                export_sources(repo, commit, export_dir, spec, args)
+                export_sources(repo, commit, export_dir, spec, args,
+                               create_tarball=False)
                 shutil.copy(os.path.join(export_dir,
                             os.path.basename(spec)), specbakd.path)
             # restore updated spec files
