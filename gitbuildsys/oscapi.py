@@ -347,7 +347,7 @@ class OSC(object):
         """Get project/package meta."""
         metatype, path_args = self.get_path(prj, pkg)
         url = core.make_meta_url(metatype, path_args, self.apiurl)
-        return self.core_http(core.http_GET, url)
+        return self.core_http(core.http_GET, url).read()
 
     def set_meta(self, meta, prj, pkg=None):
         """Set project/package meta."""
