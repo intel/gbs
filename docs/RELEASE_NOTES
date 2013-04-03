@@ -4,6 +4,10 @@ Release notes for gbs 0.15
 - Release Date: 2013-03
 
 - New features added:
+    * add --baselibs option to support creating -32bit/-64bit/-x86 rpms for
+      other arches
+    * optimization for local build, especially for local full build
+    * support updating multiple spec files in one package in export module
     * Add --baselibs option to support creating -32bit/-64bit/-x86 rpms for other arches
     * Add more osc api added: linked projects support, project deletion
     * bug fix:

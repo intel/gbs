@@ -1,5 +1,10 @@
 * Mon Mar 25 2013 Qiang Zhang <qiang.z.zhang@intel.com> - 0.15
   * upgrade to gbs v0.15, which contains the following bug fixing & features:
+    * add --baselibs option to support creating -32bit/-64bit/-x86 rpms for
+      other arches
+    * optimization for local build, especially for local full build
+    * support updating multiple spec files in one package in export module
+    * dependency upgrade, including qemu,osc,obs-build,crypt-ssleay
     * depend on new osc / osc-build
     * tizen system support
     * more osc api added: linked projects support, project deletion
