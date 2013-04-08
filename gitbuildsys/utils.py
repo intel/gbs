@@ -61,13 +61,13 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
     git_path = os.path.abspath(git_path)
 
     if commit_id == 'WC.UNTRACKED':
-        check = lambda fname, dir_only=False: os.path.exists(os.path.join( \
+        check = lambda fname, dir_only = False: os.path.exists(os.path.join(
                        git_path, fname))
         glob_ = lambda pattern: [ name.replace(git_path+'/', '')
             for name in glob.glob(os.path.join(git_path, pattern)) ]
         msg = 'No such spec file %s'
     else:
-        check = lambda fname, dir_only=False : file_exists_in_rev(git_path, \
+        check = lambda fname, dir_only = False : file_exists_in_rev(git_path,
                        fname, commit_id, dir_only=dir_only)
         glob_ = lambda pattern: glob_in_rev(git_path, pattern, commit_id)
         msg = "No such spec file %%s in %s" % commit_id
@@ -488,7 +488,8 @@ def show_file_from_rev(git_path, relative_path, commit_id):
     args = ['git', 'show', '%s:%s' % (commit_id, relative_path)]
     try:
         with Workdir(git_path):
-            return  subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
+            return  subprocess.Popen(args,
+                                     stdout=subprocess.PIPE).communicate()[0]
     except (subprocess.CalledProcessError, OSError), err:
         log.debug('failed to checkout %s from %s:%s' % (relative_path,
                                                         commit_id, str(err)))
@@ -499,13 +500,14 @@ def file_exists_in_rev(git_path, relative_path, commit_id, dir_only=False):
     """Check if file exists in given given revision."""
     git_opts = ['--name-only']
     if dir_only:
-       git_opts += ['-d']
+        git_opts += ['-d']
     args = ['git', 'ls-tree', commit_id, relative_path]
     args.extend(git_opts)
 
     try:
         with Workdir(git_path):
-            output = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
+            output = subprocess.Popen(args,
+                                      stdout=subprocess.PIPE).communicate()[0]
     except (subprocess.CalledProcessError, OSError), err:
         raise GbsError('failed to check existence of %s in %s:%s' % (
             relative_path, commit_id, str(err)))
@@ -521,7 +523,8 @@ def glob_in_rev(git_path, pattern, commit_id):
 
     try:
         with Workdir(git_path):
-            output = subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
+            output = subprocess.Popen(args,
+                                      stdout=subprocess.PIPE).communicate()[0]
     except (subprocess.CalledProcessError, OSError), err:
         raise GbsError('failed to glob %s in %s:%s' % (
             pattern, commit_id, str(err)))

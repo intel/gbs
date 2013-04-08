@@ -3,16 +3,9 @@
 """GBS setup."""
 
 import os, sys
-import glob
 import re
 
 from distutils.core import setup
-
-try:
-    import setuptools
-    # enable "setup.py develop", optional
-except ImportError:
-    pass
 
 MOD_NAME = 'gitbuildsys'
 

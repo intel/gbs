@@ -93,7 +93,8 @@ def main(args):
     else:
         commit = 'HEAD'
 
-    relative_spec = utils.guess_spec(workdir, packaging_dir, args.spec, commit)[0]
+    relative_spec = utils.guess_spec(workdir, packaging_dir,
+                                     args.spec, commit)[0]
 
     if args.include_all:
         # include_all means to use work copy,
@@ -216,8 +217,8 @@ def main(args):
             if not build_repos:
                 log.warning("no available build repos for %s" % target_prj)
         if api.exists(target_prj, package):
-            old, _not_changed, changed, new = api.diff_files(target_prj,
-                                                             package, files)
+            _old, _not_changed, changed, new = api.diff_files(target_prj,
+                                                              package, files)
             commit_files = changed + new
         else:
             log.info('creating new package %s/%s' % (target_prj, package))
