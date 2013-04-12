@@ -1,0 +1,5 @@
+usr/lib/python*/*packages/gitbuildsys/cmd_*.py
+usr/lib/python*/*packages/gitbuildsys/conf.py
+usr/lib/python*/*packages/gitbuildsys/parsing.py
+usr/bin/*
+etc/bash_completion.d/*
