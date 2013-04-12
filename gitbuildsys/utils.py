@@ -258,6 +258,8 @@ class RepoParser(object):
         self.cachedir = cachedir
         self.repourls  = defaultdict(list)
         self.buildconf = None
+        self.group_file = {}
+        self.pattern_file = {}
         self.standardrepos = []
         self.urlgrabber = URLGrabber()
 
@@ -393,6 +395,35 @@ class RepoParser(object):
 
         for repo in remotes:
             deal_with_one_repo(repo)
+
+
+        # find group/pattern files from all standard repos
+        all_repos = self.standardrepos[:]
+        for arch in self.repourls:
+            all_repos.extend(self.repourls[arch])
+        for repo in all_repos:
+            group_url = repo.pathjoin('repodata/group.xml')
+            self.group_file['name'] = self.fetch(group_url)
+            if not self.group_file['name']:
+                continue
+            with open(self.group_file['name'], 'rb') as f:
+                md5sum = hexdigest(f)
+                if 'md5sum' in self.group_file and \
+                    md5sum != self.group_file['md5sum']:
+                    log.warning('multiple differnent group files found')
+                self.group_file['md5sum'] = md5sum
+
+            pattern_url = repo.pathjoin('repodata/patterns.xml')
+            self.pattern_file['name'] = self.fetch(pattern_url)
+            if not self.pattern_file['name']:
+                log.warning('pattern/group files do not exist in the same repo')
+                continue
+            with open(self.pattern_file['name'], 'rb') as f:
+                md5sum = hexdigest(f)
+                if 'md5sum' in self.pattern_file and \
+                   md5sum != self.pattern_file['md5sum']:
+                    log.warning('multiple differnent pattern files found')
+                self.pattern_file['md5sum'] = md5sum
 
     @staticmethod
     def split_out_local_repo(repos):
