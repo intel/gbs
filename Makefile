@@ -45,9 +45,6 @@ docs: man html pdf
 install: all
 	python setup.py install --prefix=${PREFIX}
 
-dev: all
-	python setup.py develop --prefix=${PREFIX}
-
 clean:
 	rm -rf build/
 	rm -rf dist/
