@@ -262,6 +262,23 @@ def build_parser(parser):
     return parser
 
 @subparser
+def createimage_parser(parser):
+    """create image using ks file """
+
+    parser.add_argument('-K', '--ks-file',
+                        help='ks file to be used')
+    parser.add_argument('-P', '--profile',
+                        help='profile to be used for building, can be given '
+                             'without the "profile." prefix')
+    parser.add_argument('--tmpfs', action='store_true',
+                        help='use tmpfs to accelerate creating image, but '\
+                             'plesae make sure you have enough free memory '\
+                             'for whole image')
+    parser.set_defaults(alias="cr")
+    return parser
+
+
+@subparser
 def remotebuild_parser(parser):
     """remote build package
     Examples:

@@ -76,7 +76,7 @@ __gbs_find_on_cmdline ()
 __gbs ()
 {
     subcommands="
-        build remotebuild submit import export changelog chroot clone pull
+        build createimage remotebuild submit import export changelog chroot clone pull
     "
     common_opts="--upstream-tag= --upstream-branch= --squash-patches-until=
         --packaging-dir= --no-patch-export"
@@ -86,6 +86,10 @@ __gbs ()
         --skip-conf-repos --profile= --noinit --keep-packs
         --clean-repos --define --baselibs
     "
+    cr_opts="
+        --profile= --tmpfs --ks-file
+    "
+
     rb_opts="
         --base-obsprj= --target-obsprj= --spec= --commit= --include-all
         --status --buildlog --profile= --arch= --repository=
@@ -102,7 +106,7 @@ __gbs ()
         --source-rpm --include-all --commit= --spec= --outdir=
     "
     ch_opts="--message= --since= --packaging-dir="
-    cr_opts="--root"
+    chr_opts="--root"
     lbex_opts="--no-configure --exclude-from-file= --exclude= --binary-list= --threads=\
         --incremental --overwrite --clean-once --debug --deps --rdeps $lb_opts"
     cl_opts="--upstream-branch= --all --depth="
@@ -123,6 +127,9 @@ __gbs ()
             build,--*)
                 __gbscomp "$lb_opts $lbex_opts $common_opts"
                 ;;
+            createimage,--*)
+                __gbscomp "$cr_opts"
+                ;;
             remotebuild,--*)
                 __gbscomp "$rb_opts $common_opts"
                 ;;
@@ -139,7 +146,7 @@ __gbs ()
                 __gbscomp "$ch_opts"
                 ;;
             chroot,--*)
-                __gbscomp "$cr_opts"
+                __gbscomp "$chr_opts"
                 ;;
             clone,--*)
                 __gbscomp "$cl_opts"
