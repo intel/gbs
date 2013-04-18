@@ -175,8 +175,10 @@ class ConfigMgr(object):
                 'upstream_branch': 'upstream',
                 'upstream_tag': 'upstream/${upstreamversion}',
                 'squash_patches_until': '',
-                'buildroot':    '~/GBS-ROOT/',
+                'buildroot':    '~/GBS-ROOT',
                 'packaging_dir': 'packaging',
+                'image_dir': '%(buildroot)s/images',
+                'ks_dir': '%(buildroot)s/meta/ks-dir',
             },
     }
 
@@ -424,6 +426,8 @@ class Profile(object):
         self.repos = []
         self.obs = None
         self.buildroot = None
+        self.image_dir = None
+        self.ks_dir = None
 
     def add_repo(self, repoconf):
         '''add a repo to repo list of the profile'''
@@ -557,6 +561,8 @@ class BizConfigManager(ConfigMgr):
                 profile.add_repo(repoconf)
 
         profile.buildroot = self.get_optional_item(name, 'buildroot')
+        profile.ks_dir = self.get_optional_item(name, 'ks_dir')
+        profile.image_dir = self.get_optional_item(name, 'image_dir')
 
         return profile
 
