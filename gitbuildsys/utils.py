@@ -250,7 +250,6 @@ class URLGrabber(object):
             self.change_url(url, outfile, user, passwd)
             self.perform()
 
-
 class RepoParser(object):
     """Repository parser for generate real repourl and build config."""
 
@@ -260,8 +259,10 @@ class RepoParser(object):
         self.buildconf = None
         self.group_file = defaultdict(str)
         self.pattern_file = defaultdict(str)
+        self.ks_files = []
         self.standardrepos = []
         self.urlgrabber = URLGrabber()
+        self.tizen_version = None
 
         self.localrepos, remotes = self.split_out_local_repo(repos)
         self.parse(remotes)
@@ -306,6 +307,30 @@ class RepoParser(object):
 
         return meta
 
+    @staticmethod
+    def _parse_image_configs(image_configs_xml):
+        """
+        Parse image-configs.xml
+        Returns: list of ks file
+        """
+        if not (image_configs_xml and os.path.exists(image_configs_xml)):
+            return
+
+        try:
+            etree = ET.parse(image_configs_xml)
+        except ET.ParseError:
+            log.warning('Not well formed xml: %s' % image_configs_xml)
+            return
+
+        root = etree.getroot()
+
+        ks_items = root.findall('config/path')
+
+        if ks_items is not None:
+            return [ ks_item.text.strip() for ks_item in ks_items ]
+        else:
+            return []
+
     def build_repos_from_buildmeta(self, baseurl, meta):
         """Parse build.xml and pickup standard repos it contains."""
         archs = meta.get('archs', [])
@@ -345,6 +370,15 @@ class RepoParser(object):
         if build_xml:
             return self._parse_build_xml(build_xml)
 
+    def _fetch_image_configs(self, latest_repo_url):
+        """Fetch and parse image-config.xml."""
+        image_configs_url = latest_repo_url.pathjoin('builddata/image-configs.xml')
+        image_configs_xml = self.fetch(image_configs_url)
+        if image_configs_xml:
+            return self._parse_image_configs(image_configs_xml)
+        else:
+            return []
+
     def _fetch_build_conf(self, latest_repo_url, meta):
         """Get build.conf file name from build.xml and fetch it."""
         if self.buildconf:
@@ -363,6 +397,7 @@ class RepoParser(object):
         if fname:
             release, _buildid = meta['id'].split('_')
             release = release.replace('-','')
+            self.tizen_version = release
             target_conf = os.path.join(os.path.dirname(fname),
                                        '%s.conf' % release)
             os.rename(fname, target_conf)
@@ -392,6 +427,13 @@ class RepoParser(object):
                 # Generate repos from build.xml
                 self.build_repos_from_buildmeta(repo, meta)
                 self._fetch_build_conf(repo, meta)
+                # Fetch ks files
+                for ks_file in self._fetch_image_configs(repo):
+                    ksfile = self.fetch(repo.pathjoin(
+                                        os.path.join('builddata', ks_file)))
+                    if ksfile:
+                        self.ks_files.append(os.path.join(self.cachedir,
+                                         os.path.basename(ks_file)))
 
         for repo in remotes:
             deal_with_one_repo(repo)

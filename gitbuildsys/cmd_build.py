@@ -23,11 +23,14 @@ import os
 import shutil
 import pwd
 import re
+import glob
+import urlparse
 
 from gitbuildsys.utils import Temp, RepoParser
 from gitbuildsys.errors import GbsError, Usage
 from gitbuildsys.conf import configmgr
 from gitbuildsys.safe_url import SafeURL
+from gitbuildsys.ks_utils import KSRepoUpdater
 from gitbuildsys.cmd_export import get_packaging_dir
 from gitbuildsys.log import LOGGER as log
 
@@ -74,15 +77,56 @@ QEMU_CAN_BUILD = ['armv4l', 'armv5el', 'armv5l', 'armv6l', 'armv7l',
 USERID = pwd.getpwuid(os.getuid())[0]
 TMPDIR = os.path.join(configmgr.get('tmpdir', 'general'), '%s-gbs' % USERID)
 
-def prepare_repos_and_build_conf(args, arch, profile):
+def update_ks_files(args, repoparser, cachedir):
+    '''Update ks files: Add local repo and add user/pass if needed'''
+    if args.arch:
+        buildarch = args.arch
+    else:
+        buildarch = os.uname()[4]
+
+    repourls = repoparser.get_repos_by_arch(buildarch)
+    localrepo_dir = os.path.join(os.environ['TIZEN_BUILD_ROOT'], 'local/repos',
+                                 repoparser.tizen_version, buildarch)
+    for ks_file in repoparser.ks_files:
+        ks_updater = KSRepoUpdater(ks_file)
+        ks_updater.add_repo('local', localrepo_dir, priority=1)
+        #ks_updater.build_ID()
+        for url in repourls:
+            #import pdb;pdb.set_trace()
+            hostname = urlparse.urlsplit(url).hostname
+            ks_updater.add_authinfo(hostname, url.user, url.passwd)
+        ks_updater.sync()
+
+def prepare_meta_files(args, repoparser):
+    '''prepare meta files for gbs build and image creation, including
+       - group patterns files for local repo
+       - KS files for image creation
+    '''
+    meta_dir = os.path.join(os.environ['TIZEN_BUILD_ROOT'], 'meta')
+    if not os.path.exists(meta_dir):
+        os.makedirs(meta_dir)
+    if repoparser.group_file['name']:
+        shutil.copy(repoparser.group_file['name'], meta_dir)
+    if repoparser.pattern_file['name']:
+        shutil.copy(repoparser.pattern_file['name'], meta_dir)
+
+    profile = get_profile(args)
+
+    if profile.ks_dir:
+        ks_dir = profile.ks_dir
+    else:
+        ks_dir = configmgr.get('ks_dir', 'general')
+    ks_dir = os.path.expanduser(ks_dir)
+    if not os.path.exists(ks_dir):
+        os.makedirs(ks_dir)
+
+    for ks_file in repoparser.ks_files:
+        shutil.copy(ks_file, ks_dir)
+
+def prepare_repos_and_build_conf(args, arch, profile, cachedir):
     '''generate repos and build conf options for depanneur'''
 
     cmd_opts = []
-    cache = Temp(prefix=os.path.join(TMPDIR, 'gbscache'),
-                       directory=True)
-    cachedir  = cache.path
-    if not os.path.exists(cachedir):
-        os.makedirs(cachedir)
     log.info('generate repositories ...')
 
     if args.skip_conf_repos:
@@ -103,21 +147,14 @@ def prepare_repos_and_build_conf(args, arch, profile):
         raise GbsError('No package repository specified.')
 
     repoparser = RepoParser(repos, cachedir)
-    meta_dir = os.path.join(os.environ['TIZEN_BUILD_ROOT'], 'meta')
-
-    if not os.path.exists(meta_dir):
-        os.makedirs(meta_dir)
-
-    if repoparser.group_file['name']:
-        shutil.copy(repoparser.group_file['name'], meta_dir)
-    if repoparser.pattern_file['name']:
-        shutil.copy(repoparser.pattern_file['name'], meta_dir)
-
     repourls = repoparser.get_repos_by_arch(arch)
     if not repourls:
         raise GbsError('no available repositories found for arch %s under the '
                        'following repos:\n%s' % (arch, '\n'.join(repos)))
     cmd_opts += [('--repository=%s' % url.full) for url in repourls]
+
+    update_ks_files(args, repoparser, cachedir)
+    prepare_meta_files(args, repoparser)
 
     if args.dist:
         distconf = args.dist
@@ -269,9 +306,15 @@ def main(args):
     if args.clean:
         cmd += ['--clean']
 
+    cache = Temp(prefix=os.path.join(TMPDIR, 'gbscache'),
+                       directory=True)
+    cachedir  = cache.path
+    if not os.path.exists(cachedir):
+        os.makedirs(cachedir)
+
     # check & prepare repos and build conf
     if not args.noinit:
-        cmd += prepare_repos_and_build_conf(args, buildarch, profile)
+        cmd += prepare_repos_and_build_conf(args, buildarch, profile, cachedir)
     else:
         cmd += ['--noinit']
 

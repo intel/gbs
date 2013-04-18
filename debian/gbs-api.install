@@ -4,4 +4,5 @@ usr/lib/python*/*packages/gitbuildsys/errors.py
 usr/lib/python*/*packages/gitbuildsys/log.py
 usr/lib/python*/*packages/gitbuildsys/safe_url.py
 usr/lib/python*/*packages/gitbuildsys/utils.py
+usr/lib/python*/*packages/gitbuildsys/ks_utils.py
 usr/lib/python*/*packages/gbs-*.egg-info
