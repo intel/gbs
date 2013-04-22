@@ -108,9 +108,9 @@ def prepare_repos_and_build_conf(args, arch, profile):
     if not os.path.exists(meta_dir):
         os.makedirs(meta_dir)
 
-    if repoparser.group_file:
+    if repoparser.group_file['name']:
         shutil.copy(repoparser.group_file['name'], meta_dir)
-    if repoparser.pattern_file:
+    if repoparser.pattern_file['name']:
         shutil.copy(repoparser.pattern_file['name'], meta_dir)
 
     repourls = repoparser.get_repos_by_arch(arch)

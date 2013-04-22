@@ -258,8 +258,8 @@ class RepoParser(object):
         self.cachedir = cachedir
         self.repourls  = defaultdict(list)
         self.buildconf = None
-        self.group_file = {}
-        self.pattern_file = {}
+        self.group_file = defaultdict(str)
+        self.pattern_file = defaultdict(str)
         self.standardrepos = []
         self.urlgrabber = URLGrabber()
 
