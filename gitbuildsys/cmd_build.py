@@ -84,15 +84,22 @@ def update_ks_files(args, repoparser, cachedir):
     else:
         buildarch = os.uname()[4]
 
-    repourls = repoparser.get_repos_by_arch(buildarch)
+    if args.dist:
+        tizen_version = os.path.basename(args.dist)[:-len('.conf')]
+    elif repoparser.tizen_version:
+        tizen_version = repoparser.tizen_version
+    else:
+        log.debug('no tizen version detected')
+        return
+
     localrepo_dir = os.path.join(os.environ['TIZEN_BUILD_ROOT'], 'local/repos',
-                                 repoparser.tizen_version, buildarch)
+                                 tizen_version, buildarch)
+    repourls = repoparser.get_repos_by_arch(buildarch)
     for ks_file in repoparser.ks_files:
         ks_updater = KSRepoUpdater(ks_file)
         ks_updater.add_repo('local', localrepo_dir, priority=1)
         #ks_updater.build_ID()
         for url in repourls:
-            #import pdb;pdb.set_trace()
             hostname = urlparse.urlsplit(url).hostname
             ks_updater.add_authinfo(hostname, url.user, url.passwd)
         ks_updater.sync()
