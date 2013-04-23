@@ -44,7 +44,7 @@ class KSRepoUpdater(object):
                     save=False, ssl_verify=None):
         '''build repo str with specified repo options'''
         repo_args = ['repo']
-        if url.startswith('/') and os.path.exists(url):
+        if url.startswith('/'):
             url = 'file:///' + url.lstrip('/')
         if user and passwd:
             url = SafeURL(url, user, passwd).full
