@@ -23,7 +23,6 @@ import os
 import shutil
 import pwd
 import re
-import glob
 import urlparse
 
 from gitbuildsys.utils import Temp, RepoParser
@@ -77,7 +76,7 @@ QEMU_CAN_BUILD = ['armv4l', 'armv5el', 'armv5l', 'armv6l', 'armv7l',
 USERID = pwd.getpwuid(os.getuid())[0]
 TMPDIR = os.path.join(configmgr.get('tmpdir', 'general'), '%s-gbs' % USERID)
 
-def update_ks_files(args, repoparser, cachedir):
+def update_ks_files(args, repoparser):
     '''Update ks files: Add local repo and add user/pass if needed'''
     if args.arch:
         buildarch = args.arch
@@ -160,7 +159,7 @@ def prepare_repos_and_build_conf(args, arch, profile, cachedir):
                        'following repos:\n%s' % (arch, '\n'.join(repos)))
     cmd_opts += [('--repository=%s' % url.full) for url in repourls]
 
-    update_ks_files(args, repoparser, cachedir)
+    update_ks_files(args, repoparser)
     prepare_meta_files(args, repoparser)
 
     if args.dist:

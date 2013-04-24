@@ -372,7 +372,8 @@ class RepoParser(object):
 
     def _fetch_image_configs(self, latest_repo_url):
         """Fetch and parse image-config.xml."""
-        image_configs_url = latest_repo_url.pathjoin('builddata/image-configs.xml')
+        image_configs_url = latest_repo_url.pathjoin('builddata/'\
+                                                     'image-configs.xml')
         image_configs_xml = self.fetch(image_configs_url)
         if image_configs_xml:
             return self._parse_image_configs(image_configs_xml)
@@ -448,8 +449,8 @@ class RepoParser(object):
             self.group_file['name'] = self.fetch(group_url)
             if not self.group_file['name']:
                 continue
-            with open(self.group_file['name'], 'rb') as f:
-                md5sum = hexdigest(f)
+            with open(self.group_file['name'], 'rb') as fobj:
+                md5sum = hexdigest(fobj)
                 if 'md5sum' in self.group_file and \
                     md5sum != self.group_file['md5sum']:
                     log.warning('multiple differnent group files found')
@@ -460,8 +461,8 @@ class RepoParser(object):
             if not self.pattern_file['name']:
                 log.warning('pattern/group files do not exist in the same repo')
                 continue
-            with open(self.pattern_file['name'], 'rb') as f:
-                md5sum = hexdigest(f)
+            with open(self.pattern_file['name'], 'rb') as fobj:
+                md5sum = hexdigest(fobj)
                 if 'md5sum' in self.pattern_file and \
                    md5sum != self.pattern_file['md5sum']:
                     log.warning('multiple differnent pattern files found')

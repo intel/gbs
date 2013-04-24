@@ -18,7 +18,6 @@
 
 """Helpers, convenience utils, common APIs for ks file"""
 
-import os
 import urlparse
 
 from gitbuildsys.safe_url import SafeURL
@@ -67,7 +66,8 @@ class KSRepoUpdater(object):
                 repo_host = urlparse.urlsplit(repoargs[0].baseurl).hostname
                 if repo_host != host:
                     continue
-                repoargs[0].baseurl = SafeURL(repoargs[0].baseurl, user, passwd).full
+                repoargs[0].baseurl = SafeURL(repoargs[0].baseurl, user,
+                                              passwd).full
                 new_repo =  ' '.join(repoargs[1])
                 new_repo = '%s --baseurl=%s' % (new_repo, repoargs[0].baseurl)
                 kslist[index] = new_repo
