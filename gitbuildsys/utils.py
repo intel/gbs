@@ -446,26 +446,26 @@ class RepoParser(object):
             all_repos.extend(self.repourls[arch])
         for repo in all_repos:
             group_url = repo.pathjoin('repodata/group.xml')
-            self.group_file['name'] = self.fetch(group_url)
-            if not self.group_file['name']:
+            group_file = self.fetch(group_url)
+            if not group_file:
                 continue
-            with open(self.group_file['name'], 'rb') as fobj:
+            with open(group_file, 'rb') as fobj:
                 md5sum = hexdigest(fobj)
-                if 'md5sum' in self.group_file and \
-                    md5sum != self.group_file['md5sum']:
+                if md5sum != self.group_file['md5sum']:
                     log.warning('multiple differnent group files found')
+                self.group_file['name'] = group_file
                 self.group_file['md5sum'] = md5sum
 
             pattern_url = repo.pathjoin('repodata/patterns.xml')
-            self.pattern_file['name'] = self.fetch(pattern_url)
-            if not self.pattern_file['name']:
+            pattern_file = self.fetch(pattern_url)
+            if not pattern_file:
                 log.warning('pattern/group files do not exist in the same repo')
                 continue
-            with open(self.pattern_file['name'], 'rb') as fobj:
+            with open(pattern_file, 'rb') as fobj:
                 md5sum = hexdigest(fobj)
-                if 'md5sum' in self.pattern_file and \
-                   md5sum != self.pattern_file['md5sum']:
+                if md5sum != self.pattern_file['md5sum']:
                     log.warning('multiple differnent pattern files found')
+                self.pattern_file['name'] = pattern_file
                 self.pattern_file['md5sum'] = md5sum
 
     @staticmethod
