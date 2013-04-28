@@ -79,5 +79,4 @@ rm -rf %{buildroot}
 %{python_sitelib}/gitbuildsys/log.py*
 %{python_sitelib}/gitbuildsys/safe_url.py*
 %{python_sitelib}/gitbuildsys/utils.py*
-%{python_sitelib}/gitbuildsys/ks_utils.py*
 %{python_sitelib}/gbs-*-py*.egg-info

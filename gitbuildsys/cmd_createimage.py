@@ -20,16 +20,15 @@
 """
 
 import os
-import glob
 
 from gitbuildsys.errors import GbsError
-from gitbuildsys.cmd_build import get_profile
-from gitbuildsys.conf import configmgr
 from gitbuildsys.log import LOGGER as log
 
-def createimage(args, ks_file, outdir):
+def createimage(args, ks_file):
     '''create image using mic'''
-    extra_mic_opts = ['--outdir=%s' % outdir]
+    extra_mic_opts = []
+    if args.outdir:
+        extra_mic_opts = ['--outdir=%s' % outdir]
     if args.tmpfs:
         extra_mic_opts += ['--tmpfs']
     extra_mic_opts += ['--record-pkgs=name']
@@ -39,30 +38,9 @@ def createimage(args, ks_file, outdir):
 
 def main(args):
     '''main entrance for createimage'''
-    profile = get_profile(args)
-    if profile.image_dir:
-        image_dir = profile.image_dir
-    else:
-        image_dir = configmgr.get('image_dir', 'general')
-    image_dir = os.path.expanduser(image_dir)
 
     if args.ks_file:
         if not os.path.exists(args.ks_file):
-            raise GbsError('specified ks file: not exists' % args.ks_file)
+            raise GbsError('specified ks file %s does not exists' % args.ks_file)
         log.info('creating image for ks file: %s' % args.ks_file)
-        createimage(args, args.ks_file, image_dir)
-    else:
-        if profile.ks_dir:
-            ks_dir = profile.ks_dir
-        else:
-            ks_dir = configmgr.get('ks_dir', 'general')
-
-        ks_dir = os.path.expanduser(ks_dir)
-        ks_list = glob.glob(os.path.join(ks_dir, '*.ks'))
-        if not ks_list:
-            raise GbsError('no avaliable ks file found in ks dir:%s' % ks_dir)
-
-        log.debug('avaliable ks files are:\n %s '% ' '.join(ks_list))
-        for ks_file in ks_list:
-            log.info('creating image for ks file: %s' % ks_file)
-            createimage(args, ks_file, image_dir)
+        createimage(args, args.ks_file)

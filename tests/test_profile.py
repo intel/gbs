@@ -175,8 +175,6 @@ class ConvertTest(unittest.TestCase):
 
         self.assertEquals(conf.getvalue(), '''[general]
 profile = profile.current
-image_dir = ~/GBS-ROOT/images
-ks_dir = ~/GBS-ROOT/meta/ks-dir
 
 [obs.remotebuild]
 url = https://api/build/server
