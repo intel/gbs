@@ -24,6 +24,7 @@ Requires:   python-argparse
 Requires:   librpm-tizen >= 4.11.0.1.tizen20130304-tizen20130307
 %endif
 Requires:   %{name}-api = %{version}
+Requires:   %{name}-export = %{version}
 
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
@@ -43,6 +44,18 @@ Requires:      git-buildpackage-rpm
 %description api
 This package contains gbs APIs, which can be used by
 external software.
+
+%package export
+Summary:       GBS export module
+Conflicts:     gbs < 0.15
+Requires:      python
+Requires:      gbs-api
+Requires:      git-buildpackage-rpm
+
+%description export
+This package contains gbs export APIs, which can be used by
+external software.
+
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -65,7 +78,15 @@ rm -rf %{buildroot}
 %doc README.rst docs/RELEASE_NOTES
 #%{_mandir}/man1/*
 %{python_sitelib}/gitbuildsys/cmd_*.py*
-%{python_sitelib}/gitbuildsys/conf.py*
+%{python_sitelib}/gitbuildsys/cmd_build.py
+%{python_sitelib}/gitbuildsys/cmd_changelog.py
+%{python_sitelib}/gitbuildsys/cmd_chroot.py
+%{python_sitelib}/gitbuildsys/cmd_clone.py
+%{python_sitelib}/gitbuildsys/cmd_createimage.py
+%{python_sitelib}/gitbuildsys/cmd_import.py
+%{python_sitelib}/gitbuildsys/cmd_pull.py
+%{python_sitelib}/gitbuildsys/cmd_remotebuild.py
+%{python_sitelib}/gitbuildsys/cmd_submit.py
 %{python_sitelib}/gitbuildsys/parsing.py*
 %{_bindir}/*
 %{_sysconfdir}/bash_completion.d
@@ -78,5 +99,11 @@ rm -rf %{buildroot}
 %{python_sitelib}/gitbuildsys/errors.py*
 %{python_sitelib}/gitbuildsys/log.py*
 %{python_sitelib}/gitbuildsys/safe_url.py*
+%{python_sitelib}/gitbuildsys/conf.py*
 %{python_sitelib}/gitbuildsys/utils.py*
 %{python_sitelib}/gbs-*-py*.egg-info
+
+%files export
+%defattr(-,root,root,-)
+%{python_sitelib}/gitbuildsys/cmd_export.py*
+
