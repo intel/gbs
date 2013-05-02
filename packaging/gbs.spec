@@ -101,6 +101,7 @@ rm -rf %{buildroot}
 %{python_sitelib}/gitbuildsys/safe_url.py*
 %{python_sitelib}/gitbuildsys/conf.py*
 %{python_sitelib}/gitbuildsys/utils.py*
+%{python_sitelib}/gitbuildsys/builddata.py*
 %{python_sitelib}/gbs-*-py*.egg-info
 
 %files export
