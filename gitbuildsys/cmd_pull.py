@@ -33,7 +33,7 @@ def do_pull(*args, **kwargs):
     return gbp_pull(*args, **kwargs)
 
 def main(args):
-    """gbs export entry point."""
+    """gbs pull entry point."""
 
     # Determine upstream branch
     if args.upstream_branch:

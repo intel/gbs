@@ -33,7 +33,7 @@ def do_clone(*args, **kwargs):
     return gbp_clone(*args, **kwargs)
 
 def main(args):
-    """gbs export entry point."""
+    """gbs clone entry point."""
 
     # Determine upstream branch
     if args.upstream_branch:

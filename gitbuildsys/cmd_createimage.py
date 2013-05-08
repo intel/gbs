@@ -28,7 +28,7 @@ def createimage(args, ks_file):
     '''create image using mic'''
     extra_mic_opts = []
     if args.outdir:
-        extra_mic_opts = ['--outdir=%s' % outdir]
+        extra_mic_opts = ['--outdir=%s' % args.outdir]
     if args.tmpfs:
         extra_mic_opts += ['--tmpfs']
     extra_mic_opts += ['--record-pkgs=name']
@@ -41,6 +41,6 @@ def main(args):
 
     if args.ks_file:
         if not os.path.exists(args.ks_file):
-            raise GbsError('specified ks file %s does not exists' % args.ks_file)
+            raise GbsError('specified ks file %s does not exist' % args.ks_file)
         log.info('creating image for ks file: %s' % args.ks_file)
         createimage(args, args.ks_file)
