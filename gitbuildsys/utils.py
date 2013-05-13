@@ -282,6 +282,14 @@ class RepoParser(object):
         meta = {}
         root = etree.getroot()
 
+        # Get version of build.xml
+        build_version = root.get('version')
+        # It's new format of repo structure if 'version' exists
+        if build_version:
+            log.warning('new format repo structure has not been supportted '
+                        'well, please upgrade your gbs to latest version')
+            return None
+
         buildelem = root.find('buildconf')
         # Must using None here, "if buildelem" is wrong
         # None means item does not exist
