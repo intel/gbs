@@ -1,3 +1,25 @@
+Release notes for gbs 0.16
+==========================
+
+- Release Date: 2013-05
+
+- New features added:
+    * new subcommands 'createimage/cr' added, which can be used for developers
+      to create image using ks file
+    * performance optimization
+      - put all build roots in a individual directory, which can be mounted as tmpfs
+        to speed up building, based on our experimental build time can save 50%. We
+        use 800 Tizen packages as test data, without tmpfs, gbs spent about 5 hours
+        to build all packages, but with tmpfs enabled, only 2h, 25mins spent
+      - avoid export multiple times for packages contain multiple spec files
+      - refine createrepo: add --update for if repodata already exists
+      - export: use lower compression level for orig tarballs
+    * Add statistical of each errors, including export/expansion/rpmbuild errors
+    * bug fix:
+      - prereqs involved for dependency resolving
+      - fix wrong @deps which contain version info
+      - quote metacharacters in pattern to fix strip issue if metacharacters exist
+
 Release notes for gbs 0.15
 ==========================
 
