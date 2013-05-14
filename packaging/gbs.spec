@@ -13,8 +13,8 @@ Requires:   python >= 2.6
 Requires:   python-pycurl
 Requires:   sudo
 Requires:   osc >= 0.139.0
-Requires:   tizen-gbp-rpm >= 20130308
-Requires:   depanneur >= 0.6
+Requires:   tizen-gbp-rpm >= 20130403
+Requires:   depanneur >= 0.7
 
 %if "%{?python_version}" < "2.7"
 Requires:   python-argparse
