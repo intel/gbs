@@ -1,4 +1,4 @@
-gbs (0.16-0.rc1) unstable; urgency=high
+gbs (0.16-0.rc2) unstable; urgency=high
   * upgrade to gbs v0.15, which contains the following bug fixing & features:
   * new subcommands 'createimage/cr' added, which can be used for developers
     to create image using ks file
