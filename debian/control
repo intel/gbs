@@ -17,7 +17,8 @@ Depends: ${misc:Depends}, ${python:Depends},
  gbs-api (= ${binary:Version}),
  gbs-export (= ${binary:Version}),
  depanneur (>= 0.7),
- pristine-tar (>= 1.26)
+ pristine-tar (>= 1.26),
+ mic (>= 0.18)
 Recommends: librpm-tizen (>= 4.11.0.1.tizen20130304-tizen20130307)
 Description: Command line tools for Tizen package developers
  The command line tools for Tizen package developers will

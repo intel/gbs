@@ -15,6 +15,7 @@ Requires:   sudo
 Requires:   osc >= 0.139.0
 Requires:   tizen-gbp-rpm >= 20130403
 Requires:   depanneur >= 0.7
+Requires:   mic >= 0.18
 
 %if "%{?python_version}" < "2.7"
 Requires:   python-argparse
