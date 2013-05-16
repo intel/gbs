@@ -34,13 +34,17 @@ def createimage(args, ks_file):
     extra_mic_opts += ['--record-pkgs=name']
     mic_cmd = 'sudo mic create auto %s %s' % (ks_file, ' '.join(extra_mic_opts))
     log.debug(mic_cmd)
-    os.system(mic_cmd)
+    return os.system(mic_cmd)
 
 def main(args):
     '''main entrance for createimage'''
 
-    if args.ks_file:
-        if not os.path.exists(args.ks_file):
-            raise GbsError('specified ks file %s does not exist' % args.ks_file)
-        log.info('creating image for ks file: %s' % args.ks_file)
-        createimage(args, args.ks_file)
+    if not os.path.exists(args.ks_file):
+        raise GbsError('specified ks file %s does not exist' % args.ks_file)
+
+    log.info('creating image for ks file: %s' % args.ks_file)
+    retcode = createimage(args, args.ks_file)
+    if retcode != 0:
+        raise GbsError('failed to create image')
+    else:
+        log.info('Done')

@@ -263,10 +263,13 @@ def build_parser(parser):
 
 @subparser
 def createimage_parser(parser):
-    """create image using ks file """
-
-    parser.add_argument('-K', '--ks-file',
-                        help='ks file to be used')
+    """create image using ks file
+    Examples:
+      $ gbs createimage --ks-file=path/to/ks-file
+      $ gbs createimage --ks-file=path/to/ks-file --tmpfs
+    """
+    parser.add_argument('-K', '--ks-file', required=True,
+                        help='ks file to be used for image creation')
     parser.add_argument('-O', '--outdir',
                         help='image output directory')
     parser.add_argument('--tmpfs', action='store_true',
