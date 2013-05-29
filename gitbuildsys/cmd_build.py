@@ -109,23 +109,25 @@ def prepare_repos_and_build_conf(args, arch, profile):
                        'following repos:\n%s' % (arch, '\n'.join(repos)))
     cmd_opts += [('--repository=%s' % url.full) for url in repourls]
 
+    profile = get_profile(args)
+    profile_name = profile.name.replace('profile.', '', 1)
+    distconf = os.path.join(TMPDIR, '%s.conf' % profile_name)
+
     if args.dist:
-        distconf = args.dist
-        if not os.path.exists(distconf):
-            raise GbsError('specified build conf %s does not exists' % distconf)
+        if not os.path.exists(args.dist):
+            raise GbsError('specified build conf %s does not exist' % args.dist)
+        shutil.copy(args.dist, distconf)
     else:
         if repoparser.buildconf is None:
             raise GbsError('failed to get build conf from repos, please '
                            'use snapshot repo or specify build config using '
                            '-D option')
         else:
-            shutil.copy(repoparser.buildconf, TMPDIR)
-            distconf = os.path.join(TMPDIR, os.path.basename(\
-                                    repoparser.buildconf))
+            shutil.copy(repoparser.buildconf, distconf)
             log.info('build conf has been downloaded at:\n      %s' \
                        % distconf)
 
-    if distconf is None:
+    if not os.path.exists(distconf):
         raise GbsError('No build config file specified, please specify in '\
                        '~/.gbs.conf or command line using -D')
 
