@@ -201,21 +201,15 @@ def export_sources(repo, commit, export_dir, spec, args, create_tarball=True):
         ret = gbp_build(gbp_args)
         if ret == 2 and not is_native_pkg(repo, args):
             # Try falling back to old logic of one monolithic tarball
-            log.warning("Generating upstream tarball and/or generating "
-                          "patches failed. GBS tried this as you have "
-                          "upstream branch in you git tree. This is a new "
-                          "mode introduced in GBS v0.10. "
-                          "Consider fixing the problem by either:\n"
-                          "  1. Update your upstream branch and/or fix the "
-                          "spec file. Also, check the upstream tag format.\n"
-                          "  2. Remove or rename the upstream branch")
-            log.info("Falling back to the old method of generating one "
-                       "monolithic source archive")
-            gbp_args = create_gbp_export_args(repo, commit, export_dir,
-                                              tmp.path, spec, args,
-                                              force_native=True,
-                                              create_tarball=create_tarball)
-            ret = gbp_build(gbp_args)
+            log.error("Generating upstream tarball and/or generating patches "
+                      "failed. GBS tried this as you have upstream branch in "
+                      "you git tree. Fix the problem by either:\n"
+                      "  1. Update your upstream branch and/or fix the spec "
+                      "file. Also, check the upstream tag format.\n"
+                      "  2. Remove or rename the upstream branch (change the "
+                      "package to native)\n"
+                      "See https://source.tizen.org/documentation/reference/"
+                      "git-build-system/upstream-package for more details.")
         if ret:
             raise GbsError("Failed to export packaging files from git tree")
     except GitRepositoryError, excobj:
