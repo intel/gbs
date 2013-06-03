@@ -60,6 +60,8 @@ def main(args):
         params.append("--pristine-tar")
     if args.filter:
         params += [('--filter=%s' % f) for f in args.filter]
+    if args.upstream_vcs_tag:
+        params.append('--upstream-vcs-tag=%s' % args.upstream_vcs_tag)
 
     if path.endswith('.src.rpm') or path.endswith('.spec'):
         if args.allow_same_version:
@@ -77,8 +79,6 @@ def main(args):
         elif ret:
             raise GbsError("Failed to import %s" % path)
     else:
-        if args.upstream_vcs_tag:
-            params.append('--upstream-vcs-tag=%s' % args.upstream_vcs_tag)
         if args.merge:
             params.append('--merge')
         else:
