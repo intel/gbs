@@ -64,6 +64,7 @@ def main(args):
         params.append('--upstream-vcs-tag=%s' % args.upstream_vcs_tag)
 
     if path.endswith('.src.rpm') or path.endswith('.spec'):
+        params.append("--create-missing-branches")
         if args.allow_same_version:
             params.append("--allow-same-version")
         if args.native:
