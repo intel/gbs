@@ -21,6 +21,7 @@ Provides classes and functions to read and write gbs.conf.
 
 from __future__ import with_statement
 import os
+import re
 import base64
 import shutil
 from collections import namedtuple
@@ -177,6 +178,7 @@ class ConfigMgr(object):
                 'squash_patches_until': '',
                 'buildroot':    '~/GBS-ROOT/',
                 'packaging_dir': 'packaging',
+                'work_dir': '.',
             },
     }
 
@@ -256,6 +258,10 @@ url = http://download.tizen.org/releases/daily/trunk/ivi/latest/
             cfgparser = BrainConfigParser()
             try:
                 cfgparser.read_one(fpath)
+                if cfgparser.has_section('general') and \
+                   cfgparser.has_option('general', 'work_dir'):
+                    cfgparser.set('general', 'work_dir',
+                                  os.path.abspath(os.path.dirname(fpath)))
             except Error, err:
                 raise errors.ConfigError('config file error:%s' % err)
             self._cfgparsers.append(cfgparser)
@@ -272,6 +278,24 @@ url = http://download.tizen.org/releases/daily/trunk/ivi/latest/
         """
 
         paths = []
+
+        def lookfor_tizen_conf(start_dir):
+            """ Search topdir of tizen source code cloned using repo tool,
+            if .gbs.conf exists under that dir, then return it
+            """
+            cur_dir = os.path.abspath(start_dir)
+            while True:
+                cur_dir = os.path.dirname(cur_dir)
+                if cur_dir == '/':
+                    break
+                if os.path.exists(os.path.join(cur_dir, '.repo')) and \
+                   os.path.exists(os.path.join(cur_dir, '.gbs.conf')):
+                    return os.path.join(cur_dir, '.gbs.conf')
+            return None
+
+        tizen_conf = lookfor_tizen_conf(os.getcwd())
+        if tizen_conf:
+            paths.append(tizen_conf)
         for path in (os.path.abspath('.gbs.conf'),
                      os.path.expanduser('~/.gbs.conf'),
                      '/etc/gbs.conf'):
@@ -424,6 +448,7 @@ class Profile(object):
         self.repos = []
         self.obs = None
         self.buildroot = None
+        self.buildconf = None
 
     def add_repo(self, repoconf):
         '''add a repo to repo list of the profile'''
@@ -462,6 +487,22 @@ class Profile(object):
 class BizConfigManager(ConfigMgr):
     '''config manager which handles high level conception, such as profile info
     '''
+
+
+    def _interpolate(self, value):
+        '''do string interpolation'''
+
+        general_keys = {}
+
+        for opt in self.DEFAULTS['general']:
+            if opt == 'work_dir' and self.get(opt, 'general') == '.':
+                general_keys[opt] = os.getcwd()
+            else:
+                general_keys[opt] = self.get(opt, 'general')
+
+        value = re.sub(r'\$\{([^}]+)\}', r'%(\1)s', value)
+        value = value % general_keys
+        return value
 
     def is_profile_oriented(self):
         '''return True if config file is profile oriented'''
@@ -513,7 +554,7 @@ class BizConfigManager(ConfigMgr):
 
     def _get_url_options(self, section_id):
         '''get url/user/passwd from a section'''
-        url = self.get('url', section_id)
+        url = os.path.expanduser(self._interpolate(self.get('url', section_id)))
         user = self.get_optional_item(section_id, 'user')
         password = self.get_optional_item(section_id, 'passwd')
         return URL(url, user, password)
@@ -557,7 +598,10 @@ class BizConfigManager(ConfigMgr):
                 profile.add_repo(repoconf)
 
         profile.buildroot = self.get_optional_item(name, 'buildroot')
-
+        if self.get_optional_item(name, 'buildconf'):
+            profile.buildconf = os.path.expanduser(self._interpolate(
+                                                   self.get_optional_item(name,
+                                                   'buildconf')))
         return profile
 
     def _parse_build_repos(self):

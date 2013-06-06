@@ -117,6 +117,8 @@ def prepare_repos_and_build_conf(args, arch, profile):
         if not os.path.exists(args.dist):
             raise GbsError('specified build conf %s does not exist' % args.dist)
         shutil.copy(args.dist, distconf)
+    elif profile.buildconf:
+        shutil.copy(profile.buildconf, distconf)
     else:
         if repoparser.buildconf is None:
             raise GbsError('failed to get build conf from repos, please '
