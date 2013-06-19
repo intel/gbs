@@ -429,6 +429,7 @@ def clone_parser(parser):
 
     parser.add_argument('uri', help='path/uri to a git repository')
     parser.add_argument('--upstream-branch', help='upstream branch')
+    parser.add_argument('--packaging-branch', help='packaging branch, or development branch')
     parser.add_argument('--all', action='store_true',
                         help='track all remote branches')
     parser.add_argument('--depth',

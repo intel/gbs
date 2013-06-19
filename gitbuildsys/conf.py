@@ -173,6 +173,7 @@ class ConfigMgr(object):
             'general': {
                 'tmpdir': '/var/tmp',
                 'editor': '',
+                'packaging_branch': 'master',
                 'upstream_branch': 'upstream',
                 'upstream_tag': 'upstream/${upstreamversion}',
                 'squash_patches_until': '',

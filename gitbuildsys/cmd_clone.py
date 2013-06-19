@@ -40,13 +40,16 @@ def main(args):
         upstream_branch = args.upstream_branch
     else:
         upstream_branch = configmgr.get('upstream_branch', 'general')
-
+    if args.packaging_branch:
+        packaging_branch = args.packaging_branch
+    else:
+        packaging_branch = configmgr.get('packaging_branch', 'general')
     # Construct GBP cmdline arguments
     gbp_args = ['dummy argv[0]',
                 '--color-scheme=magenta:green:yellow:red',
                 '--pristine-tar',
                 '--upstream-branch=%s' % upstream_branch,
-                '--packaging-branch=master']
+                '--packaging-branch=%s' % packaging_branch]
     if args.all:
         gbp_args.append('--all')
     if args.depth:
