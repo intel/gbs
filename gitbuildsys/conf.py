@@ -259,7 +259,8 @@ url = http://download.tizen.org/releases/daily/trunk/ivi/latest/
             try:
                 cfgparser.read_one(fpath)
                 if cfgparser.has_section('general') and \
-                   cfgparser.has_option('general', 'work_dir'):
+                   cfgparser.has_option('general', 'work_dir') and \
+                   cfgparser.get('general', 'work_dir') == '.':
                     cfgparser.set('general', 'work_dir',
                                   os.path.abspath(os.path.dirname(fpath)))
             except Error, err:
