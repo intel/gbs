@@ -503,7 +503,12 @@ class BizConfigManager(ConfigMgr):
                 general_keys[opt] = self.get(opt, 'general')
 
         value = re.sub(r'\$\{([^}]+)\}', r'%(\1)s', value)
-        value = value % general_keys
+        try:
+            value = value % general_keys
+        except KeyError, err:
+            raise errors.ConfigError('unknown key: %s. Supportted '\
+                    'keys are %s' % (str(err), ' '.join( \
+                    self.DEFAULTS['general'].keys())))
         return value
 
     def is_profile_oriented(self):
