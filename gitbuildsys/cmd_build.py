@@ -72,7 +72,7 @@ QEMU_CAN_BUILD = ['armv4l', 'armv5el', 'armv5l', 'armv6l', 'armv7l',
                   ]
 
 USERID = pwd.getpwuid(os.getuid())[0]
-TMPDIR = os.path.join(configmgr.get('tmpdir', 'general'), '%s-gbs' % USERID)
+TMPDIR = None
 
 def prepare_repos_and_build_conf(args, arch, profile):
     '''generate repos and build conf options for depanneur'''
@@ -202,6 +202,9 @@ def get_profile(args):
 
 def main(args):
     """gbs build entry point."""
+
+    global TMPDIR
+    TMPDIR = os.path.join(configmgr.get('tmpdir', 'general'), '%s-gbs' % USERID)
 
     if args.commit and args.include_all:
         raise Usage('--commit can\'t be specified together with '\
