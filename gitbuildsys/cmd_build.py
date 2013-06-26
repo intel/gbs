@@ -23,6 +23,7 @@ import os
 import shutil
 import pwd
 import re
+import urlparse
 
 from gitbuildsys.utils import Temp, RepoParser
 from gitbuildsys.errors import GbsError, Usage
@@ -91,11 +92,16 @@ def prepare_repos_and_build_conf(args, arch, profile):
         repos = [i.url for i in profile.repos]
 
     if args.repositories:
-        for i in args.repositories:
+        for r in args.repositories:
             try:
-                opt_repo = SafeURL(i)
+                if not urlparse.urlsplit(r).scheme:
+                    if os.path.exists(r):
+                        r = os.path.abspath(os.path.expanduser(r))
+                    else:
+                        log.warning('local repo: %s does not exist' % r)
+                opt_repo = SafeURL(r)
             except ValueError, err:
-                log.warning('Invalid repo %s: %s' % (i, str(err)))
+                log.warning('Invalid repo %s: %s' % (r, str(err)))
             else:
                 repos.append(opt_repo)
 
