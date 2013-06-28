@@ -19,6 +19,8 @@
 """Helpers, convenience utils, common APIs."""
 
 import os
+import re
+import gzip
 import glob
 import tempfile
 import shutil
@@ -374,13 +376,50 @@ class RepoParser(object):
             os.rename(fname, target_conf)
             self.buildconf = target_conf
 
+    def _fetch_build_conf_new(self, baseurl):
+        """ fetch build conf from standard repo"""
+        repomd_url = baseurl.pathjoin('repodata/repomd.xml')
+        repomd_file = self.fetch(repomd_url)
+        if not repomd_file:
+            return
+
+        try:
+            etree = ET.parse(repomd_file)
+        except ET.ParseError:
+            log.warning('Not well formed xml: %s' % repomd_file)
+            return
+        root = etree.getroot()
+
+        # get namespace of repomd element
+        xmlns = re.sub('repomd$', '', root.tag)
+        location_elem = None
+        for elem in root.findall('%sdata' % xmlns):
+            if elem.attrib['type'] == 'build':
+                location_elem = elem.find('%slocation' % xmlns)
+                break
+        if location_elem is not None and 'href' in location_elem.attrib:
+            buildconf_url = baseurl.pathjoin(location_elem.attrib['href'])
+            fname = self.fetch(buildconf_url)
+            if fname:
+                if fname[-3:] == '.gz':
+                    fh_gz = gzip.open(fname, 'r')
+                else:
+                    fh_gz = open(fname, 'r')
+                buildconf_file = os.path.join(os.path.dirname(fname),
+                                              'build.conf')
+                buildconf_fh = open(buildconf_file, 'w')
+                buildconf_fh.write(fh_gz.read())
+                fh_gz.close()
+                buildconf_fh.close()
+                self.buildconf = buildconf_file
+
     def parse(self, remotes):
         """Parse each remote repo, try to fetch build.xml and build.conf"""
         def deal_with_one_repo(repo):
             """Deal with one repo url."""
             if self.is_standard_repo(repo):
                 self.standardrepos.append(repo)
-
+                self._fetch_build_conf_new(repo)
                 if self.buildconf:
                     return
 
