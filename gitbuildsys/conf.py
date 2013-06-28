@@ -287,12 +287,13 @@ url = http://download.tizen.org/releases/daily/trunk/ivi/latest/
             """
             cur_dir = os.path.abspath(start_dir)
             while True:
-                cur_dir = os.path.dirname(cur_dir)
-                if cur_dir == '/':
-                    break
                 if os.path.exists(os.path.join(cur_dir, '.repo')) and \
                    os.path.exists(os.path.join(cur_dir, '.gbs.conf')):
                     return os.path.join(cur_dir, '.gbs.conf')
+                if cur_dir == '/':
+                    break
+                cur_dir = os.path.dirname(cur_dir)
+
             return None
 
         tizen_conf = lookfor_tizen_conf(os.getcwd())
