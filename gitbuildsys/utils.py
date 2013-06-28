@@ -437,6 +437,13 @@ class RepoParser(object):
                 # Generate repos from build.xml
                 self.build_repos_from_buildmeta(repo, meta)
                 self._fetch_build_conf(repo, meta)
+            else:
+                # Check if it's repo with build.xml exist
+                buildxml_url = repo.pathjoin('build.xml')
+                if self.fetch(buildxml_url):
+                    raise GbsError('Maybe you are using new designed repo, '\
+                                   'and please specify real RPM repo with '\
+                                   'repodata under it.')
 
         for repo in remotes:
             deal_with_one_repo(repo)
