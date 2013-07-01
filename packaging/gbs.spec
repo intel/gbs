@@ -3,7 +3,7 @@
 Name:       gbs
 Summary:    The command line tools for Tizen package developers
 Version:    0.17
-Release:    1
+Release:    0.rc1.<CI_CNT>.<B_CNT>
 Group:      Development/Tools
 License:    GPLv2
 BuildArch:  noarch
