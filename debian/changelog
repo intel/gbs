@@ -1,3 +1,27 @@
+gbs (0.17-1) unstable; urgency=high
+  * upgrade to gbs v0.17, which contains the following bug fixing & features:
+  * New gbs config refinements
+    - 'work_dir' support in [general] section
+    - 'buildconf' support  in each [profile] section, use buildconf to specify
+      local build conf
+    - string interpolation: ${key} can be used to reference keys defined in
+      [general] section
+    - 'packaging_branch' support in [general] section, which can be used to
+      specify working or development branch, and the default is 'master'
+  * Support fetching build conf from standard RPM repodata
+  * create debug package by default
+  * refinement:
+    - report package dependency cycles in time
+    - load dependency data during refresh repo, instead of during parsing every
+      spec file
+  * bug fix:
+    - get target arch from build conf if 'Target' is set in build config, which
+      make gbs and remote obs generate the same arch for final RPM package
+    - exit unexpectedly if cycles exist
+    - using higer version in different repo
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Tue, 14 May 2013 10:56:15 +0800
+
 gbs (0.16-1) unstable; urgency=high
   * upgrade to gbs v0.15, which contains the following bug fixing & features:
   * new subcommands 'createimage/cr' added, which can be used for developers
