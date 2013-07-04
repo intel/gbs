@@ -21,7 +21,7 @@ Requires:   mic >= 0.20
 Requires:   python-argparse
 %endif
 %if ! 0%{?tizen_version:1}
-Requires:   librpm-tizen >= 4.11.0.1.tizen20130304-tizen20130619
+Requires:   rpm-tizen >= 4.11.0.1.tizen20130618-tizen20130619
 %endif
 Requires:   %{name}-api = %{version}
 Requires:   %{name}-export = %{version}
