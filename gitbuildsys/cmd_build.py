@@ -99,6 +99,7 @@ def prepare_repos_and_build_conf(args, arch, profile):
                         r = os.path.abspath(os.path.expanduser(r))
                     else:
                         log.warning('local repo: %s does not exist' % r)
+                        continue
                 opt_repo = SafeURL(r)
             except ValueError, err:
                 log.warning('Invalid repo %s: %s' % (r, str(err)))
