@@ -75,6 +75,18 @@ QEMU_CAN_BUILD = ['armv4l', 'armv5el', 'armv5l', 'armv6l', 'armv7l',
 USERID = pwd.getpwuid(os.getuid())[0]
 TMPDIR = None
 
+def formalize_build_conf(profile):
+    ''' formalize build conf file name from profile'''
+
+    # build conf file name should not start with digital, see:
+    # obs-build/Build.pm:read_config_dist()
+    start_digital_re = re.compile(r'^[0-9]')
+    if start_digital_re.match(profile):
+        profile = 'tizen%s' % profile
+
+    # '-' is not allowed, so replace with '_'
+    return profile.replace('-', '_');
+
 def prepare_repos_and_build_conf(args, arch, profile):
     '''generate repos and build conf options for depanneur'''
 
@@ -117,7 +129,7 @@ def prepare_repos_and_build_conf(args, arch, profile):
     cmd_opts += [('--repository=%s' % url.full) for url in repourls]
 
     profile = get_profile(args)
-    profile_name = profile.name.replace('profile.', '', 1)
+    profile_name = formalize_build_conf(profile.name.replace('profile.', '', 1))
     distconf = os.path.join(TMPDIR, '%s.conf' % profile_name)
 
     if args.dist:
