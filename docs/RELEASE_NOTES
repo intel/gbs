@@ -1,3 +1,11 @@
+Release notes for gbs 0.17.1
+============================
+
+- Release Date: 2013-07
+
+- New feature added:
+  * Always generate textual diffs to support binary file patch generation
+
 Release notes for gbs 0.17
 ==========================
 
