@@ -1,4 +1,4 @@
-gbs (0.17.1-1) unstable; urgency=high
+gbs (0.17.2-1) unstable; urgency=high
   * upgrade to gbs v0.17, which contains the following bug fixing & features:
   * New gbs config refinements
     - 'work_dir' support in [general] section
