@@ -2,7 +2,7 @@
 %{!?python_version: %define python_version %(%{__python} -c "import sys; sys.stdout.write(sys.version[:3])")}
 Name:       gbs
 Summary:    The command line tools for Tizen package developers
-Version:    0.17.1
+Version:    0.17.2
 Release:    1
 Group:      Development/Tools
 License:    GPLv2
@@ -13,7 +13,7 @@ Requires:   python >= 2.6
 Requires:   python-pycurl
 Requires:   sudo
 Requires:   osc >= 0.139.0
-Requires:   tizen-gbp-rpm >= 20130716
+Requires:   tizen-gbp-rpm >= 20130719
 Requires:   depanneur >= 0.8
 Requires:   mic >= 0.20
 
