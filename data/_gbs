@@ -1,0 +1,230 @@
+#compdef gbs
+#
+# Copyright (c) 2013 Intel, Inc.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; version 2 of the License
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc., 59
+# Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+local ret=1 state
+
+local -a common_ops
+common_ops=(
+  {-h,--help}"[show this help message and exit]"
+  {-V,--version}"[show program's version number and exit]"
+  {-c,--conf}"[specify config file for gbs]:filename:_files"
+  {-d,--debug}"[debug output]"
+  {-v,--verbose}"[verbose output]"
+)
+
+_directories () {
+  _wanted directories expl directory _path_files -/ "$@" -
+}
+
+typeset -A opt_args
+_arguments \
+  ':subcommand:->subcommand' \
+  $common_ops \
+  '*::options:->options' && ret=0
+
+case $state in
+  subcommand)
+    local -a subcommands
+    subcommands=(
+      "changelog:update the changelog file with the git commit messages"
+      "remotebuild:remote build package"
+      "export:export files and prepare for build"
+      "chroot:chroot to build root"
+      "import:import spec file/source rpm/tar ball to git repository"
+      "clone:clone a git repository"
+      "submit:submit tag to gerrit and trigger building in OBS"
+      "pull:update a package git repository"
+      "build:local build package"
+    )
+
+    _describe -t subcommands 'gbs subcommand' subcommands && ret=0
+  ;;
+
+  options)
+    local -a args
+    args=(
+      $common_ops
+    )
+
+    local -a import_ops
+    import_ops=(
+      "--author-name[author name of git commit]:parameter"
+      "--author-email[author email of git commit]:parameter"
+      "--upstream-branch[specify upstream branch for new package version]:parameter"
+      "--packaging-dir[directory containing packaging files]:directory:_directories"
+      "--no-pristine-tar[don't use pristine-tar to import source. pristine-tar only support import *tar.{gz,bz2,xz} sources, this option can be specified to import other format sources]"
+      "--filter[files to filter out d]:parameter"
+      "--allow-same-version[allow to import already imported version]"
+      "--native[this is a dist native package, no separate upstream]"
+      "--no-patch-import[don't import patches automatically]"
+      "--merge[merge new upstream branch to master]"
+      "--upstream-vcs-tag[upstream VCS tag add to the merge commit]:parameter"
+    )
+
+    local -a export_ops
+    export_ops=(
+      {-o,--outdir}"[output directory]:directory:_directories"
+      "--spec[specify a spec file to use. It should be a file name that GBS will find it in packaging dir]:filename:_files"
+      {-c,--commit}"[specify a commit ID to export]:parameter"
+      "--include-all[uncommitted changes and untracked files would be included while generating tar ball]"
+      "--source-rpm[generate source rpm]"
+      "--no-patch-export[don't create patches between upstream and export-treeish, and create tar ball from the export-treeish instead of upstream branch]"
+      "--upstream-branch[upstream branch]:parameter"
+      "--upstream-tag[upstream tag format, '\$\{upstreamversion\}' is expanded to the version in the spec file. E.g. 'v\$\{upstreamversion\}']:parameter"
+      "--squash-patches-until[when generating patches, squash patches up to given commit-ish into one monolithic diff file. Format is the commit-ish optionally followed by a colon and diff filename base]:parameter"
+      "--packaging-dir[directory containing packaging files]:directory:_directories"
+    )
+
+    local -a build_ops
+    build_ops=(
+      {-A,--arch}"[build target arch. Supported arch types are: x86_64 i586 armv6l armv7hl armv7l]: :_arch_filters"
+      {-D,--dist}"[specify project (build) configuration file]:parameter"
+      {-P,--profile}"[profile to be used for building, it is defined in .gbs.conf, can be given without the \"profile.\" prefix]:parameter"
+      {-R,--repository}"[specify package repositories, only rpm-md format is supported]:parameter"
+      "--skip-conf-repos[skip repositories mentioned in config file, and only use repos from command line -R option]"
+      "--overwrite[overwrite existing binaries and build them anyway]"
+      "--define[define macro X with value Y with format \"X Y\"]:parameter"
+      "--debug[debug output]"
+      {-B,--buildroot}"[specify build root to setup chroot environment. By default, ~/GBS-ROOT/ will be used, and if no -B option, but TIZEN_BUILD_ROOT env exists, then \$\{TIZEN_BUILD_ROOT\} will used as build root]:parameter"
+      {-C,--clean}"[delete old build root before initialization]"
+      "--clean-once[clean the build environment only once when you start building multiple packages, after that use existing environment for all packages.]"
+      "--clean-repos[clean up local repos created by gbs build before building packages]"
+      "--extra-packs[specify extra packages to install to build root, Multiple packages can be separated by comma(,)]:parameter"
+      "--keep-packs[keep unused packages in build root. without this option, unused packages will be removed from build root]"
+      "--incremental[build a package from the local git tree incremental. If the build fails, changes can be done directly to the source and build can continue from where it stopped]"
+      "--no-configure[this option disables running configure scripts and auto generation of auto-tools to make incremental build possible. This requires the configure scripts in the spec to be referenced using the \%configure, \%reconfigure and \%autogen macros]"
+      "--noinit[working in offline mode. Start building directly]"
+      "--ccache[use ccache to speed up rebuilds]"
+      "--threads[number of threads to build multiple packages in parallel]:parameter"
+      {-c,--commit}"[specify a commit ID to build]:parameter"
+      "--include-all[uncommitted changes and untracked files would be included while generating tar ball]"
+      "--packaging-dir[directory containing packaging files]:directory:_directories"
+      "--spec[specify a spec file to use. It should be a file name that GBS will find it in packaging dir]:filename:_files"
+      "--upstream-branch[upstream branch]:parameter"
+      "--upstream-tag[upstream tag format, '\$\{upstreamversion\}' is expanded to the version in the spec file. E.g. 'v\$\{upstreamversion\}]:parameter"
+      "--squash-patches-until[when generating patches, squash patches up to given commit-ish into one monolithic diff file. Format is the commit-ish optionally followed by a colon and diff filename base.]:parameter"
+      "--no-patch-export[don't create patches between upstream and export-treeish, and create tar ball from the export-treeish instead of upstream branch]"
+      "--binary-list[specify a package list to be built. Multiple packages can be separated by comma(,). Note: package names are from spec files, not the package dir name]:parameter"
+      "--binary-from-file[specify a binary package list file. Packages listed in this file will be selected to be built. The format of binary-list file is one package for one line, and only binary RPM name is accepted]:filename:_files"
+      "--exclude[specify a package list to be excluded for building. Multiple packages can be separated by comma(,)]"
+      "--exclude-from-file[specify an exclude package list text file, the format is one package in one line, and only binary RPM package name is accepted. Packages listed in this file will be skipped to be built.]:parameter"
+      "--deps[build specified packages and all packages they depend on]"
+      "--rdeps[build specified packages and all packages depend on]"
+    )
+
+    local -a remotebuild_ops
+    remotebuild_ops=(
+      {-T,--target-obsprj}"[OBS project where package will be checked in. Default is home:<userid>:gbs:<base_prj>, you can set default target_prj in .gbs.conf]:parameter"
+      {-B,--base-obsprj}"[OBS project being used to branch from, you can set default base_prj in .gbs.conf]:parameter"
+      {-P,--profile}"[profile to be used for building, can be given without the "profile." prefix]:parameter"
+      "--spec[specify a spec file to use. It should be a file name that GBS will find it in packaging dir]:filename:_files"
+      {-c,--commit}"[specify a commit ID to build]:parameter"
+      "--no-patch-export[don't create patches between upstream and export-treeish, and create tar ball from the export-treeish instead of upstream branch]"
+      "--buildlog[get buildlog from build sever]"
+      "--status[get build status from build server]"
+      {-R,--repository}"[OBS repository for --buildlog]:parameter"
+      {-A,--arch}"[OBS build architecture for --buildlog]:parameter"
+      "--include-all[uncommitted changes and untracked files will be included while generating tar ball]"
+      "--upstream-branch[upstream branch]:parameter"
+      "--upstream-tag[upstream tag format, '\$\{upstreamversion\}' is expanded to the version in the spec file. E.g. 'v\$\{upstreamversion\}']:parameter"
+      "--squash-patches-until[when generating patches, squash patches up to given commit-ish into one monolithic diff file. Format is the commit-ish optionally followed by a colon and diff filename base.]:parameter"
+      "--packaging-dir[directory containing packaging files]:directory:_directories]"
+    )
+
+    case $words[1] in
+      changelog)
+        args+=(
+          "--spec=[specify a spec file to use. It should be a file name that GBS will find it in packaging dir]:filename:_files"
+          {-s,--since=}"[commit to start from]"
+          {-m,--message}"[use given message as the changelog entry]:parameter"
+          "--packaging-dirdirectory[containing packaging files]:directory:_directories"
+        )
+      ;;
+
+      remotebuild)
+        args+=(
+          $remotebuild_ops
+        )
+      ;;
+
+      export)
+        args+=(
+          $export_ops
+        )
+      ;;
+
+      chroot)
+        args+=(
+          {-r,--root}"[chroot as root instead of abuild by default]:directory:_directories"
+        )
+      ;;
+
+      import)
+        args+=(
+          $import_ops
+        )
+      ;;
+
+      clone)
+        args+=(
+           "--upstream-branch[upstream branch]:parameter"
+           "--all[track all remote branches]"
+           "--depth[git history depth, for creating shallow clones]:parameter"
+        )
+      ;;
+
+      submit)
+        args+=(
+          "--tag[create tag using specified tag name. This option can be used for group submission, and submissions with same tag can be seen as one group]:parameter"
+          {-m,--msg}"[specify tag message info]:parameter"
+          {-c,--commit}"[specify a commit ID to submit]:parameter"
+          {-s,--sign}"[make a GPG-signed tag]:parameter"
+          {-u,--user-key}"[using the given key to make a GPG-signed tag]:parameter"
+          {-t,--target}"[specify target version to submit, eg: trunk.]:parameter"
+          {-r,--remote}"[specify gerrit project server, for example: ssh://user@review.tizen.org:29418/public/base/gcc]:parameter"
+        )
+      ;;
+
+      pull)
+        args+=(
+          "--upstream-branch[upstream branch]:parameter"
+          "--depth[git history depth, for creating shallow clones]:parameter"
+          "--force[force branch update even if unable to fast-forward, WARNING: local changes may be lost]"
+          "--all[update all branches]"
+        )
+      ;;
+
+      build)
+        args+=(
+          $build_ops
+        )
+      ;;
+    esac
+
+    _arguments $args && ret=0
+  ;;
+esac
+
+(( $+functions[_arch_filters] )) ||
+_arch_filters() {
+  local filters; filters=(x86_64 i586 armv6l armv7hl armv7l)
+  _values $@ 'filter' "${filters[@]}"
+}
+
+return ret
+
+# vim: ft=zsh sw=2 ts=2 et

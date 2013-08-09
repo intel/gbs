@@ -32,6 +32,7 @@ setup(name='gbs',
       author_email='jian-feng.ding@intel.com, huaxu.wan@intel.com',
       url='https://git.tizen.org/',
       scripts=['tools/gbs'],
-      data_files = [('/etc/bash_completion.d/', ['data/gbs.sh'])],
+      data_files = [('/etc/bash_completion.d/', ['data/gbs.sh']),
+          ('/etc/zsh_completion.d/', ['data/_gbs'])],
       packages=[MOD_NAME],
 )

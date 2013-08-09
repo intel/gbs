@@ -90,6 +90,7 @@ rm -rf %{buildroot}
 %{python_sitelib}/gitbuildsys/parsing.py*
 %{_bindir}/*
 %{_sysconfdir}/bash_completion.d
+%{_sysconfdir}/zsh_completion.d
 
 %files api
 %defattr(-,root,root,-)
