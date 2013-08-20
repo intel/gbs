@@ -1,3 +1,14 @@
+* Tue Aug 20 2013 Qiang Zhang <qiang.z.zhang@intel.com> - 0.18
+  * upgrade to gbs v0.18, which contains the following bug fixing & features:
+  * New gbs config refinements
+    - offline local full build support for tizen 2.1/2.2/3.0 on tizen.org
+    - support CI_CNT and B_CNT OBS
+    - zsh completion support
+  * bug fix:
+    - fix build conf and profile naming limitation: build conf can't contains
+      '-' and profile name can't start with digital, like profile.2.1tizen.
+
+
 * Mon Jul  1 2013 Qiang Zhang <qiang.z.zhang@intel.com> - 0.17
   * upgrade to gbs v0.17, which contains the following bug fixing & features:
   * New gbs config refinements

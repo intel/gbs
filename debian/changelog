@@ -1,3 +1,16 @@
+gbs (0.18-0.rc1) unstable; urgency=high
+  * upgrade to gbs v0.18, which contains the following bug fixing & features:
+  * New gbs config refinements
+    - offline local full build support for tizen 2.1/2.2/3.0 on tizen.org
+    - support CI_CNT and B_CNT OBS
+    - zsh completion support
+  * bug fix:
+    - fix build conf and profile naming limitation: build conf can't contains
+      '-' and profile name can't start with digital, like profile.2.1tizen.
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Tue, 14 May 2013 10:56:15 +0800
+
+
 gbs (0.17.2-1) unstable; urgency=high
   * upgrade to gbs v0.17, which contains the following bug fixing & features:
   * New gbs config refinements
