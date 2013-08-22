@@ -13,7 +13,7 @@ Requires:   python >= 2.6
 Requires:   python-pycurl
 Requires:   sudo
 Requires:   osc >= 0.139.0
-Requires:   tizen-gbp-rpm >= 20130719
+Requires:   tizen-gbp-rpm >= 20130822
 Requires:   depanneur >= 0.9
 Requires:   mic >= 0.20
 
@@ -21,7 +21,7 @@ Requires:   mic >= 0.20
 Requires:   python-argparse
 %endif
 %if ! 0%{?tizen_version:1}
-Requires:   rpm-tizen >= 4.11.0.1.tizen20130618-tizen20130619
+Requires:   rpm-tizen >= 4.11.0.1.tizen20130618-tizen20130821
 %endif
 Requires:   %{name}-api = %{version}
 Requires:   %{name}-export = %{version}
