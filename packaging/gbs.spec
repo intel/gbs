@@ -77,16 +77,15 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %doc README.rst docs/RELEASE_NOTES
 #%{_mandir}/man1/*
-%{python_sitelib}/gitbuildsys/cmd_*.py*
-%{python_sitelib}/gitbuildsys/cmd_build.py
-%{python_sitelib}/gitbuildsys/cmd_changelog.py
-%{python_sitelib}/gitbuildsys/cmd_chroot.py
-%{python_sitelib}/gitbuildsys/cmd_clone.py
-%{python_sitelib}/gitbuildsys/cmd_createimage.py
-%{python_sitelib}/gitbuildsys/cmd_import.py
-%{python_sitelib}/gitbuildsys/cmd_pull.py
-%{python_sitelib}/gitbuildsys/cmd_remotebuild.py
-%{python_sitelib}/gitbuildsys/cmd_submit.py
+%{python_sitelib}/gitbuildsys/cmd_build.py*
+%{python_sitelib}/gitbuildsys/cmd_changelog.py*
+%{python_sitelib}/gitbuildsys/cmd_chroot.py*
+%{python_sitelib}/gitbuildsys/cmd_clone.py*
+%{python_sitelib}/gitbuildsys/cmd_createimage.py*
+%{python_sitelib}/gitbuildsys/cmd_import.py*
+%{python_sitelib}/gitbuildsys/cmd_pull.py*
+%{python_sitelib}/gitbuildsys/cmd_remotebuild.py*
+%{python_sitelib}/gitbuildsys/cmd_submit.py*
 %{python_sitelib}/gitbuildsys/parsing.py*
 %{_bindir}/*
 %{_sysconfdir}/bash_completion.d
