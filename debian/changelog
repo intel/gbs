@@ -1,4 +1,4 @@
-gbs (0.18-0.rc2) unstable; urgency=high
+gbs (0.18-1) unstable; urgency=high
   * upgrade to gbs v0.18, which contains the following bug fixing & features:
   * New gbs config refinements
     - offline local full build support for tizen 2.1/2.2/3.0 on tizen.org
