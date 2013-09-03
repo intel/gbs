@@ -256,8 +256,7 @@ def main(args):
     with utils.Workdir(workdir):
         export_sources(repo, commit, export_dir, main_spec, args)
 
-        # also update other spec files if no --spec option specified
-        if not args.spec and rest_specs:
+        if rest_specs:
             # backup updated spec file
             specbakd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_export_'),
                                directory=True)

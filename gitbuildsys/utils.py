@@ -74,11 +74,11 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
         glob_ = lambda pattern: glob_in_rev(git_path, pattern, commit_id)
         msg = "No such spec file %%s in %s" % commit_id
 
+    spec = None
     if given_spec:
         spec = os.path.join(packaging_dir, given_spec)
         if not check(spec):
             raise GbsError(msg % spec)
-        return [spec, []]
 
     specs = glob_(os.path.join(packaging_dir, '*.spec'))
     if not specs:
@@ -86,8 +86,9 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
                        "%s" % packaging_dir)
 
     project_name =  os.path.basename(git_path)
-    spec = os.path.join(packaging_dir, '%s.spec' % project_name)
-    spec = spec if spec in specs else specs[0]
+    if not spec:
+        spec = os.path.join(packaging_dir, '%s.spec' % project_name)
+        spec = spec if spec in specs else specs[0]
     specs.remove(spec)
     return [spec, specs]
 
