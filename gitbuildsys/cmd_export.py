@@ -74,28 +74,19 @@ def check_export_branches(repo, args):
     give warning if pristine-tar/upstream branch exist in remote
     but have not been checkout to local
     '''
-    remote_branches = [branch.split('/')[-1] for branch in \
-                       repo.get_remote_branches()]
+    remote_branches = {}
+    for branch in repo.get_remote_branches():
+        remote_branches[branch.split('/')[-1]] = branch
     if args.upstream_branch:
         upstream_branch = args.upstream_branch
     else:
         upstream_branch = configmgr.get('upstream_branch', 'general')
 
-    # upstream exist, but pristine-tar not exist
-    if repo.has_branch(upstream_branch) and \
-       not repo.has_branch('pristine-tar') and \
-       'pristine-tar' in remote_branches:
-        log.warning('pristine-tar branch exist in remote branches, '
-                    'you can checkout it to enable exporting upstrean '
-                    'tarball from pristine-tar branch')
-
-    # all upstream and pristine-tar are not exist
-    if not repo.has_branch(upstream_branch) and \
-       not repo.has_branch('pristine-tar') and  \
-       'pristine-tar' in remote_branches and upstream_branch in remote_branches:
-        log.warning('pristine-tar and %s branches exist in remote branches, '
-                    'you can checkout them to enable upstream tarball and '
-                    'patch-generation ' % upstream_branch)
+    # track upstream/pristine-tar branch
+    for br in [upstream_branch, 'pristine-tar']:
+        if not repo.has_branch(br) and br in remote_branches:
+            log.info('tracking branch: %s -> %s' % (remote_branches[br], br))
+            repo.create_branch(br, remote_branches[br])
 
 def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
                            force_native=False, create_tarball=True):
