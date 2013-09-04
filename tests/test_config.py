@@ -92,6 +92,15 @@ class ConfigGettingTest(unittest.TestCase):
         reload(gitbuildsys.conf)
         return gitbuildsys.conf.configmgr.get(option, section)
 
+    @staticmethod
+    def add_conf(fpath):
+        '''get section.option from config'''
+        # configmgr is a global variable, reload to recreate it
+        # otherwise fixtures only take effect in the first time
+        reload(gitbuildsys.conf)
+        return gitbuildsys.conf.configmgr.add_conf(fpath)
+
+
     @Fixture(project='project1.ini')
     def test_no_such_section(self):
         '''test no such section'''
@@ -138,6 +147,12 @@ class ConfigGettingTest(unittest.TestCase):
     def test_interpolation(self):
         'test interpolation is supported'
         self.assertEquals('abc/def', self.get('remote', 'target'))
+
+    @Fixture(home='home1.ini')
+    def test_addconf(self):
+        '''value can be inherit from two levels'''
+        self.add_conf(os.path.join(FILE_DIRNAME, 'testdata', 'ini', 'project1.ini'))
+        self.assertEqual('homev2', self.get('section', 'home_only_key'))
 
 
 if __name__ == '__main__':

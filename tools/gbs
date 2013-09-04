@@ -526,7 +526,7 @@ def main(argv):
     # Process configuration file if --conf is used
     if args.conf:
         from gitbuildsys.conf import configmgr
-        configmgr.reset_from_conf(args.conf)
+        configmgr.add_conf(args.conf)
 
     # Import target module and call 'main' from it
     module = __import__("gitbuildsys.%s" % args.module, fromlist=[args.module])

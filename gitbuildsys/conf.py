@@ -228,8 +228,22 @@ url = http://download.tizen.org/releases/daily/trunk/ivi/latest/
         return cls._instance
 
     def __init__(self, fpath=None):
+        self._cfgfiles = []
         self._cfgparsers = []
-        self.reset_from_conf(fpath)
+        if fpath:
+            if not os.path.exists(fpath):
+                raise errors.ConfigError('Configuration file %s does not '\
+                                         'exist' % fpath)
+            self._cfgfiles.append(fpath)
+
+        # find the default path
+        fpaths = self._lookfor_confs()
+        if not fpaths:
+            self._new_conf()
+            fpaths = self._lookfor_confs()
+        self._cfgfiles.extend(fpaths)
+
+        self.load_confs()
 
     def _create_default_parser(self):
         'create a default parser that handle DEFAULTS values'
@@ -240,22 +254,11 @@ url = http://download.tizen.org/releases/daily/trunk/ivi/latest/
                 parser.set(sec, key, val)
         return parser
 
-    def reset_from_conf(self, fpath):
+    def load_confs(self):
         'reset all config values by files passed in'
-        if fpath:
-            if not os.path.exists(fpath):
-                raise errors.ConfigError('Configuration file %s does not '\
-                                         'exist' % fpath)
-            fpaths = [fpath]
-        else:
-            # use the default path
-            fpaths = self._lookfor_confs()
-            if not fpaths:
-                self._new_conf()
-                fpaths = self._lookfor_confs()
 
         self._cfgparsers = []
-        for fpath in fpaths:
+        for fpath in self._cfgfiles:
             cfgparser = BrainConfigParser()
             try:
                 cfgparser.read_one(fpath)
@@ -270,6 +273,20 @@ url = http://download.tizen.org/releases/daily/trunk/ivi/latest/
         self._cfgparsers.append(self._create_default_parser())
 
         self._check_passwd()
+
+    def add_conf(self, fpath):
+        """ Add new config to configmgr, and new added config file has
+            highest priority
+        """
+        if not fpath:
+            return
+        if not os.path.exists(fpath):
+            raise errors.ConfigError('Configuration file %s does not '\
+                                     'exist' % fpath)
+        # new added conf has highest priority
+        self._cfgfiles.insert(0, fpath)
+        # reload config files
+        self.load_confs()
 
     @staticmethod
     def _lookfor_confs():
