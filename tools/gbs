@@ -28,6 +28,7 @@ from gitbuildsys import errors
 from gitbuildsys.parsing import subparser, GbsHelpFormatter, basename_type
 from gitbuildsys import log
 from gitbuildsys import cmd_build
+from gitbuildsys.utils import SearchConfAction
 
 
 @subparser
@@ -87,6 +88,7 @@ def export_parser(parser):
 
     parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
                         default=os.getcwd(),
+                        action=SearchConfAction,
                         help='path to git repository')
 
     parser.add_argument('-o', '--outdir', help='output directory')
@@ -136,6 +138,7 @@ def build_parser(parser):
 
     parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
                         default=os.getcwd(),
+                        action=SearchConfAction,
                         help='git repository path, which can contain multiple '
                         'packages, in this case, all packages will be built in '
                         'dependency order')
@@ -292,6 +295,7 @@ def remotebuild_parser(parser):
 
     parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
                         default=os.getcwd(),
+                        action=SearchConfAction,
                         help='path to git repository')
 
     parser.add_argument('-T', '--target-obsprj',
@@ -371,6 +375,7 @@ def changelog_parser(parser):
 
     parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
                         default=os.getcwd(),
+                        action=SearchConfAction,
                         help='path to git repository')
 
     parser.add_argument('--spec', type=basename_type,
@@ -397,6 +402,7 @@ def submit_parser(parser):
 
     parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
                         default=os.getcwd(),
+                        action=SearchConfAction,
                         help='path to git repository')
 
     parser.add_argument('--tag', help='create tag using specified tag name. '

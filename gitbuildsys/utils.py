@@ -29,13 +29,14 @@ import hashlib
 import fnmatch
 import signal
 import subprocess
+import argparse
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
 from gitbuildsys.errors import UrlError, GbsError
 from gitbuildsys.log import LOGGER as log
 
-from gbp.rpm.git import GitRepositoryError
+from gbp.rpm.git import RpmGitRepository, GitRepositoryError
 from gbp.errors import GbpError
 
 
@@ -489,6 +490,25 @@ class RepoParser(object):
 
         return filter_valid_repo(repos)
 
+class SearchConfAction(argparse.Action):
+    """
+    Action for gitdir position argument to find project special
+    gbs.conf
+    """
+    def __call__(self, parser, namespace, value, option_string=None):
+        from gitbuildsys.conf import configmgr
+
+        workdir = value
+        try:
+            repo = RpmGitRepository(value)
+            workdir = repo.path
+        except GitRepositoryError, err:
+            pass
+
+        prj_conf = os.path.join(workdir, '.gbs.conf')
+        if os.path.exists(prj_conf) and workdir != os.getcwd():
+            configmgr.add_conf(prj_conf)
+        setattr(namespace, self.dest, value)
 
 def git_status_checker(git, opts):
     """
