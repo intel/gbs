@@ -67,7 +67,7 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
         check = lambda fname, dir_only = False: os.path.exists(os.path.join(
                        git_path, fname))
         glob_ = lambda pattern: [ name.replace(git_path+'/', '')
-            for name in glob.glob(os.path.join(git_path, pattern)) ]
+            for name in reversed(glob.glob(os.path.join(git_path, pattern))) ]
         msg = 'No such spec file %s'
     else:
         check = lambda fname, dir_only = False : file_exists_in_rev(git_path,
