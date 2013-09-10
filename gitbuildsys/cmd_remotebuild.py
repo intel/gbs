@@ -111,7 +111,7 @@ def main(args):
 
     # get 'name' and 'version' from spec file
     try:
-        spec = gbp.rpm.parse_spec(spec_to_parse)
+        spec = gbp.rpm.SpecFile(spec_to_parse)
     except GbpError, err:
         raise GbsError('%s' % err)
 

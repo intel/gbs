@@ -273,7 +273,7 @@ def main(args):
 
     specfile = os.path.basename(main_spec)
     try:
-        spec = rpm.parse_spec(os.path.join(export_dir, specfile))
+        spec = rpm.SpecFile(os.path.join(export_dir, specfile))
     except GbpError, err:
         raise GbsError('%s' % err)
 
