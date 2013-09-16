@@ -1,3 +1,15 @@
+Release notes for gbs 0.18.1
+============================
+
+- Release Date: 2013-09-18
+
+- New feature added:
+  * support ExportFilter in build.conf, more details about ExportFilter
+    refer to:http://en.opensuse.org/openSUSE:Build_Service_prjconf#ExportFilter
+  * bug fix:
+    - support multiple level packaging dir in --packaging-dir option
+
+
 Release notes for gbs 0.18
 ==========================
 
