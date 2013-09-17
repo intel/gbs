@@ -1,4 +1,4 @@
-gbs (0.18.1-0.rc1) unstable; urgency=high
+gbs (0.18.1-1) unstable; urgency=high
   * upgrade to gbs v0.18.1, which contains the following bug fixing & features:
   * support ExportFilter in build.conf
   * bug fix:
