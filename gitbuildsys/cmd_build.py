@@ -25,7 +25,7 @@ import pwd
 import re
 import urlparse
 
-from gitbuildsys.utils import Temp, RepoParser
+from gitbuildsys.utils import Temp, RepoParser, read_localconf
 from gitbuildsys.errors import GbsError, Usage
 from gitbuildsys.conf import configmgr
 from gitbuildsys.safe_url import SafeURL
@@ -240,6 +240,8 @@ def main(args):
         if args.spec:
             raise GbsError("git project can't be found for --spec, "
                            "give it in argument or cd into it")
+
+    read_localconf(workdir)
 
     hostarch = os.uname()[4]
     if args.arch:

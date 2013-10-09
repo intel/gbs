@@ -81,6 +81,8 @@ def main(args):
 
     workdir = repo.path
 
+    utils.read_localconf(workdir)
+
     if not (args.buildlog or args.status):
         utils.git_status_checker(repo, args)
 

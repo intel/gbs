@@ -219,6 +219,7 @@ def main(args):
     except GitRepositoryError, err:
         raise GbsError(str(err))
 
+    utils.read_localconf(repo.path)
     utils.git_status_checker(repo, args)
     workdir = repo.path
 

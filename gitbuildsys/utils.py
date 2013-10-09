@@ -490,14 +490,21 @@ class RepoParser(object):
 
         return filter_valid_repo(repos)
 
+
+def read_localconf(workdir):
+    """Read local configuration file from project directory."""
+    from gitbuildsys.conf import configmgr
+    prj_conf = os.path.join(workdir, '.gbs.conf')
+    if os.path.exists(prj_conf) and workdir != os.getcwd():
+        configmgr.add_conf(prj_conf)
+
+
 class SearchConfAction(argparse.Action):
     """
     Action for gitdir position argument to find project special
     gbs.conf
     """
     def __call__(self, parser, namespace, value, option_string=None):
-        from gitbuildsys.conf import configmgr
-
         workdir = value
         try:
             repo = RpmGitRepository(value)
@@ -505,9 +512,7 @@ class SearchConfAction(argparse.Action):
         except GitRepositoryError, err:
             pass
 
-        prj_conf = os.path.join(workdir, '.gbs.conf')
-        if os.path.exists(prj_conf) and workdir != os.getcwd():
-            configmgr.add_conf(prj_conf)
+        read_localconf(workdir)
         setattr(namespace, self.dest, value)
 
 def git_status_checker(git, opts):
