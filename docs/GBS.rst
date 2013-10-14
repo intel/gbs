@@ -103,7 +103,7 @@ Here's an example:
 
   [profile.tizen]
   repos = repo.tizen_latest, repo.my_local
-  
+
   [repo.tizen_latest]
   url = http://download.tizen.org/releases/trunk/daily/ivi/latest/
   user = xxx
@@ -145,7 +145,7 @@ You can configure multiple profiles in one configuration file, for example, one 
 
   [general]
   profile = profile.ivi
-  
+
   [profile.mobile]
   ...
   [profile.ivi]
@@ -373,7 +373,7 @@ To use this feature, you need to have your patch(es) in the packaging directory 
  Source0:     %{name}-%{version}.tar.bz2
  # Gbp-Ignore-Patches: 0
  Patch0:     my.patch
- 
+
  %description
  ...
 
@@ -394,11 +394,11 @@ GBS tries to automatically find the correct location to add the '%patch' macros 
  %prep
  %setup
  # do things here...
- 
+
  # Gbp-Patch-Macros
- 
+
  # do more things here...
- 
+
  %build
  ...
 
@@ -490,8 +490,8 @@ Example: clone a tizen package using gbs clone
 
 ::
 
-  $ gbs clone review.tizen.org:toolchains/zlib.git
-  info: cloning review.tizen.org:toolchains/zlib.git
+  $ gbs clone tizen:toolchains/zlib.git
+  info: cloning tizen:toolchains/zlib.git
   .......
   info: finished
   $ cd zlib/
@@ -505,8 +505,8 @@ The `--all` option can be used to track and create a local copy of all remote br
 
 ::
 
-  $ gbs clone --all review.tizen.org:toolchains/zlib.git
-  info: cloning review.tizen.org:toolchains/zlib.git
+  $ gbs clone --all tizen:toolchains/zlib.git
+  info: cloning tizen:toolchains/zlib.git
   .......
   Branch 1.0_post set up to track remote branch 1.0_post from origin.
   Branch 2.0alpha set up to track remote branch 2.0alpha from origin.
@@ -551,7 +551,7 @@ The `--all` option can be used to update all remote branches. Using this will up
 
 Using the `--depth` one can deepen shallow clones, that is, fetch deeper history from the remote.
 
-With the --force option the developer can force update the local branch HEADs to match the remote repo. 
+With the --force option the developer can force update the local branch HEADs to match the remote repo.
 
 **WARNING**: Use the `--force` option with care. It will discard all local changes to the updated branches! This effectively does a `git reset --hard` for the local branches. Example:
 
@@ -932,7 +932,7 @@ The --exclude-from-file option specifies a text file  that contains a name list 
   $ gbs build -A i586 tizen-packages --exclude-from-file=/path/to/packages.list
 
 5. Build packages based on dependencies.
-The --deps option enables GBS to build specific packages, together with all the related packages on which they depend.The --rdep option enables GBS to build specific packages, together with all the related packages that depend on them.  
+The --deps option enables GBS to build specific packages, together with all the related packages on which they depend.The --rdep option enables GBS to build specific packages, together with all the related packages that depend on them.
 
 The specific packages can be included by the --binary-from-file option or the --binary-list option, and be excluded by the --exclude option or the --exclude-from-file option.
 
@@ -1115,7 +1115,7 @@ GBS would create an annotated tag named 'submit/${cur_branch_name}'/${date}.${ti
 
 ::
 
-  $ gbs submit -r ssh://user@review.tizen.org:29418/public/base/gcc -m 'release for 0.4'
+  $ gbs submit -r tizen:public/base/gcc -m 'release for 0.4'
 
 5) If your gpg key has been set, you can use '-s' to create a signed tag.
 
