@@ -57,6 +57,8 @@ def main(args):
     if args.debug:
         gbp_args.append("--verbose")
     gbp_args.append(args.uri)
+    if args.directory:
+        gbp_args.append(args.directory)
 
     # Clone
     log.info('cloning %s' % args.uri)

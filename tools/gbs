@@ -430,10 +430,13 @@ def clone_parser(parser):
     """Clone a git repository
     Examples:
       $ gbs clone git://example.com/repos/package.git
+      $ gbs clone git://example.com/repos/package.git dir
       $ gbs clone --upstream-branch=orig ../package.git
     """
 
     parser.add_argument('uri', help='path/uri to a git repository')
+    parser.add_argument('directory', nargs='?', help='the name of a new directory to clone into. '
+                        'Cloning into an existing directory is only allowed if the directory is empty.')
     parser.add_argument('--upstream-branch', help='upstream branch')
     parser.add_argument('--packaging-branch', help='packaging branch, or development branch')
     parser.add_argument('--all', action='store_true',
