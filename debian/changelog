@@ -1,3 +1,12 @@
+gbs (0.18.1-1) unstable; urgency=high
+  * upgrade to gbs v0.18.1, which contains the following bug fixing & features:
+  * support ExportFilter in build.conf
+  * bug fix:
+    - support multiple level packaging dir in --packaging-dir option
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Tue, 14 May 2013 10:56:15 +0800
+
+
 gbs (0.18-1) unstable; urgency=high
   * upgrade to gbs v0.18, which contains the following bug fixing & features:
   * New gbs config refinements
