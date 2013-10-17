@@ -13,7 +13,7 @@ Requires:   python >= 2.6
 Requires:   python-pycurl
 Requires:   sudo
 Requires:   osc >= 0.139.0
-Requires:   tizen-gbp-rpm >= 20131016
+Requires:   tizen-gbp-rpm >= 20131017
 Requires:   depanneur >= 0.10
 Requires:   mic >= 0.20
 

@@ -141,7 +141,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
             "--git-export=%s" % commit,
             "--git-upstream-branch=%s" % upstream_branch,
             "--git-upstream-tag=%s" % upstream_tag,
-            "--git-spec-vcs-tag=%s#%%(tagname)s" % reponame]
+            "--git-spec-vcs-tag=%s#%%(commit)s" % reponame]
 
     if create_tarball:
         argv.append("--git-force-create")
