@@ -25,6 +25,7 @@ Requires:   rpm-tizen >= 4.11.0.1.tizen20130618-tizen20131001
 %endif
 Requires:   %{name}-api = %{version}
 Requires:   %{name}-export = %{version}
+Requires:   %{name}-remotebuild = %{version}
 
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
@@ -56,6 +57,17 @@ Requires:      git-buildpackage-rpm
 This package contains gbs export APIs, which can be used by
 external software.
 
+%package remotebuild
+Summary:       GBS remotebuild module
+Conflicts:     gbs < 0.18.1
+Requires:      python
+Requires:      gbs-api
+Requires:      git-buildpackage-rpm
+
+%description remotebuild
+This package contains gbs remotebuild APIs, which can be used by
+external software.
+
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -84,7 +96,6 @@ rm -rf %{buildroot}
 %{python_sitelib}/gitbuildsys/cmd_createimage.py*
 %{python_sitelib}/gitbuildsys/cmd_import.py*
 %{python_sitelib}/gitbuildsys/cmd_pull.py*
-%{python_sitelib}/gitbuildsys/cmd_remotebuild.py*
 %{python_sitelib}/gitbuildsys/cmd_submit.py*
 %{python_sitelib}/gitbuildsys/parsing.py*
 %{_bindir}/*
@@ -107,3 +118,6 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %{python_sitelib}/gitbuildsys/cmd_export.py*
 
+%files remotebuild
+%defattr(-,root,root,-)
+%{python_sitelib}/gitbuildsys/cmd_remotebuild.py*

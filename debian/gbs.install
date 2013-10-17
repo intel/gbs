@@ -5,7 +5,6 @@ usr/lib/python*/*packages/gitbuildsys/cmd_clone.py
 usr/lib/python*/*packages/gitbuildsys/cmd_createimage.py
 usr/lib/python*/*packages/gitbuildsys/cmd_import.py
 usr/lib/python*/*packages/gitbuildsys/cmd_pull.py
-usr/lib/python*/*packages/gitbuildsys/cmd_remotebuild.py
 usr/lib/python*/*packages/gitbuildsys/cmd_submit.py
 usr/lib/python*/*packages/gitbuildsys/parsing.py
 usr/bin/*

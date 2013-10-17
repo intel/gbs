@@ -1,7 +1,7 @@
 Format: 1.0
 Source: gbs
 Version: 0.18.1
-Binary: gbs, gbs-api, gbs-export
+Binary: gbs, gbs-api, gbs-export, gbs-remotebuild
 Maintainer: Jian-feng Ding <jian-feng.ding@intel.com>
 Architecture: all
 Standards-Version: 3.7.1
