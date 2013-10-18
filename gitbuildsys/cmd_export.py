@@ -101,8 +101,8 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
         upstream_tag = args.upstream_tag
     else:
         upstream_tag = configmgr.get('upstream_tag', 'general')
-        # transform variables from shell to python convention ${xxx} -> %(xxx)s
-        upstream_tag = re.sub(r'\$\{([^}]+)\}', r'%(\1)s', upstream_tag)
+    # transform variables from shell to python convention ${xxx} -> %(xxx)s
+    upstream_tag = re.sub(r'\$\{([^}]+)\}', r'%(\1)s', upstream_tag)
 
     log.debug("Using upstream branch: %s" % upstream_branch)
     log.debug("Using upstream tag format: '%s'" % upstream_tag)
