@@ -2,8 +2,8 @@
 %{!?python_version: %define python_version %(%{__python} -c "import sys; sys.stdout.write(sys.version[:3])")}
 Name:       gbs
 Summary:    The command line tools for Tizen package developers
-Version:    0.18.1
-Release:    1
+Version:    0.19
+Release:    0.rc1.<CI_CNT>.<B_CNT>
 Group:      Development/Tools
 License:    GPLv2
 BuildArch:  noarch

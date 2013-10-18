@@ -1,3 +1,24 @@
+gbs (0.19-0.rc1) unstable; urgency=high
+  * upgrade to gbs v0.19, which contains the following bug fixing & features:
+  * [build] support comments(#) in binary-list file for --binary-from-file
+  * [build] remove previous built rpm and srpm if new version has been built out
+  * [remotebuild] split out to separate sub-package: gbs-remotebuild
+  * [export] track upstream/pristine-tar branch automatically, and use upstream
+    and pristine-tar branch to generate tar ball.
+  * [export] update all spec file if multiple spec files exist, updates
+    including insert patches and VCS tag
+  * [export] use commit sha1 instead of tag name in spec file VCS tag
+  * [clone] add directory argument to gbs clone
+  * [conf] overwrite different level of gbs.conf instead of clean up them.
+  * [conf] load project special gbs.conf if gitdir specified
+  * update dependencies:
+    - depanneur >= 0.10
+    - pristine-tar >= 1.28
+    - librpm-tizen >= 4.11.0.1.tizen20130618-tizen20131001
+    - git-buildpackage-rpm >= 0.6.3-tizen20131017
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Fri, 18 Otc 2013 10:56:15 +0800
+
 gbs (0.18.1-1) unstable; urgency=high
   * upgrade to gbs v0.18.1, which contains the following bug fixing & features:
   * support ExportFilter in build.conf
