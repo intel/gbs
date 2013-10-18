@@ -18,7 +18,6 @@ Depends: ${misc:Depends}, ${python:Depends},
  gbs-export (= ${binary:Version}),
  gbs-remotebuild (= ${binary:Version}),
  depanneur (>= 0.10),
- pristine-tar (>= 1.26),
  mic (>= 0.20)
 Recommends: librpm-tizen (>= 4.11.0.1.tizen20130618-tizen20131001)
 Description: Command line tools for Tizen package developers
@@ -40,7 +39,8 @@ Description: GBS API
 Package: gbs-export
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends},
- gbs-api,
+ gbs-api (= ${binary:Version}),
+ pristine-tar (>= 1.28),
  git-buildpackage-rpm
 Conflicts: gbs (<< 0.15)
 Replaces: gbs (<< 0.15)
@@ -51,7 +51,8 @@ Description: GBS export API
 Package: gbs-remotebuild
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends},
- gbs-api,
+ gbs-api (= ${binary:Version}),
+ gbs-export (= ${binary:Version}),
  git-buildpackage-rpm
 Conflicts: gbs (<< 0.18.1)
 Replaces: gbs (<< 0.18.1)

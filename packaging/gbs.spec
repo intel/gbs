@@ -23,9 +23,9 @@ Requires:   python-argparse
 %if ! 0%{?tizen_version:1}
 Requires:   rpm-tizen >= 4.11.0.1.tizen20130618-tizen20131001
 %endif
-Requires:   %{name}-api = %{version}
-Requires:   %{name}-export = %{version}
-Requires:   %{name}-remotebuild = %{version}
+Requires:   %{name}-api = %{version}-%{release}
+Requires:   %{name}-export = %{version}-%{release}
+Requires:   %{name}-remotebuild = %{version}-%{release}
 
 BuildRequires:  python-devel
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
@@ -50,7 +50,8 @@ external software.
 Summary:       GBS export module
 Conflicts:     gbs < 0.15
 Requires:      python
-Requires:      gbs-api
+Requires:      pristine-tar >= 1.28
+Requires:      gbs-api = %{version}-%{release}
 Requires:      git-buildpackage-rpm
 
 %description export
@@ -61,7 +62,8 @@ external software.
 Summary:       GBS remotebuild module
 Conflicts:     gbs < 0.18.1
 Requires:      python
-Requires:      gbs-api
+Requires:      gbs-api = %{version}-%{release}
+Requires:      gbs-export = %{version}-%{release}
 Requires:      git-buildpackage-rpm
 
 %description remotebuild
