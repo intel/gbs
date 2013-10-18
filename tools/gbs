@@ -47,6 +47,10 @@ def import_parser(parser):
     parser.add_argument('--author-email', help='author email of git commit')
     parser.add_argument('--upstream-branch',
                         help='specify upstream branch for new package version')
+    parser.add_argument('--upstream-tag',
+                        help="upstream tag format, '${upstreamversion}' is "
+                        'expanded to the version in the spec file. '
+                        "E.g. 'v${upstreamversion}'")
     parser.add_argument('--upstream-vcs-tag',
                         help='upstream VCS tag on top of which to import the '
                              'orig sources')

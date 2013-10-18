@@ -19,6 +19,7 @@
 """Implementation of subcmd: import
 """
 import os
+import re
 
 from gitbuildsys.errors import GbsError
 from gitbuildsys.cmd_export import get_packaging_dir
@@ -47,11 +48,18 @@ def main(args):
         upstream_branch = args.upstream_branch
     else:
         upstream_branch = configmgr.get('upstream_branch', 'general')
+    if args.upstream_tag:
+        upstream_tag = args.upstream_tag
+    else:
+        upstream_tag = configmgr.get('upstream_tag', 'general')
+    # transform variables from shell to python convention ${xxx} -> %(xxx)s
+    upstream_tag = re.sub(r'\$\{([^}]+)\}', r'%(\1)s', upstream_tag)
 
     params = ["argv[0] placeholder",
               "--color-scheme=magenta:green:yellow:red",
               "--packaging-dir=%s" % get_packaging_dir(args),
               "--upstream-branch=%s" % upstream_branch, path,
+              "--upstream-tag=%s" % upstream_tag,
               "--tmp-dir=%s" % tmp.path,
               ]
     if args.debug:
