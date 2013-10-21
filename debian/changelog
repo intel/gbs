@@ -1,8 +1,9 @@
-gbs (0.19-0.rc1) unstable; urgency=high
+gbs (0.19-0.rc2) unstable; urgency=high
   * upgrade to gbs v0.19, which contains the following bug fixing & features:
   * [build] support comments(#) in binary-list file for --binary-from-file
   * [build] remove previous built rpm and srpm if new version has been built out
   * [remotebuild] split out to separate sub-package: gbs-remotebuild
+  * [import] add --upstream-tag option to set customized tag format
   * [export] track upstream/pristine-tar branch automatically, and use upstream
     and pristine-tar branch to generate tar ball.
   * [export] update all spec file if multiple spec files exist, updates

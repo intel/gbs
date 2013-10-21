@@ -9,6 +9,8 @@ Release notes for gbs 0.19
     - remove previous built rpm and srpm if new version has been built out
   * remotebuild:
     - split out to separate sub-package: gbs-remotebuild
+  * import:
+    - add --upstream-tag option to set customized tag format
   * export:
     - track upstream/pristine-tar branch automatically, and use upstream
       and pristine-tar branch to generate tar ball.
