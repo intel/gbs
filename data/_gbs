@@ -65,6 +65,7 @@ case $state in
       "--author-name[author name of git commit]:parameter"
       "--author-email[author email of git commit]:parameter"
       "--upstream-branch[specify upstream branch for new package version]:parameter"
+      "--upstream-tag[upstream tag format, '\$\{upstreamversion\}' is expanded to the version in the spec file. E.g. 'v\$\{upstreamversion\}']:parameter"
       "--packaging-dir[directory containing packaging files]:directory:_directories"
       "--no-pristine-tar[don't use pristine-tar to import source. pristine-tar only support import *tar.{gz,bz2,xz} sources, this option can be specified to import other format sources]"
       "--filter[files to filter out d]:parameter"

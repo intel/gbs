@@ -98,7 +98,7 @@ __gbs ()
         --msg= --target= --commit= --spec= --sign --user-key= --remote= --tag=
     "
     im_opts="
-        --merge --upstream-branch= --author-email= --author-name= --no-pristine-tar
+        --merge --upstream-branch= --upstream-tag= --author-email= --author-name= --no-pristine-tar
         --packaging-dir= --upstream-vcs-tag= --allow-same-version --native
         --filter=  --no-patch-import
     "
