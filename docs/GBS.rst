@@ -5,9 +5,9 @@ GBS
 ----------------
 git build system
 ----------------
-:Date:              2012-12-1
+:Date:              2013-10-23
 :Copyright:         GPLv2
-:Version:           0.12
+:Version:           0.19
 :Manual section:    1
 :Manual group:      System
 
@@ -1494,9 +1494,12 @@ This section contains frequently asked questions.
 Installation Related Issues
 ---------------------------
 
-Q: I'm unable to get zypper to refresh from http://download.tizen.org/tools/openSUSE12.1/, but I'm not getting an error of repo issue
+Q: I'm unable to get zypper to refresh from http://download.tizen.org/tools/openSUSE12.1/, but I'm not getting an error of repo issue.
 
-A: This may be because there is a cached version at the proxy server. Try running the commands below to clean the cache:
+A: This may be caused by proxy settings. Try double-checking the proxy settings and adding "-E" option when running **sudo zypper refresh** command, then see what happens. If problem is solved, preserve environment variables by modifying /etc/suders to solve the problem once and for all. Refer to Section 3 in `Setting up Development Environment`_ for details.
+
+Another possible reason is cached version at the proxy server. Try running the commands below to clean the cache:
+
 
 ::
 
@@ -1507,26 +1510,11 @@ A: This may be because there is a cached version at the proxy server. Try runnin
 
 Q: I installed gbs from the official repo, but it is trying to use source code from /usr/local/lib/python*.
 
-A: This may be because you have installed gbs from source code before. Please remove the old gbs version.
+A: This may be because you have installed GBS from source code before. Please remove it and re-install.
 
 Q: How do I update GBS and its dependencies?
 
-A: GBS is open source software and it depends on several open source packages, including osc, git-core, build, rpm, etc. You should install all of these packages from the official GBS repo, especially the 'build' package. To update the 'build' package:
-
-- On Ubuntu: remove non-tizen repos, re-install 'build' package from Tizen repo
-
-::
-
- $ dpkg -r --force-depends build
- $ apt-get update
- $ apt-get install build
-
-- On openSUSE:
-
-::
-
- $ zypper refresh
- $ zypper install tools:build # tools is the repo name for gbs repo
+Refer to `Installing Development Tools`_.
 
 gbs build Related Issues
 ------------------------
@@ -1653,3 +1641,6 @@ License
  You should have received a copy of the GNU General Public License along
  with this program; if not, write to the Free Software Foundation, Inc., 59
  Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+.. _`Setting up Development Environment`: https://source.tizen.org/documentation/developer-guide/environment-setup
+.. _`Installing Development Tools`: https://source.tizen.org/documentation/developer-guide/installing-development-tools
