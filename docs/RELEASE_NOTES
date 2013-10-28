@@ -17,6 +17,8 @@ Release notes for gbs 0.19
     - update all spec file if multiple spec files exist, updates
       including insert patches and VCS tag
     - use commit sha1 instead of tag name in spec file VCS tag
+  * submit:
+    - support '/' in git branch
   * clone:
     - add directory argument to gbs clone
   * conf parser:

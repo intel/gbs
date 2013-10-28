@@ -87,7 +87,7 @@ def main(args):
         target = args.target
         if not target:
             if upstream and upstream.startswith(args.remote):
-                target = os.path.basename(upstream)
+                target = re.sub('^%s/' % args.remote, '', upstream)
             else:
                 log.warning("Can't find upstream branch for current branch "
                             "%s. Gbs uses the local branch name as the target. "

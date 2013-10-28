@@ -10,6 +10,7 @@ gbs (0.19-1) unstable; urgency=high
     including insert patches and VCS tag
   * [export] use commit sha1 instead of tag name in spec file VCS tag
   * [clone] add directory argument to gbs clone
+  * [submit] support '/' in git branch
   * [conf] overwrite different level of gbs.conf instead of clean up them.
   * [conf] load project special gbs.conf if gitdir specified
   * update dependencies:
