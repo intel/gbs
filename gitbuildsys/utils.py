@@ -184,7 +184,7 @@ class URLGrabber(object):
         #curl.setopt(pycurl.VERBOSE, 1)
         self.curl = curl
 
-    def change_url(self, url, outfile, user, passwd):
+    def change_url(self, url, outfile, user, passwd, no_cache=False):
         '''change options for individual url'''
 
         curl = self.curl
@@ -196,6 +196,12 @@ class URLGrabber(object):
             if passwd:
                 userpwd = '%s:%s' % (user, passwd)
             curl.setopt(pycurl.USERPWD, userpwd)
+        httpheader = []
+        if no_cache:
+            httpheader.append('Pragma: no-cache')
+            httpheader.append('Cache-Control: no-cache')
+            log.debug("disable HTTP caching")
+        curl.setopt(pycurl.HTTPHEADER, httpheader)
 
     def perform(self):
         '''do the real Curl perform work'''
@@ -245,13 +251,13 @@ class URLGrabber(object):
         self.curl.close()
         self.curl = None
 
-    def grab(self, url, filename, user=None, passwd=None):
+    def grab(self, url, filename, user=None, passwd=None, no_cache=False):
         """Grab url to file."""
 
         log.debug("fetching %s => %s" % (url, filename))
 
         with open(filename, 'w') as outfile:
-            self.change_url(url, outfile, user, passwd)
+            self.change_url(url, outfile, user, passwd, no_cache)
             self.perform()
 
 
@@ -328,7 +334,7 @@ class RepoParser(object):
                 if self.is_standard_repo(repourl):
                     self.repourls[arch].append(repourl)
 
-    def fetch(self, url):
+    def fetch(self, url, no_cache=False):
         """
         Fetch url.
         Returns: file name if fetch succeds, else None.
@@ -336,7 +342,7 @@ class RepoParser(object):
         fname = os.path.join(self.cachedir, os.path.basename(url))
 
         try:
-            self.urlgrabber.grab(url, fname, url.user, url.passwd)
+            self.urlgrabber.grab(url, fname, url.user, url.passwd, no_cache)
         except PageNotFound:
             return
 
@@ -346,7 +352,7 @@ class RepoParser(object):
         """Check if repo is standard repo with repodata/repomd.xml exist."""
 
         repomd_url = repo.pathjoin('repodata/repomd.xml')
-        return not not self.fetch(repomd_url)
+        return not not self.fetch(repomd_url, no_cache=True)
 
     def _fetch_build_meta(self, latest_repo_url):
         """Fetch and parse build.xml."""
