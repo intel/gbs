@@ -1,4 +1,4 @@
-gbs (0.19-1) unstable; urgency=high
+gbs (0.19) unstable; urgency=high
   * upgrade to gbs v0.19, which contains the following bug fixing & features:
   * [build] support comments(#) in binary-list file for --binary-from-file
   * [build] remove previous built rpm and srpm if new version has been built out
