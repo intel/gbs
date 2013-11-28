@@ -151,7 +151,10 @@ def build_parser(parser):
     group.add_argument('-A', '--arch', help='build target arch. Supported arch '
                        'types are: %s' % ' '.join(cmd_build.SUPPORTEDARCHS))
     group.add_argument('-D', '--dist',
-                        help='specify project (build) configuration file')
+                        help='specify project (build) configuration file. '
+                        'User can specify build config in [profile.xx] '
+                        'section of gbs.conf using \'buildconf\' key, and '
+                        'the value is local path of build conf file')
     group.add_argument('-P', '--profile',
                         help='profile to be used for building, it is defined '
                              'in .gbs.conf, can be given without the '
@@ -174,9 +177,11 @@ def build_parser(parser):
     group = parser.add_argument_group('build env options')
     group.add_argument('-B', '--buildroot',
                         help='specify build root to setup chroot environment. '
-                        'By default, ~/GBS-ROOT/ will be used, and if no '
-                        '-B option, but TIZEN_BUILD_ROOT env exists, then '
-                        '${TIZEN_BUILD_ROOT} will used as build root')
+                        'By default, ~/GBS-ROOT/ will be used. User can specify'
+                        ' customized build root in gbs.conf with \'buildroot\' '
+                        'key, which can be set in [general] section for default'
+                        ' build root, or in [profile.xx] section for profile '
+                        'special build root')
     group.add_argument('-C', '--clean', action='store_true',
                         help='delete old build root before initialization')
     group.add_argument('--clean-once', action='store_true',
