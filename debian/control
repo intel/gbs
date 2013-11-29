@@ -17,7 +17,7 @@ Depends: ${misc:Depends}, ${python:Depends},
  gbs-api (= ${binary:Version}),
  gbs-export (= ${binary:Version}),
  gbs-remotebuild (= ${binary:Version}),
- depanneur (>= 0.10),
+ depanneur (>= 0.10.1),
  mic (>= 0.20)
 Recommends: librpm-tizen (>= 4.11.0.1.tizen20130618-tizen20131001)
 Description: Command line tools for Tizen package developers
