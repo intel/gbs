@@ -332,6 +332,6 @@ def main(args):
     log.debug("running command: %s" % ' '.join(cmd))
     retcode = os.system(' '.join(cmd))
     if retcode != 0:
-        raise GbsError('rpmbuild fails')
+        raise GbsError('some packages failed to be built')
     else:
         log.info('Done')
