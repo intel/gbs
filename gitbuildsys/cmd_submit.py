@@ -28,6 +28,24 @@ from gitbuildsys.log import LOGGER as log
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
 
+def _lookup_submit_template():
+    """
+    Look for submit templates in current project,
+    user and system settings location
+    """
+
+    lookup_paths = (
+      '.gbs/templates/submit_message',
+      '~/.gbs/templates/submit_message',
+      '/etc/gbs/templates/submit_message')
+
+
+    for path in lookup_paths:
+        abs_path = os.path.abspath(os.path.expanduser(path))
+        if os.path.exists(abs_path):
+            return abs_path
+
+    return None
 
 
 def get_message():
@@ -38,6 +56,14 @@ def get_message():
 # Please enter the message for your tag. Lines starting with '#'
 # will be ignored, and an empty message aborts the submission.
 #'''
+
+    #check for additional submit template
+    template_path = _lookup_submit_template()
+    if template_path:
+        with open(template_path, 'r') as template_file:
+            submit_template = template_file.read()
+            prompt = submit_template
+
     raw = edit(prompt)
     useful = [i for i in raw.splitlines() if not i.startswith('#') ]
     return os.linesep.join(useful).strip()
