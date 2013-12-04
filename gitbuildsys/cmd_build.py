@@ -52,6 +52,7 @@ SUPPORTEDARCHS = [
             'armv6l',
             'armv7hl',
             'armv7l',
+            'aarch64',
           ]
 
 USERID = pwd.getpwuid(os.getuid())[0]
