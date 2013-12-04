@@ -54,24 +54,6 @@ SUPPORTEDARCHS = [
             'armv7l',
           ]
 
-# These two dicts maping come from osc/build.py
-CAN_ALSO_BUILD = {
-             'armv7l' :['armv4l', 'armv5l', 'armv6l', 'armv7l', 'armv5el',
-                        'armv6el', 'armv7el'],
-             'armv7el':['armv4l', 'armv5l', 'armv6l', 'armv7l', 'armv5el',
-                        'armv6el', 'armv7el'],
-             'armv8l' :['armv4l', 'armv5el', 'armv6el', 'armv7el', 'armv8el' ],
-             'i586'   :['i586', 'i386'],
-             'i686'   :['i686', 'i586', 'i386',],
-             'x86_64' :['x86_64', 'i686', 'i586', 'i386'],
-            }
-
-QEMU_CAN_BUILD = ['armv4l', 'armv5el', 'armv5l', 'armv6l', 'armv7l',
-                  'armv6el', 'armv7el', 'armv7hl', 'armv8el', 'sh4', 'mips',
-                  'mipsel', 'ppc', 'ppc64', 's390', 's390x', 'sparc64v',
-                  'sparcv9v', 'sparcv9', 'sparcv8', 'sparc', 'hppa'
-                  ]
-
 USERID = pwd.getpwuid(os.getuid())[0]
 TMPDIR = None
 
@@ -255,11 +237,6 @@ def main(args):
     if not buildarch in SUPPORTEDARCHS:
         raise GbsError('arch %s not supported, supported archs are: %s ' % \
                        (buildarch, ','.join(SUPPORTEDARCHS)))
-
-    if buildarch not in CAN_ALSO_BUILD.get(hostarch, []):
-        if buildarch not in QEMU_CAN_BUILD:
-            raise GbsError("hostarch: %s can't build target arch %s" %
-                            (hostarch, buildarch))
 
     profile = get_profile(args)
     if args.buildroot:
