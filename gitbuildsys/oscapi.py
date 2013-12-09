@@ -94,6 +94,19 @@ class OSC(object):
             repos[repo.name].append(repo.arch)
         return repos
 
+    def get_tags(self, project, tags):
+        """Get tags content from meta."""
+        meta_xml = self.get_meta(project)
+        xml_root = ET.fromstringlist(meta_xml)
+
+        result = ''
+        for tag in tags:
+            element = xml_root.find(tag)
+            if element:
+                result += ET.tostring(element)
+
+        return result
+
     def create_project(self, target, src=None, rewrite=False,
                        description='', linkto='', linkedbuild=''):
         """
@@ -122,6 +135,9 @@ class OSC(object):
 
         # Collect source repos if src project exist
         if src:
+            # Copy debuginfo, build, useforbuild and publish meta
+            meta += self.get_tags(src, ['debuginfo', 'build',
+                                        'useforbuild', 'publish'])
             # Copy repos to target
             repos = self.get_repos_of_project(src)
             for name in repos:
