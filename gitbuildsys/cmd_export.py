@@ -120,11 +120,16 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
         remotename = 'origin' if 'origin' in remotes else remotes.keys()[0]
         # Take the remote repo of current branch, if available
         try:
-            remote_branch = repo.get_upstream_branch(repo.branch)
-            if remote_branch:
-                remotename = remote_branch.split("/")[0]
-        except GitRepositoryError:
+            config_remote = repo.get_config('branch.%s.remote' % repo.branch)
+        except KeyError:
             pass
+        else:
+            if config_remote in remotes:
+                remotename = config_remote
+            elif config_remote != '.':
+                log.warning("You appear to have non-existent remote '%s' "
+                            "configured for branch '%s'. Check your git config!"
+                            % (config_remote, repo.branch))
         reponame = urlparse(remotes[remotename][0]).path.lstrip('/')
 
     packaging_dir = get_packaging_dir(args)
