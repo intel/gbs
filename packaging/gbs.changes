@@ -1,3 +1,21 @@
+* Tue Dec 10 2013 Qiang Zhang <qiang.z.zhang@intel.com> - 0.20
+  * [build] attempt to bypass HTTP caches when fetching repomd.xml
+  * [build] generate html & json format report
+  * [build] no default upstream-branch option while calling depanneur
+  * [build] refine build report summary:
+    - add build log dir
+    - always print the dirs of final build files
+    - add succeeded packages number
+  * [build] depend on initvm to register qemu handler
+  * [build]add arm 64(aarch64) support
+  * [export ]update pristine-tar to fix pristine-tar branch broken issue
+  * [doc] refine gbs config and FAQ parts of gbs document
+  * update dependencies:
+    - depanneur >= 0.10.1
+    - build >= 20131112
+    - git-buildpackage >= tizen20131202
+    - pristine-tar >= 1.30-tizen20131209
+
 * Fri Oct 18 2013 Qiang Zhang <qiang.z.zhang@intel.com> - 0.19
   * upgrade to gbs v0.19, which contains the following bug fixing & features:
   * [build] support comments(#) in binary-list file for --binary-from-file

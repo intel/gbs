@@ -2,8 +2,12 @@
 %{!?python_version: %define python_version %(%{__python} -c "import sys; sys.stdout.write(sys.version[:3])")}
 Name:       gbs
 Summary:    The command line tools for Tizen package developers
-Version:    0.19.1
+Version:    0.20
+%if 0%{?opensuse_bs}
+Release:    0.rc1.<CI_CNT>.<B_CNT>
+%else
 Release:    1
+%endif
 Group:      Development/Tools
 License:    GPLv2
 BuildArch:  noarch
@@ -13,8 +17,8 @@ Requires:   python >= 2.6
 Requires:   python-pycurl
 Requires:   sudo
 Requires:   osc >= 0.139.0
-Requires:   tizen-gbp-rpm >= 20131017
-Requires:   depanneur >= 0.10.1
+Requires:   tizen-gbp-rpm >= 20131202
+Requires:   depanneur >= 0.11
 Requires:   mic >= 0.20
 
 %if "%{?python_version}" < "2.7"
@@ -50,7 +54,7 @@ external software.
 Summary:       GBS export module
 Conflicts:     gbs < 0.15
 Requires:      python
-Requires:      pristine-tar >= 1.28
+Requires:      tizen-pristine-tar >= 20131209
 Requires:      gbs-api = %{version}-%{release}
 Requires:      git-buildpackage-rpm
 
