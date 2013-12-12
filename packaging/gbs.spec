@@ -50,7 +50,7 @@ external software.
 Summary:       GBS export module
 Conflicts:     gbs < 0.15
 Requires:      python
-Requires:      tizen-pristine-tar >= 20131209
+Requires:      tizen-pristine-tar >= 20131205
 Requires:      gbs-api = %{version}-%{release}
 Requires:      git-buildpackage-rpm
 

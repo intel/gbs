@@ -40,7 +40,7 @@ Package: gbs-export
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends},
  gbs-api (= ${binary:Version}),
- pristine-tar (>= 1.30-tizen20131209),
+ pristine-tar (>= 1.28-tizen20131205),
  git-buildpackage-rpm
 Conflicts: gbs (<< 0.15)
 Replaces: gbs (<< 0.15)
