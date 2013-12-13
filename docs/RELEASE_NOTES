@@ -1,3 +1,34 @@
+Release notes for gbs 0.20
+==========================
+
+- Release Date: 2013-12
+
+- New feature and enhancements added:
+  * build:
+    - ARM64(aarch64) build support
+    - using HTTP no-cache headers to avoid unexpected proxy caching
+    - generate html & json format report
+    - no default upstream-branch option while calling depanneur
+    - depend on initvm static binary to register qemu handler, instead of
+      using qemu bash script(/usr/sbin/qemu-binfmt-conf.sh)
+    - refine build report summary:
+      * add build log dir
+      * always print the dirs of final build files
+      * add succeeded packages number
+  * export
+    - update pristine-tar dependency to fix pristine-tar branch broken issue
+  * document
+    - refine gbs config and FAQ parts of gbs document
+
+- dependencies update:
+  * depanneur >= 0.11
+  * pristine-tar >= 1.28
+  * librpm-tizen >= 4.11.0.1.tizen20130618-tizen20131001
+  * git-buildpackage-rpm >= 0.6.3-tizen20131202
+  * build >= 20131112
+  * initvm >= 20131112
+
+
 Release notes for gbs 0.19
 ==========================
 

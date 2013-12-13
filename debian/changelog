@@ -1,4 +1,4 @@
-gbs (0.20~rc1) unstable; urgency=high
+gbs (0.20) unstable; urgency=high
   * upgrade to gbs v0.20, which contains the following bug fixing & features:
     * [build] attempt to bypass HTTP caches when fetching repomd.xml
     * [build] generate html & json format report
