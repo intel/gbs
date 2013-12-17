@@ -15,7 +15,7 @@ gbs (0.20~rc1) unstable; urgency=high
       - depanneur >= 0.10.1
       - build >= 20131112
       - git-buildpackage >= tizen20131202
-      - pristine-tar >= 1.30-tizen20131209
+      - pristine-tar >= 1.28-tizen20131205
 
  -- Qiang Zhang <qiang.z.zhang@intel.com>  Fri, 29 Nov 2013 10:56:15 +0800
 
