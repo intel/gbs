@@ -1494,17 +1494,13 @@ This section contains frequently asked questions.
 Installation Related Issues
 ---------------------------
 
-Q: I'm unable to get zypper to refresh from http://download.tizen.org/tools/openSUSE12.1/, but I'm not getting an error of repo issue.
-
-A: This may be caused by proxy settings. Try double-checking the proxy settings and adding "-E" option when running **sudo zypper refresh** command, then see what happens. If problem is solved, preserve environment variables by modifying /etc/suders to solve the problem once and for all. Refer to Section 3 in `Setting up Development Environment`_ for details.
-
-Another possible reason is cached version at the proxy server. Try running the commands below to clean the cache:
-
+Q: On openSUSE, with correct proxy setting, zypper refresh/install does not work with http://download.tizen.org/tools/latest-release/openSUSE_{version}.
+A: This may be caused by the proxy server. Try running the commands below to clean the cache:
 
 ::
 
  # clean the cache from proxy server or remote http server.
- $ wget --no-cache http://download.tizen.org/tools/openSUSE12.1/repodata/repomd.xml
+ $ wget --no-cache http://download.tizen.org/tools/latest-release/openSUSE_{version}/repodata/repomd.xml
  $ zypper refresh
  $ zypper install gbs
 
@@ -1557,17 +1553,6 @@ or
  Prefer: package2
 
 To see how to download and customize build config, please refer to the gbs build usage page.
-
-Q: 'gbs build' fails to create an arm build env on Ubuntu 11.10
-
-A: This may be caused by qemu. 'qemu-user-static' has some issues with the Ubuntu official repo. Remove 'qemu-user-static' and install 'qemu-arm-static' from the Tizen tools repo.
-You can use this command:
-
-::
-
- $ dpkg -r --force-depends qemu-user-static
- $ apt-get update
- $ apt-get install qemu-arm-static
 
 gbs Remote build Related Issues
 -------------------------------
