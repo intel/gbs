@@ -14,7 +14,7 @@
     - depanneur >= 0.10.1
     - build >= 20131112
     - git-buildpackage >= tizen20131202
-    - pristine-tar >= 1.30-tizen20131209
+    - pristine-tar >= 1.28-tizen20131205
 
 * Fri Oct 18 2013 Qiang Zhang <qiang.z.zhang@intel.com> - 0.19
   * upgrade to gbs v0.19, which contains the following bug fixing & features:
