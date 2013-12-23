@@ -54,11 +54,11 @@ This section provides information about the profile oriented style in a GBS conf
 The basic structure of a configuration file is composed of properties and sections.
 
 2.1.1 Properties
-++++++++++++++++
+''''''''''''''''
 The basic element contained in a configuration file is the property. Every property has a name and a value, delimited by an equal sign (=). The name appears to the left of the equal sign.
 
 2.1.2 Sections
-++++++++++++++
+''''''''''''''
 Properties may be grouped into various sections, named according to the naming conventions specified in Section 2.2. The section name appears on a line by itself in square brackets ([ ]). All the properties after the section declaration are associated with that section. No explicit "end of section" delimiter is needed. Sections end at the next section declaration or the end of the file. Possible sections include:
 
 * **General section**
