@@ -9,3 +9,4 @@ usr/lib/python*/*packages/gitbuildsys/cmd_submit.py
 usr/lib/python*/*packages/gitbuildsys/parsing.py
 usr/bin/*
 etc/bash_completion.d/*
+usr/share/man/man1/gbs.1

@@ -5,6 +5,9 @@
 
 override_dh_auto_install:
 	python setup.py install --root=debian/tmp --prefix=/usr
+	make man
+	mkdir -p debian/tmp/usr/share/man/man1
+	install -m644 docs/gbs.1 debian/tmp/usr/share/man/man1
 
 override_dh_auto_test:
 	@echo 'Skipping autotests'

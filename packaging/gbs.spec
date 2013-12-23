@@ -27,6 +27,7 @@ Requires:   %{name}-export = %{version}-%{release}
 Requires:   %{name}-remotebuild = %{version}-%{release}
 
 BuildRequires:  python-devel
+BuildRequires:  python-docutils
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
 
 %description
@@ -76,12 +77,13 @@ external software.
 
 %build
 %{__python} setup.py build
+make man
 
 %install
 %{__python} setup.py install --prefix=%{_prefix} --root=%{buildroot}
 
-#mkdir -p %{buildroot}/%{_prefix}/share/man/man1
-#install -m644 doc/gbs.1 %{buildroot}/%{_prefix}/share/man/man1
+mkdir -p %{buildroot}/%{_prefix}/share/man/man1
+install -m644 docs/gbs.1 %{buildroot}/%{_prefix}/share/man/man1
 
 %clean
 rm -rf %{buildroot}
@@ -89,7 +91,7 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %doc README.rst docs/RELEASE_NOTES
-#%{_mandir}/man1/*
+%{_mandir}/man1/*
 %{python_sitelib}/gitbuildsys/cmd_build.py*
 %{python_sitelib}/gitbuildsys/cmd_changelog.py*
 %{python_sitelib}/gitbuildsys/cmd_chroot.py*
