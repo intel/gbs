@@ -25,7 +25,8 @@ import pwd
 import re
 import urlparse
 
-from gitbuildsys.utils import Temp, RepoParser, read_localconf
+from gitbuildsys.utils import Temp, RepoParser, read_localconf,\
+                              guess_spec, show_file_from_rev
 from gitbuildsys.errors import GbsError, Usage
 from gitbuildsys.conf import configmgr
 from gitbuildsys.safe_url import SafeURL
@@ -33,6 +34,8 @@ from gitbuildsys.cmd_export import get_packaging_dir
 from gitbuildsys.log import LOGGER as log
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
+from gbp import rpm
+from gbp.errors import GbpError
 
 
 CHANGE_PERSONALITY = {
@@ -68,7 +71,42 @@ def formalize_build_conf(profile):
         profile = 'tizen%s' % profile
 
     # '-' is not allowed, so replace with '_'
-    return profile.replace('-', '_');
+    return profile.replace('-', '_')
+
+def get_binary_name_from_git (args, package_dirs):
+    ''' get binary rpm name from specified git package'''
+
+    binary_list = []
+    packaging_dir = get_packaging_dir(args)
+    if args.commit:
+        commit = args.commit
+    elif args.include_all:
+        commit = 'WC.UNTRACKED'
+    else:
+        commit = 'HEAD'
+
+    for package_dir in package_dirs:
+        main_spec, rest_specs = guess_spec(package_dir, packaging_dir,
+                                                 None, commit)
+        rest_specs.append(main_spec)
+        for spec in rest_specs:
+            if args.include_all:
+                spec_to_parse = os.path.join(package_dir, spec)
+            else:
+                content = show_file_from_rev(package_dir, spec, commit)
+                if content is None:
+                    raise GbsError('failed to checkout %s from commit: %s' %
+                                    (spec, commit))
+                tmp_spec = Temp(content=content)
+                spec_to_parse = tmp_spec.path
+
+            try:
+                spec = rpm.SpecFile(spec_to_parse)
+            except GbpError, err:
+                raise GbsError('%s' % err)
+            binary_list.append(spec.name)
+
+    return binary_list
 
 def prepare_repos_and_build_conf(args, arch, profile):
     '''generate repos and build conf options for depanneur'''
@@ -174,6 +212,19 @@ def prepare_depanneur_opts(args):
     if args.baselibs:
         cmd_opts += ['--baselibs']
 
+    #
+    if args.package_list:
+        package_list = args.package_list.split(',')
+        binary_list = get_binary_name_from_git(args, package_list)
+        args.binary_list += ','+ ','.join(binary_list)
+    if args.package_from_file:
+        if not os.path.exists(args.package_from_file):
+            raise GbsError('specified package list file %s not exists' % \
+                           args.package_from_file)
+        with open(args.package_from_file) as fobj:
+            pkglist = [pkg.strip() for pkg in fobj.readlines() if pkg.strip()]
+            binary_list = get_binary_name_from_git(args, pkglist)
+        args.binary_list += ',' + ','.join(binary_list)
     if args.binary_list:
         blist = [ i.strip() for i in args.binary_list.split(',') ]
         cmd_opts += ['--binary-list=%s' % ','.join(blist)]

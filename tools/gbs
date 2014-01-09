@@ -246,7 +246,16 @@ def build_parser(parser):
                         'export-treeish instead of upstream branch')
 
     group = parser.add_argument_group('package selection options')
-    group.add_argument('--binary-list',
+    group.add_argument('--package-list', default='',
+                       help='specify a package list to be built. Multiple '
+                       'packages can be separated by comma(,). Note: packages '
+                       'are package dir name')
+    group.add_argument('--package-from-file',
+                        help='specify a package list file. Packages '
+                       'listed in this file will be selected to be built. '
+                       'The format of file is one package dir for one '
+                       'line')
+    group.add_argument('--binary-list', default='',
                        help='specify a package list to be built. Multiple '
                        'packages can be separated by comma(,). Note: package '
                        'names are from spec files, not the package dir name')
