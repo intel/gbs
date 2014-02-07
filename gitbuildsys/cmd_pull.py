@@ -36,10 +36,7 @@ def main(args):
     """gbs pull entry point."""
 
     # Determine upstream branch
-    if args.upstream_branch:
-        upstream_branch = args.upstream_branch
-    else:
-        upstream_branch = configmgr.get('upstream_branch', 'general')
+    upstream_branch = configmgr.get_arg_conf(args, 'upstream_branch')
 
     # Construct GBP cmdline arguments
     gbp_args = ['dummy argv[0]',

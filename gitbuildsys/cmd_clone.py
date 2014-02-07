@@ -36,14 +36,8 @@ def main(args):
     """gbs clone entry point."""
 
     # Determine upstream branch
-    if args.upstream_branch:
-        upstream_branch = args.upstream_branch
-    else:
-        upstream_branch = configmgr.get('upstream_branch', 'general')
-    if args.packaging_branch:
-        packaging_branch = args.packaging_branch
-    else:
-        packaging_branch = configmgr.get('packaging_branch', 'general')
+    upstream_branch = configmgr.get_arg_conf(args, 'upstream_branch')
+    packaging_branch = configmgr.get_arg_conf(args, 'packaging_branch')
     # Construct GBP cmdline arguments
     gbp_args = ['dummy argv[0]',
                 '--color-scheme=magenta:green:yellow:red',

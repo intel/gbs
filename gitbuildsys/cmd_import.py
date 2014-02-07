@@ -44,14 +44,8 @@ def main(args):
                dirn=configmgr.get('tmpdir', 'general'),
                directory=True)
 
-    if args.upstream_branch:
-        upstream_branch = args.upstream_branch
-    else:
-        upstream_branch = configmgr.get('upstream_branch', 'general')
-    if args.upstream_tag:
-        upstream_tag = args.upstream_tag
-    else:
-        upstream_tag = configmgr.get('upstream_tag', 'general')
+    upstream_branch = configmgr.get_arg_conf(args, 'upstream_branch')
+    upstream_tag = configmgr.get_arg_conf(args, 'upstream_tag')
     # transform variables from shell to python convention ${xxx} -> %(xxx)s
     upstream_tag = re.sub(r'\$\{([^}]+)\}', r'%(\1)s', upstream_tag)
 

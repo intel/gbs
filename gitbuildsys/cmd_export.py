@@ -53,20 +53,14 @@ def is_native_pkg(repo, args):
     """
     Determine if the package is "native"
     """
-    if args.upstream_branch:
-        upstream_branch = args.upstream_branch
-    else:
-        upstream_branch = configmgr.get('upstream_branch', 'general')
+    upstream_branch = configmgr.get_arg_conf(args, 'upstream_branch')
     return not repo.has_branch(upstream_branch)
 
 def get_packaging_dir(args):
     """
     Determine the packaging dir to be used
     """
-    if args.packaging_dir:
-        path = args.packaging_dir
-    else:
-        path = configmgr.get('packaging_dir', 'general')
+    path = configmgr.get_arg_conf(args, 'packaging_dir')
     return path.rstrip(os.sep)
 
 def check_export_branches(repo, args):
@@ -77,10 +71,7 @@ def check_export_branches(repo, args):
     remote_branches = {}
     for branch in repo.get_remote_branches():
         remote_branches[branch.split('/')[-1]] = branch
-    if args.upstream_branch:
-        upstream_branch = args.upstream_branch
-    else:
-        upstream_branch = configmgr.get('upstream_branch', 'general')
+    upstream_branch = configmgr.get_arg_conf(args, 'upstream_branch')
 
     # track upstream/pristine-tar branch
     for br in [upstream_branch, 'pristine-tar']:
@@ -93,14 +84,8 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
     """
     Construct the cmdline argument list for git-buildpackage export
     """
-    if args.upstream_branch:
-        upstream_branch = args.upstream_branch
-    else:
-        upstream_branch = configmgr.get('upstream_branch', 'general')
-    if args.upstream_tag:
-        upstream_tag = args.upstream_tag
-    else:
-        upstream_tag = configmgr.get('upstream_tag', 'general')
+    upstream_branch = configmgr.get_arg_conf(args, 'upstream_branch')
+    upstream_tag = configmgr.get_arg_conf(args, 'upstream_tag')
     # transform variables from shell to python convention ${xxx} -> %(xxx)s
     upstream_tag = re.sub(r'\$\{([^}]+)\}', r'%(\1)s', upstream_tag)
 
@@ -108,10 +93,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
     log.debug("Using upstream tag format: '%s'" % upstream_tag)
 
     # Get patch squashing option
-    if args.squash_patches_until:
-        squash_patches_until = args.squash_patches_until
-    else:
-        squash_patches_until = configmgr.get('squash_patches_until', 'general')
+    squash_patches_until = configmgr.get_arg_conf(args, 'squash_patches_until')
 
     # Determine the remote repourl
     reponame = ""

@@ -407,6 +407,16 @@ url = http://download.tizen.org/releases/daily/trunk/ivi/latest/
         else:
             return self._get(opt, section)
 
+    def get_arg_conf(self, args, opt, section='general'):
+        """get value from command line arguments if found there, otherwise fall
+           back to config
+        """
+        if hasattr(args, opt):
+            value = getattr(args, opt)
+            if value is not None:
+                return value
+        return self.get(opt, section)
+
     @staticmethod
     def update(cfgparsers):
         'update changed values into files on disk'
