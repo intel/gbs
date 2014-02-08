@@ -482,6 +482,32 @@ def pull_parser(parser):
                         help='update all branches')
     return parser
 
+@subparser
+def devel_parser(parser):
+    """Manage devel branches
+    Examples:
+      $ gbs devel start
+      $ gbs devel export
+    """
+
+    parser.add_argument('gitdir', nargs='?', type=os.path.abspath,
+                        default=os.getcwd(),
+                        action=SearchConfAction,
+                        help='path to git repository')
+    parser.add_argument('--packaging-dir',
+                        help='directory containing packaging files')
+    parser.add_argument('--spec', type=basename_type,
+                        help='specify a spec file to use. It should be a file '
+                        'name that GBS will find it in packaging dir')
+    parser.add_argument('--upstream-tag',
+                        help="upstream tag format, '${upstreamversion}' is "
+                        'expanded to the version in the spec file. '
+                        "E.g. 'v${upstreamversion}'")
+    parser.add_argument('action', choices=['start', 'export', 'drop', 'switch',
+                        'convert'],
+                        help='Action to take')
+    return parser
+
 def main(argv):
     """Script entry point."""
 

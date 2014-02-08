@@ -130,6 +130,7 @@ rm -rf %{buildroot}
 %{python_sitelib}/gitbuildsys/cmd_chroot.py*
 %{python_sitelib}/gitbuildsys/cmd_clone.py*
 %{python_sitelib}/gitbuildsys/cmd_createimage.py*
+%{python_sitelib}/gitbuildsys/cmd_devel.py*
 %{python_sitelib}/gitbuildsys/cmd_import.py*
 %{python_sitelib}/gitbuildsys/cmd_pull.py*
 %{python_sitelib}/gitbuildsys/cmd_submit.py*

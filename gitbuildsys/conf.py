@@ -184,6 +184,9 @@ class ConfigMgr(object):
                 'packaging_dir': 'packaging',
                 'work_dir': '.',
             },
+            'orphan-devel': {
+                'packaging_branch': '',
+            },
     }
 
     DEFAULT_CONF_TEMPLATE = '''[general]
