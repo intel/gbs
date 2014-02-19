@@ -70,7 +70,7 @@ def check_export_branches(repo, args):
     '''
     remote_branches = {}
     for branch in repo.get_remote_branches():
-        remote_branches[branch.split('/')[-1]] = branch
+        remote_branches[branch.split('/', 1)[-1]] = branch
     upstream_branch = configmgr.get_arg_conf(args, 'upstream_branch')
 
     # track upstream/pristine-tar branch
