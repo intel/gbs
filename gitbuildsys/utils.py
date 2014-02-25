@@ -222,7 +222,6 @@ class URLGrabber(object):
         curl.setopt(pycurl.PROGRESSFUNCTION, progressing)
         curl.setopt(pycurl.NOPROGRESS, False)
         original_handler = signal.signal(signal.SIGINT, handler)
-
         try:
             curl.perform()
         except pycurl.error, err:
@@ -231,9 +230,16 @@ class URLGrabber(object):
             errcode, errmsg = err.args
             http_code = curl.getinfo(pycurl.HTTP_CODE)
 
-            if errcode == pycurl.E_OPERATION_TIMEOUTED:
+            if errcode == pycurl.E_OPERATION_TIMEOUTED or http_code == 503:
+                proxies = ['Detected proxies set in system environment:']
+                ENV = os.environ
+                for key in ['HTTPS_PROXY', 'HTTP_PROXY', 'FTP_PROXY',
+                            'https_proxy', 'http_proxy', 'ftp_proxy',
+                            'NO_PROXY', 'no_proxy']:
+                    proxies.append('%s=%s' % (key, ENV.get(key, '')))
                 raise UrlError("connect timeout to %s, maybe it's caused by "
-                               "proxy settings, please check." % curl.url)
+                               "proxy settings, please check. %s" % (curl.url,
+                               '\n  '.join(proxies)))
             elif errcode == pycurl.E_ABORTED_BY_CALLBACK:
                 raise KeyboardInterrupt(err)
             elif http_code in (401, 403):
