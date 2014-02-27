@@ -1,5 +1,8 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %{!?python_version: %define python_version %(%{__python} -c "import sys; sys.stdout.write(sys.version[:3])")}
+%define jobs_dir /var/lib/jenkins/jobs
+%define scripts_dir /var/lib/jenkins/jenkins-scripts
+
 Name:       gbs
 Summary:    The command line tools for Tizen package developers
 Version:    0.20
@@ -74,6 +77,21 @@ Requires:      git-buildpackage-rpm
 This package contains gbs remotebuild APIs, which can be used by
 external software.
 
+%package jenkins-jobs
+Summary: GBS local full build jenkins jobs configurations.
+
+%description jenkins-jobs
+These jenkins jobs are used to build tizen source from scratch or
+only a part of packages, and create images finally.
+
+%package jenkins-scripts
+Summary:  Jenkins scripts used by gbs-jenkins-job
+Requires: gbs
+Requires: mic
+
+%description jenkins-scripts
+These scripts are used by GBS local full build jenkins jobs. These
+scripts should be installed on Jenkins slave nodes.
 
 %prep
 %setup -q -n %{name}-%{version}
@@ -88,6 +106,17 @@ make man
 
 mkdir -p %{buildroot}/%{_prefix}/share/man/man1
 install -m644 docs/gbs.1 %{buildroot}/%{_prefix}/share/man/man1
+
+# Install Jenkins Jobs
+for job_name in $(ls jenkins-jobs/configs)
+do
+    mkdir -p %{buildroot}/%{jobs_dir}/${job_name}
+    install -m644 jenkins-jobs/configs/${job_name}/config.xml %{buildroot}/%{jobs_dir}/${job_name}
+done
+
+#Install Jenkins Scripts
+mkdir -p %{buildroot}/%{scripts_dir}
+install -m755 jenkins-jobs/scripts/*  %{buildroot}/%{scripts_dir}
 
 %clean
 rm -rf %{buildroot}
@@ -128,3 +157,20 @@ rm -rf %{buildroot}
 %files remotebuild
 %defattr(-,root,root,-)
 %{python_sitelib}/gitbuildsys/cmd_remotebuild.py*
+
+%files jenkins-jobs
+%defattr(-,jenkins,jenkins,-)
+%dir /var/lib/jenkins
+%dir %{jobs_dir}
+%dir %{jobs_dir}/GBS-local-full-build
+%dir %{jobs_dir}/GBS-local-build-with-package-list
+%{jobs_dir}/GBS-local-full-build/config.xml
+%{jobs_dir}/GBS-local-build-with-package-list/config.xml
+
+%files jenkins-scripts
+%defattr(-,jenkins,jenkins,-)
+%dir /var/lib/jenkins
+%dir %{scripts_dir}
+%{scripts_dir}/job_local_full_build
+%{scripts_dir}/job_build_packagelist
+%{scripts_dir}/common_functions

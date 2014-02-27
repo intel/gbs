@@ -1,0 +1,197 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>This jenkins job is used to  build  Tizen  sources.&#xd;
+This job is based on &lt;a class=&quot;reference external&quot; href=&quot;http://en.wikipedia.org/wiki/Repo_%28script%29&quot;&gt;repo&lt;/a&gt; and  &lt;a class=&quot;reference external&quot; href=&quot;https://source.tizen.org/documentation/reference/git-build-system&quot;&gt;GBS&lt;/a&gt;.  Developers can reconfigure&#xd;
+this job to run periodically, of course can be triggered at anytime needed.&lt;/p&gt;&#xd;
+&lt;p&gt;Using this job, developers can specify a list of packages, which just have&#xd;
+been updated in remote repos, and check if the final image can work well&#xd;
+with these changes of packages. To use this job, one remote repo must be&#xd;
+specified, which can be used to get ks file and required by &lt;cite&gt;gbs build&lt;/cite&gt;.&#xd;
+An example of remote repo is shown below:&lt;/p&gt;&#xd;
+&lt;pre class=&quot;literal-block&quot;&gt;&#xd;
+http://download.tizen.org/releases/daily/tizen/ivi/ivi/tizen_20140212.7/&#xd;
+&lt;/pre&gt;&#xd;
+&lt;p&gt;With &lt;strong&gt;PUBLISH&lt;/strong&gt; enabled, build artifacts, including build reports, repos and&#xd;
+images, will be synchronized to respective download servers.&lt;/p&gt;&#xd;
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt; To get a better understanding of this job, it is highly recommended&#xd;
+that the following document, which provides instructions of the corresponding&#xd;
+manual operations, is read and well understood:&#xd;
+&lt;a class=&quot;reference external&quot; href=&quot;https://source.tizen.org/documentation/developer-guide/creating-tizen-image-scratch&quot;&gt;Creating a Tizen Image from Scratch&lt;/a&gt;&lt;/p&gt;&#xd;
+&lt;p&gt;The following options are supported by this jenkins job:&lt;/p&gt;&#xd;
+&lt;dl class=&quot;docutils&quot;&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;MANIFEST_URL&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;&lt;p class=&quot;first&quot;&gt;The manifest url, which should be recognized by &lt;a class=&quot;reference external&quot; href=&quot;http://en.wikipedia.org/wiki/Repo_%28script%29&quot;&gt;repo&lt;/a&gt; command,&#xd;
+for example: &lt;cite&gt;review.tizen.org:scm/manifest&lt;/cite&gt;, where &lt;cite&gt;review.tizen.org&lt;/cite&gt;&#xd;
+is the alias name set in ~/.ssh, like:&lt;/p&gt;&#xd;
+&lt;pre class=&quot;literal-block&quot;&gt;&#xd;
+Host review.tizen.org&#xd;
+Hostname review.tizen.org&#xd;
+Port 29418&#xd;
+User &amp;lt;username&amp;gt;&#xd;
+#ProxyCommand connect -S &amp;lt;proxy&amp;gt;:&amp;lt;port&amp;gt; %h %p&#xd;
+&lt;/pre&gt;&#xd;
+&lt;p class=&quot;last&quot;&gt;and, &lt;cite&gt;scm/manifest&lt;/cite&gt; is the manifest path in remote tizen.org gerrit.&lt;/p&gt;&#xd;
+&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;MANIFEST_BRANCHES&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;This option specifies the manifest branch used for syncing code, this&#xd;
+value will be passed to &lt;a class=&quot;reference external&quot; href=&quot;http://en.wikipedia.org/wiki/Repo_%28script%29&quot;&gt;repo&lt;/a&gt; command directly.&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PROFILE&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;This option specifies the target profile, valid values: &lt;cite&gt;IVI&lt;/cite&gt;, &lt;cite&gt;Mobile&lt;/cite&gt;.&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;ARCH&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;This option specifies the arch to be built, valid values: &lt;cite&gt;i586&lt;/cite&gt; and&#xd;
+&lt;cite&gt;armv7l&lt;/cite&gt;.&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;REMOTE_REPOS&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;The remote repos for doing local full build using gbs, and get ks file for&#xd;
+image creation.&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;KS&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;Specify the ks file name used to create images. The avaliable names&#xd;
+should be in  &lt;strong&gt;REMOTE_REPO&lt;/strong&gt;  specified  above, multiple ks can be&#xd;
+specified seperate by space.&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PACKAGE_LIST&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;This option specifies the package list, in which the full path of each&#xd;
+package is listed line by line.&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;BUILD_RDEPS&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;This option enables the building with dependency,that is, packages that&#xd;
+depend on packages in &lt;cite&gt;PACKAGE_LIST&lt;/cite&gt; will be built in correct dependency&#xd;
+order.&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PARALEL_THREADS&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;This option determines how many builder gbs should run in parallel&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;EXCLUDE_PACKAGES&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;This option specifies the packages that does not participate in building.&#xd;
+And also can be used to break dependency cycles.&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;BUILD_ARGS&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;Specify more gbs build options. For more gbs build options and usage&#xd;
+refer to &lt;a class=&quot;reference external&quot; href=&quot;https://source.tizen.org/documentation/reference/git-build-system/usage/gbs-build&quot;&gt;gbs build usage&lt;/a&gt;.  Default value: empty.&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PUBLISH&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;This option enables the publishing of build artifacts to respective&#xd;
+download servers. Build artifacts include report, images and repos.&lt;/dd&gt;&#xd;
+&lt;dt&gt;&lt;tt class=&quot;docutils literal&quot;&gt;PUBLISH_URL&lt;/tt&gt;&lt;/dt&gt;&#xd;
+&lt;dd&gt;Specify the  URL  address to publish build artifacts. The format of&#xd;
+&lt;cite&gt;PUBLISH_URL&lt;/cite&gt; should be the same as rsync format which can be a local&#xd;
+path or  remote url like: &lt;cite&gt;user&amp;#64;hostname:/path/to/publish_dir&lt;/cite&gt;.&#xd;
+This option only take effect if PUBLISH is enabled.&lt;/dd&gt;&#xd;
+&lt;/dl&gt;</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>MANIFEST_URL</name>
+          <description>&lt;p class=&quot;first&quot;&gt;The manifest url, which should be recognized by &lt;a class=&quot;reference external&quot; href=&quot;http://en.wikipedia.org/wiki/Repo_%28script%29&quot;&gt;repo&lt;/a&gt; command,
+for example: &lt;cite&gt;review.tizen.org:scm/manifest&lt;/cite&gt;, where &lt;cite&gt;review.tizen.org&lt;/cite&gt;
+is the alias name set in ~/.ssh, like:&lt;/p&gt;
+&lt;pre class=&quot;literal-block&quot;&gt;
+Host review.tizen.org
+Hostname review.tizen.org
+Port 29418
+User &amp;lt;username&amp;gt;
+#ProxyCommand connect -S &amp;lt;proxy&amp;gt;:&amp;lt;port&amp;gt; %h %p
+&lt;/pre&gt;
+&lt;p class=&quot;last&quot;&gt;and, &lt;cite&gt;scm/manifest&lt;/cite&gt; is the manifest path in remote tizen.org gerrit.&lt;/p&gt;
+</description>
+          <defaultValue>review.tizen.org:scm/manifest</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>MANIFEST_BRANCH</name>
+          <description>This option specifies the manifest branch used for syncing code, this
+value will be passed to &lt;a class=&quot;reference external&quot; href=&quot;http://en.wikipedia.org/wiki/Repo_%28script%29&quot;&gt;repo&lt;/a&gt; command directly.</description>
+          <defaultValue>tizen</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>PROFILE</name>
+          <description>This option specifies the target profile, valid values: &lt;cite&gt;IVI&lt;/cite&gt;, &lt;cite&gt;Mobile&lt;/cite&gt;.</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>ivi</string>
+              <string>mobile</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.TextParameterDefinition>
+          <name>REMOTE_REPOS</name>
+          <description>The remote repos for doing local full build using gbs, and get ks file for
+image creation. Example:
+http://download.tizen.org/releases/daily/tizen/ivi/ivi/tizen_20140212.7/</description>
+          <defaultValue>https://download.tizen.org/releases/daily/tizen/ivi/ivi/tizen_20140214.10</defaultValue>
+        </hudson.model.TextParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>KS</name>
+          <description>ks file name.
+Example:
+  mobile.ks
+
+For multiple ks file use spaces to separate them:
+ mobile.ks mobile-ref.ks</description>
+          <defaultValue>ivi-mbr-i586.ks</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>BUILD_RDEPS</name>
+          <description>Check this box, all packages depend on specified packages will be built in correct dependency order.</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.TextParameterDefinition>
+          <name>PACKAGE_LIST</name>
+          <description>Specify the packages list to be built, and one line for per package. The format should be the detail path in remote gerrit.</description>
+          <defaultValue>apps/core/preloaded/menu-screen
+apps/core/preloaded/settings
+</defaultValue>
+        </hudson.model.TextParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>ARCH</name>
+          <description>This option specifies the arch to be built, valid values: &lt;cite&gt;i586&lt;/cite&gt;</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>ia32</string>
+              <string>armv7l</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PARALEL_THREADS</name>
+          <description>This option determines how many builder gbs should run in parallel.</description>
+          <defaultValue>4</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>EXCLUDE_PACKAGES</name>
+          <description>This option specifies the packages that does not participate in building.
+And also can be used to break dependency cycles.</description>
+          <defaultValue>texinfo,aul,gettext</defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>BUILD_ARGS</name>
+          <description>Specify more gbs build options. For more gbs build options and usage
+refer to &lt;a class=&quot;reference external&quot; href=&quot;https://source.tizen.org/documentation/reference/git-build-system/usage/gbs-build&quot;&gt;gbs build usage&lt;/a&gt;.  Default value: empty.</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>PUBLISH</name>
+          <description>This option enables the publishing of build artifacts to respective download servers. Build artifacts include report, images and repos..</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PUBLISH_URL</name>
+          <description>Specify the  URL  address to publish build artifacts. The format of
+&lt;cite&gt;PUBLISH_URL&lt;/cite&gt; should be the same as rsync format which can be a local
+path or  remote url like: &lt;cite&gt;user&amp;#64;hostname:/path/to/publish_dir&lt;/cite&gt;.
+This option only take effect if PUBLISH is enabled.</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>${JENKINS_HOME}/jenkins-scripts/job_build_packagelist</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>
+  <buildWrappers/>
+</project>

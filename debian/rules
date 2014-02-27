@@ -8,6 +8,12 @@ override_dh_auto_install:
 	make man
 	mkdir -p debian/tmp/usr/share/man/man1
 	install -m644 docs/gbs.1 debian/tmp/usr/share/man/man1
+	for job_name in $(shell ls jenkins-jobs/configs); do \
+		mkdir -p debian/tmp/var/lib/jenkins/jobs/$$job_name; \
+		install -m644 jenkins-jobs/configs/$$job_name/config.xml debian/tmp/var/lib/jenkins/jobs/$$job_name; \
+	done
+	mkdir -p debian/tmp/var/lib/jenkins/jenkins-scripts
+	install -m755 jenkins-jobs/scripts/* debian/tmp/var/lib/jenkins/jenkins-scripts
 
 override_dh_auto_test:
 	@echo 'Skipping autotests'

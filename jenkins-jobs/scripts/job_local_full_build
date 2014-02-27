@@ -1,0 +1,74 @@
+#!/bin/bash -xe
+#
+# Copyright (c) 2014 Intel, Inc.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; version 2 of the License
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc., 59
+# Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+jenkins_script_dir=$(dirname $0)
+source $jenkins_script_dir/common_functions
+
+# Clone & sync source code
+function prepare_tizen_src()
+{
+    pushd $TIZEN_SOURCE
+    repo init -u $MANIFEST_URL -b $MANIFEST_BRANCH -m ${PROFILE}.xml
+    repo sync
+    popd
+}
+
+# Get ks files via unpack image-configurations.rpm
+function get_ks_files
+{
+    image_configurations_rpm=`find $LOCAL_REPO_DIR -name "image-configurations*.noarch.rpm"`
+    if [ -z $image_configurations_rpm ]; then
+        echo "No image-configuation rpm generated, so can't get ks files"
+        return 1
+    fi
+
+    rpm -K $image_configurations_rpm || cleanup_and_exit 1;
+
+    for ks_file in $(rpm2cpio $image_configurations_rpm |cpio -t)
+    do
+        echo $ks_file|grep "ks$" || continue
+        ks_base_name=$(basename $ks_file)
+        rpm2cpio $image_configurations_rpm |cpio -i --quiet --to-stdout $ks_file >"$OUTPUT_DIR/builddata/image-configs/$ks_base_name"
+        KS_FILES="$KS_FILES $OUTPUT_DIR/builddata/image-configs/$ks_base_name"
+    done
+
+}
+
+
+#MAIN START
+
+prepare_build_env
+
+prepare_tizen_src
+
+profile_name=$(sed -n 's/profile.*=.*profile\.\(.*\)/\1/p' $TIZEN_SOURCE/.gbs.conf)
+LOCAL_REPO_DIR="$GBS_BUILD_ROOT/local/repos/$profile_name/$ARCH"
+
+#Building tizen source packages using gbs build
+cd $TIZEN_SOURCE
+gen_gbs_build_args
+gbs build --arch $ARCH $GBS_BUILD_ARGS || true
+
+# Building Images
+get_ks_files && create_images
+
+#Publish repos, images and build reports
+if [ $PUBLISH = true -a -n "$PUBLISH_URL" ]; then
+    publish_artifacts
+fi
+
+cleanup_and_exit 0

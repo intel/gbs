@@ -1,0 +1,3 @@
+var/lib/jenkins/jenkins-scripts/common_functions
+var/lib/jenkins/jenkins-scripts/job_local_full_build
+var/lib/jenkins/jenkins-scripts/job_build_packagelist

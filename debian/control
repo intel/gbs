@@ -58,3 +58,18 @@ Replaces: gbs (<< 0.18.1)
 Description: GBS remotebuild API
  This package contains gbs remotebuild APIs, which can be used by
  external software.
+
+Package: gbs-jenkins-jobs
+Architecture: all
+Depends: ${misc:Depends},
+ jenkins
+Description: GBS local full build jenkins jobs configurations.
+ These jenkins jobs are used to build tizen source from scratch or only a part of packages, and create images finally.
+
+Package: gbs-jenkins-scripts
+Architecture: all
+Depends: ${misc:Depends},
+ gbs,
+ mic
+Description: Jenkins scripts used by gbs-jenkins-job
+ These scripts are used by GBS local full build jenkins jobs. These scripts should be installed on Jenkins slave nodes.

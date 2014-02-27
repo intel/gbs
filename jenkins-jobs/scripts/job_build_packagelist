@@ -1,0 +1,110 @@
+#!/bin/bash -xe
+#
+# Copyright (c) 2014 Intel, Inc.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; version 2 of the License
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc., 59
+# Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+jenkins_script_dir=$(dirname $0)
+source $jenkins_script_dir/common_functions
+
+function update_manifest()
+{
+    # Manifest in-consistant issues
+    echo fix error in $MANIFEST_FILE
+    sed -i 's|system\(/smart\)|connectivity\1|g' $TMP_DIR/$MANIFEST_FILE
+    sed -i '/<remote fetch=/,+1 d' $TMP_DIR/$MANIFEST_FILE
+}
+
+# Clone & sync source code
+function prepare_tizen_src()
+{
+    pushd $TIZEN_SOURCE
+    rm .repo/manifests -rf
+    rm .repo/local_manifests -rf
+    repo init -u $MANIFEST_URL -b $MANIFEST_BRANCH -m ${PROFILE}.xml
+    popd
+
+    #Update original manifest by removing duplicated packags
+    #with specified package list to be built
+    HEADER="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+    <manifest>
+    "
+    for pkg in $PACKAGE_LIST
+    do
+        sed -i "\,\"$pkg\",d" $TMP_DIR/$MANIFEST_FILE
+        HEADER="$HEADER <project name=\"$pkg\" path=\"$pkg\" />
+"
+    done
+
+    HEADER="$HEADER</manifest>"
+
+    if [ ! -d $LOCAL_MANIFEST_DIR ]; then
+        mkdir $LOCAL_MANIFEST_DIR
+    fi
+
+    echo "create user customized local manifest: ${LOCAL_MANIFEST_DIR}/local.xml"
+
+    cat >"${LOCAL_MANIFEST_DIR}/local.xml" <<EOF
+$HEADER
+EOF
+
+    echo replace .repo/manifests/mobile/projects.xml with $MANIFEST_FILE
+    cp $TMP_DIR/$MANIFEST_FILE "${TIZEN_SOURCE}/.repo/manifests/$PROFILE/projects.xml"
+
+    pushd $TIZEN_SOURCE
+    #repo sync
+    popd
+}
+
+#MAIN START
+
+prepare_build_env
+
+MANIFEST_FILE="${BUILD_ID}_${ARCH}.xml"
+MANIFEST_FILE_URL="$REMOTE_REPOS/builddata/manifest/${MANIFEST_FILE}"
+LOCAL_MANIFEST_DIR="$TIZEN_SOURCE/.repo/local_manifests"
+[ $ARCH = ia32 ] && ARCH=i586
+
+#Download ks files
+for ks in $KS
+do
+    wget -q "$REMOTE_REPOS/builddata/image-configs/$ks" -O $TMP_DIR/$ks
+    KS_FILES="$KS_FILES $TMP_DIR/$ks"
+done
+
+#Download manifest file released in specified $REMOTE_REPOS
+wget -q $MANIFEST_FILE_URL -O "$TMP_DIR/$MANIFEST_FILE"
+update_manifest
+# prepare manifest and sync tizen src
+prepare_tizen_src
+
+profile_name=$(sed -n 's/profile.*=.*profile\.\(.*\)/\1/p' $TIZEN_SOURCE/.gbs.conf)
+LOCAL_REPO_DIR="$GBS_BUILD_ROOT/local/repos/$profile_name/$ARCH"
+
+#Building tizen source packages using gbs build
+cd $TIZEN_SOURCE
+gen_gbs_build_args
+[ "x$BUILD_RDEPS" == "xtrue" ] && GBS_BUILD_ARGS="$GBS_BUILD_ARGS --rdeps"
+PKG_LIST=$(echo $PACKAGE_LIST|sed 's/ /,/g')
+gbs build --arch $ARCH $GBS_BUILD_ARGS --package-list=$PKG_LIST  || true
+
+# Building Images
+create_images
+
+#Publish repos, images and build reports
+if [ $PUBLISH = true -a -n "$PUBLISH_URL" ]; then
+    publish_artifacts
+fi
+
+cleanup_and_exit 0

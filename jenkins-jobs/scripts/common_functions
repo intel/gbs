@@ -1,0 +1,110 @@
+#!/bin/bash -xe
+#
+# Copyright (c) 2014 Intel, Inc.
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation; version 2 of the License
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc., 59
+# Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+
+# COMMON ENVIRONMENT VARIABLES
+# $WORKSPACE is the jenkins workspace, the default is /var/lib/jenkins/workspace/%{jenkins_job_name}
+TMP_DIR="$WORKSPACE/.tmp"
+TIZEN_SOURCE="$WORKSPACE/tizen"
+GBS_BUILD_ROOT="$WORKSPACE/GBS-ROOT"
+BUILD_ID=
+LOCAL_REPO_DIR=
+KS_FILES=
+OUTPUT_DIR="$WORKSPACE/$JOB_NAME/tizen_$(date +%Y%m%d)#${BUILD_NUMBER}"
+GBS_BUILD_ARGS="--clean-once" # default enabled args
+
+# Prepare build env
+function prepare_build_env()
+{
+    test -e $TIZEN_SOURCE || mkdir -p $TIZEN_SOURCE
+    sudo rm -rf "$JOB_NAME"
+    mkdir -p $OUTPUT_DIR/repos
+    mkdir -p $OUTPUT_DIR/builddata
+    mkdir -p $OUTPUT_DIR/images
+    mkdir -p $OUTPUT_DIR/builddata/image-configs
+    BUILD_ID=$(basename $(echo $REMOTE_REPOS|awk '{print $1}'))
+
+    test -e $TMP_DIR || mkdir $TMP_DIR
+}
+
+function cleanup_and_exit ()
+{
+    sudo rm $OUTPUT_DIR -rf
+    rm -rf $TMP_DIR
+    exit $1
+}
+
+# Build gbs args using jenkins job options
+function gen_gbs_build_args()
+{
+    GBS_BUILD_ARGS="-B $GBS_BUILD_ROOT $GBS_BUILD_ARGS $BUILD_ARGS "
+    [ -n "$EXCLUDE_PACKAGES" ] && GBS_BUILD_ARGS="$GBS_BUILD_ARGS --exclude=$EXCLUDE_PACKAGES"
+    [ -z "$PARALEL_THREADS" ] && $PARALEL_THREADS="4"
+    GBS_BUILD_ARGS="$GBS_BUILD_ARGS --threads=$PARALEL_THREADS"
+    for repo in $REMOTE_REPOS
+    do
+        GBS_BUILD_ARGS="$GBS_BUILD_ARGS -R $repo"
+    done
+}
+
+# Update ks files with new repos
+function update_ks_file(){
+    # KS files
+    sed -i 's#^\(repo.*\)http.*@BUILD_ID@\(.*\)$#\1'"${REMOTE_REPOS}"'\2#' $KS_FILES
+    sed -i 's/^repo .*/& --priority=99 --ssl_verify=no/' $KS_FILES
+    sed -i "/^repo/ a\repo --name=local  --baseurl=file://$LOCAL_REPO_DIR --priority=1" $KS_FILES
+}
+
+
+#Create images
+function create_images()
+{
+    update_ks_file
+
+    for ks in $KS_FILES
+    do
+        ks_file=$(basename $ks)
+        sudo mic cr auto $ks --release=$BUILD_ID \
+                             --logfile=${BUILD_ID}_${ks_file%.*} \
+                             -o $OUTPUT_DIR/images || true
+    done
+
+    if [ -e "$OUTPUT_DIR/images/${BUILD_ID}/images" ]; then
+        sudo mv $OUTPUT_DIR/images/${BUILD_ID}/images/* $OUTPUT_DIR/images/
+        sudo rm $OUTPUT_DIR/images/${BUILD_ID} -rf
+    fi
+}
+
+# publish build artifacts
+function publish_artifacts()
+{
+    cd $OUTPUT_DIR
+    if [ -e "$LOCAL_REPO_DIR/repodata" -a \
+         -e "$LOCAL_REPO_DIR/RPMS" -a \
+         -e "$LOCAL_REPO_DIR/logs" -a \
+         -e "$LOCAL_REPO_DIR/index.html" ]; then
+        ln -s "$LOCAL_REPO_DIR/repodata" "$LOCAL_REPO_DIR/RPMS" repos/
+        cp $LOCAL_REPO_DIR/index.html builddata/
+        ln -s $LOCAL_REPO_DIR/logs builddata/
+        rsync -avzk "$WORKSPACE/$JOB_NAME" $PUBLISH_URL || cleanup_and_exit 1
+    else
+        echo "No build report generated"
+    fi
+}
+
+
+
