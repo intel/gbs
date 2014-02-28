@@ -97,7 +97,7 @@ class OSC(object):
     def get_tags(self, project, tags):
         """Get tags content from meta."""
         meta_xml = self.get_meta(project)
-        xml_root = ET.fromstringlist(meta_xml)
+        xml_root = ET.fromstring(meta_xml)
 
         result = ''
         for tag in tags:
