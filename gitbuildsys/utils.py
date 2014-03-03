@@ -64,12 +64,25 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
     git_path = os.path.abspath(git_path)
 
     if commit_id == 'WC.UNTRACKED':
+        if os.path.islink(packaging_dir):
+            packaging_dir = os.readlink(packaging_dir)
         check = lambda fname, dir_only = False: os.path.exists(os.path.join(
                        git_path, fname))
         glob_ = lambda pattern: [ name.replace(git_path+'/', '')
             for name in reversed(glob.glob(os.path.join(git_path, pattern))) ]
         msg = 'No such spec file %s'
     else:
+        git_object = commit_id + ':' + packaging_dir
+        cmd = ['git', 'show', git_object]
+        try:
+            with Workdir(git_path):
+                p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        except (subprocess.CalledProcessError, OSError):
+            raise GbsError("failed to run %s in %s" % (' '.join(cmd), git_path))
+        output = p.communicate()[0]
+        if not output.startswith('tree %s' % git_object):
+            # packaging_dir is a symlink
+            packaging_dir = output
         check = lambda fname, dir_only = False : file_exists_in_rev(git_path,
                        fname, commit_id, dir_only=dir_only)
         glob_ = lambda pattern: glob_in_rev(git_path, pattern, commit_id)
