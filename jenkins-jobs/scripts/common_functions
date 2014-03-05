@@ -73,6 +73,11 @@ function update_ks_file(){
 #Create images
 function create_images()
 {
+    if [ -z "$KS_FILES" ]; then
+        echo "No KS files found, skip image creation "
+        return
+    fi
+
     update_ks_file
 
     for ks in $KS_FILES
