@@ -63,21 +63,32 @@ def get_packaging_dir(args):
     path = configmgr.get_arg_conf(args, 'packaging_dir')
     return path.rstrip(os.sep)
 
-def check_export_branches(repo, args):
+def track_export_branches(repo, args):
     '''checking export related branches: pristine-tar, upstream.
     give warning if pristine-tar/upstream branch exist in remote
     but have not been checkout to local
     '''
     remote_branches = {}
+    tracked_branches = []
     for branch in repo.get_remote_branches():
         remote_branches[branch.split('/', 1)[-1]] = branch
     upstream_branch = configmgr.get_arg_conf(args, 'upstream_branch')
 
     # track upstream/pristine-tar branch
-    for br in [upstream_branch, 'pristine-tar']:
-        if not repo.has_branch(br) and br in remote_branches:
-            log.info('tracking branch: %s -> %s' % (remote_branches[br], br))
-            repo.create_branch(br, remote_branches[br])
+    for branch in [upstream_branch, 'pristine-tar']:
+        if not repo.has_branch(branch ) and branch in remote_branches:
+            log.info('tracking branch: %s -> %s' % (remote_branches[branch],
+                                                    branch))
+            repo.create_branch(branch, remote_branches[branch])
+            tracked_branches.append(branch)
+
+    return tracked_branches
+
+def untrack_export_branches(repo, branches):
+    ''' remove local tracking branches, created in track_export_branches()
+    '''
+    for branch in branches:
+        repo.delete_branch(branch)
 
 def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
                            force_native=False, create_tarball=True):
@@ -238,7 +249,7 @@ def main(args):
                        directory=True)
     export_dir = tempd.path
 
-    check_export_branches(repo, args)
+    tracked_branches = track_export_branches(repo, args)
 
     with utils.Workdir(workdir):
         export_sources(repo, commit, export_dir, main_spec, args)
@@ -257,6 +268,10 @@ def main(args):
             # restore updated spec files
             for spec in glob.glob(os.path.join(specbakd.path, "*.spec")):
                 shutil.copy(spec, export_dir)
+
+    # Remove tracked export branches
+    if tracked_branches:
+        untrack_export_branches(repo, tracked_branches)
 
     specfile = os.path.basename(main_spec)
     try:
