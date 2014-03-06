@@ -63,7 +63,7 @@ EOF
     cp $TMP_DIR/$MANIFEST_FILE "${TIZEN_SOURCE}/.repo/manifests/$PROFILE/projects.xml"
 
     pushd $TIZEN_SOURCE
-    #repo sync
+    repo sync
     popd
 }
 
