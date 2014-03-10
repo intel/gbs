@@ -30,7 +30,7 @@ function prepare_tizen_src()
 # Get ks files via unpack image-configurations.rpm
 function get_ks_files
 {
-    image_configurations_rpm=`find $LOCAL_REPO_DIR -name "image-configurations*.noarch.rpm"`
+    image_configurations_rpm=`find $LOCAL_REPO_DIR ! -name "image-configurations-debug*.noarch.rpm" -a -name "image-configurations*.noarch.rpm"`
     if [ -z $image_configurations_rpm ]; then
         echo "No image-configuation rpm generated, so can't get ks files"
         return 1
