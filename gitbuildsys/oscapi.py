@@ -102,7 +102,7 @@ class OSC(object):
         result = ''
         for tag in tags:
             element = xml_root.find(tag)
-            if element:
+            if element is not None:
                 result += ET.tostring(element)
 
         return result
