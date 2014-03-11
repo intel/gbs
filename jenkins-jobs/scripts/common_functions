@@ -109,6 +109,3 @@ function publish_artifacts()
         echo "No build report generated"
     fi
 }
-
-
-

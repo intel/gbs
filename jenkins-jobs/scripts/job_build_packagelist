@@ -69,6 +69,12 @@ EOF
 
 #MAIN START
 
+# Parameters Checking
+if [ -z $REMOTE_REPOS ];then
+    echo "REMOTE_REPOS parameter must be specified for this job"
+    exit 1
+fi
+
 prepare_build_env
 
 BUILD_ID=$(basename $(echo $REMOTE_REPOS|awk '{print $1}'))
