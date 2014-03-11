@@ -1,3 +1,19 @@
+gbs (0.21~rc1) unstable; urgency=high
+  * upgrade to gbs v0.21, which contains the following bug fixing & features:
+    * [jenkins-job] support two jenkins jobs for local build:
+      - local full build jenkins job for build all packages and create images
+      - build specified packages list and create images
+    * [build]  support --package-list and --package-from-file to select pacakges
+    * [build]  enhance exception caused by proxy
+    * [export] clean uptracked upstream/pristine-tar branches when export done
+    * [doc]    enable gbs man page
+    * update dependencies:
+      - depanneur >= 0.12
+      - build >= 20131112
+      - git-buildpackage >= 0.6.8-tizen20140306
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Tue, 29 Mar 2014 10:56:15 +0800
+
 gbs (0.20) unstable; urgency=high
   * upgrade to gbs v0.20, which contains the following bug fixing & features:
     * [build] attempt to bypass HTTP caches when fetching repomd.xml
