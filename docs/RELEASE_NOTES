@@ -1,3 +1,24 @@
+Release notes for gbs 0.21
+==========================
+
+- Release Date: 2014-03
+
+- New feature and enhancements added:
+    * GBS jenkins jobs supported. The following two jenkins jobs included:
+      - local full build jenkins job for build all packages and create images
+      - build specified packages list and create images
+    * two sub-packages added for jenkins job, which are gbs-jenkins-jobs for
+      jenkins master and gbs-jenkins-scripts for jenkins build nodes
+    * [build] support --package-list and --package-from-file to select pacakges
+    * [build] enhance exception caused by proxy
+    * [export]clean untracked upstream/pristine-tar branches when export done
+    * [doc] man page of gbs has been added again.
+
+- dependencies update:
+    * depanneur >= 0.12
+    * build >= 20131112
+    * git-buildpackage >= 0.6.8-tizen20140306
+
 Release notes for gbs 0.20
 ==========================
 
