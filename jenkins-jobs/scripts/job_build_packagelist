@@ -71,6 +71,7 @@ EOF
 
 prepare_build_env
 
+BUILD_ID=$(basename $(echo $REMOTE_REPOS|awk '{print $1}'))
 MANIFEST_FILE="${BUILD_ID}_${ARCH}.xml"
 MANIFEST_FILE_URL="$REMOTE_REPOS/builddata/manifest/${MANIFEST_FILE}"
 LOCAL_MANIFEST_DIR="$TIZEN_SOURCE/.repo/local_manifests"

@@ -36,7 +36,6 @@ function prepare_build_env()
     mkdir -p $OUTPUT_DIR/builddata
     mkdir -p $OUTPUT_DIR/images
     mkdir -p $OUTPUT_DIR/builddata/image-configs
-    BUILD_ID=$(basename $(echo $REMOTE_REPOS|awk '{print $1}'))
 
     test -e $TMP_DIR || mkdir $TMP_DIR
 }
