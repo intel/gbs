@@ -105,7 +105,7 @@ def main(args):
     else:
         content = utils.show_file_from_rev(workdir, relative_spec, commit)
         if content is None:
-            raise GbsError('failed to checkout %s from commit: %s' % 
+            raise GbsError('failed to checkout %s from commit: %s' %
                             (relative_spec, commit))
 
         tmp_spec = utils.Temp(content=content)
@@ -147,7 +147,7 @@ def main(args):
                 "passwdx": encode_passwd(api_passwd),
             }
 
-    tmpdir     = configmgr.get('tmpdir', 'general')
+    tmpdir = configmgr.get('tmpdir', 'general')
     tmpd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_remotebuild_'),
                       directory=True)
     exportdir = tmpd.path

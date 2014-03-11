@@ -39,7 +39,7 @@ def createimage(args, ks_file):
 def main(args):
     '''main entrance for createimage'''
     try:
-       import mic
+        import mic
     except ImportError:
         raise GbsError('please install mic manually first')
 

@@ -74,7 +74,7 @@ def make_log_entries(commits, git_repo):
                     author.name, author.email, get_version(git_repo,
                                                            commits[0])))
     for commit in commits:
-        commit_info =  git_repo.get_commit_info(commit)
+        commit_info = git_repo.get_commit_info(commit)
         entries.append("- %s" % commit_info["subject"])
     return entries
 

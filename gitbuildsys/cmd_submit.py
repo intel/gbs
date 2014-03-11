@@ -65,7 +65,7 @@ def get_message():
             prompt = submit_template
 
     raw = edit(prompt)
-    useful = [i for i in raw.splitlines() if not i.startswith('#') ]
+    useful = [i for i in raw.splitlines() if not i.startswith('#')]
     return os.linesep.join(useful).strip()
 
 

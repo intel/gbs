@@ -73,7 +73,7 @@ def formalize_build_conf(profile):
     # '-' is not allowed, so replace with '_'
     return profile.replace('-', '_')
 
-def get_binary_name_from_git (args, package_dirs):
+def get_binary_name_from_git(args, package_dirs):
     ''' get binary rpm name from specified git package'''
 
     binary_list = []
@@ -114,7 +114,7 @@ def prepare_repos_and_build_conf(args, arch, profile):
     cmd_opts = []
     cache = Temp(prefix=os.path.join(TMPDIR, 'gbscache'),
                        directory=True)
-    cachedir  = cache.path
+    cachedir = cache.path
     if not os.path.exists(cachedir):
         os.makedirs(cachedir)
     log.info('generate repositories ...')
@@ -125,17 +125,17 @@ def prepare_repos_and_build_conf(args, arch, profile):
         repos = [i.url for i in profile.repos]
 
     if args.repositories:
-        for r in args.repositories:
+        for repo in args.repositories:
             try:
-                if not urlparse.urlsplit(r).scheme:
-                    if os.path.exists(r):
-                        r = os.path.abspath(os.path.expanduser(r))
+                if not urlparse.urlsplit(repo).scheme:
+                    if os.path.exists(repo):
+                        repo = os.path.abspath(os.path.expanduser(repo))
                     else:
-                        log.warning('local repo: %s does not exist' % r)
+                        log.warning('local repo: %s does not exist' % repo)
                         continue
-                opt_repo = SafeURL(r)
+                opt_repo = SafeURL(repo)
             except ValueError, err:
-                log.warning('Invalid repo %s: %s' % (r, str(err)))
+                log.warning('Invalid repo %s: %s' % (repo, str(err)))
             else:
                 repos.append(opt_repo)
 
@@ -226,7 +226,7 @@ def prepare_depanneur_opts(args):
             binary_list = get_binary_name_from_git(args, pkglist)
         args.binary_list += ',' + ','.join(binary_list)
     if args.binary_list:
-        blist = [ i.strip() for i in args.binary_list.split(',') ]
+        blist = [i.strip() for i in args.binary_list.split(',')]
         cmd_opts += ['--binary-list=%s' % ','.join(blist)]
     if args.binary_from_file:
         if not os.path.exists(args.binary_from_file):
@@ -333,7 +333,7 @@ def main(args):
         cmd += ['--extra-packs=%s' % args.extra_packs]
 
     if hostarch != buildarch and buildarch in CHANGE_PERSONALITY:
-        cmd = [ CHANGE_PERSONALITY[buildarch] ] + cmd
+        cmd = [CHANGE_PERSONALITY[buildarch]] + cmd
 
     # Extra depanneur special command options
     cmd += prepare_depanneur_opts(args)

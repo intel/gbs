@@ -52,7 +52,7 @@ class OSC(object):
     def __init__(self, apiurl=None, oscrc=None):
         if oscrc:
             try:
-                conf.get_config(override_conffile = oscrc)
+                conf.get_config(override_conffile=oscrc)
             except OSError, err:
                 if err.errno == 1:
                     # permission problem, should be the chmod(0600) issue
@@ -202,8 +202,8 @@ class OSC(object):
         metatype, path_args = self.get_path(prj, pkg)
         err = None
         try:
-            core.meta_exists(metatype = metatype, path_args = path_args,
-                             create_new = False, apiurl = self.apiurl)
+            core.meta_exists(metatype=metatype, path_args=path_args,
+                             create_new=False, apiurl=self.apiurl)
         except urllib2.HTTPError, err:
             if err.code == 404:
                 return False
@@ -346,8 +346,8 @@ class OSC(object):
         except OSCError, err:
             raise ObsError("can't get %s/%s build log: %s" % (prj, pkg, err))
 
-        return log.translate(None, "".join([chr(i) \
-                                            for i in range(10) + range(11,32)]))
+        return log.translate(None, "".join([chr(i) for i in \
+                                                    range(10) + range(11, 32)]))
 
     @staticmethod
     def get_path(prj, pkg=None):

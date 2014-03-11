@@ -66,24 +66,24 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
     if commit_id == 'WC.UNTRACKED':
         if os.path.islink(packaging_dir):
             packaging_dir = os.readlink(packaging_dir)
-        check = lambda fname, dir_only = False: os.path.exists(os.path.join(
+        check = lambda fname, dir_only=False: os.path.exists(os.path.join(
                        git_path, fname))
-        glob_ = lambda pattern: [ name.replace(git_path+'/', '')
-            for name in reversed(glob.glob(os.path.join(git_path, pattern))) ]
+        glob_ = lambda pattern: [name.replace(git_path+'/', '')
+            for name in reversed(glob.glob(os.path.join(git_path, pattern)))]
         msg = 'No such spec file %s'
     else:
         git_object = commit_id + ':' + packaging_dir
         cmd = ['git', 'show', git_object]
         try:
             with Workdir(git_path):
-                p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+                outp = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         except (subprocess.CalledProcessError, OSError):
             raise GbsError("failed to run %s in %s" % (' '.join(cmd), git_path))
-        output = p.communicate()[0]
+        output = outp.communicate()[0]
         if not output.startswith('tree %s' % git_object):
             # packaging_dir is a symlink
             packaging_dir = output
-        check = lambda fname, dir_only = False : file_exists_in_rev(git_path,
+        check = lambda fname, dir_only=False : file_exists_in_rev(git_path,
                        fname, commit_id, dir_only=dir_only)
         glob_ = lambda pattern: glob_in_rev(git_path, pattern, commit_id)
         msg = "No such spec file %%s in %s" % commit_id
@@ -99,7 +99,7 @@ def guess_spec(git_path, packaging_dir, given_spec, commit_id='WC.UNTRACKED'):
         raise GbsError("can't find any spec file under packaging dir: "
                        "%s" % packaging_dir)
 
-    project_name =  os.path.basename(git_path)
+    project_name = os.path.basename(git_path)
     if not spec:
         spec = os.path.join(packaging_dir, '%s.spec' % project_name)
         spec = spec if spec in specs else specs[0]
@@ -245,11 +245,11 @@ class URLGrabber(object):
 
             if errcode == pycurl.E_OPERATION_TIMEOUTED or http_code == 503:
                 proxies = ['Detected proxies set in system environment:']
-                ENV = os.environ
+                env = os.environ
                 for key in ['HTTPS_PROXY', 'HTTP_PROXY', 'FTP_PROXY',
                             'https_proxy', 'http_proxy', 'ftp_proxy',
                             'NO_PROXY', 'no_proxy']:
-                    proxies.append('%s=%s' % (key, ENV.get(key, '')))
+                    proxies.append('%s=%s' % (key, env.get(key, '')))
                 raise UrlError("connect timeout to %s, maybe it's caused by "
                                "proxy settings, please check. %s" % (curl.url,
                                '\n  '.join(proxies)))
@@ -285,7 +285,7 @@ class RepoParser(object):
 
     def __init__(self, repos, cachedir):
         self.cachedir = cachedir
-        self.repourls  = defaultdict(list)
+        self.repourls = defaultdict(list)
         self.buildconf = None
         self.standardrepos = []
         self.urlgrabber = URLGrabber()
@@ -328,13 +328,13 @@ class RepoParser(object):
 
         repo_items = root.find('repos')
         if repo_items is not None:
-            meta['repos'] = [ repo.text.strip()
-                             for repo in repo_items.findall('repo') ]
+            meta['repos'] = [repo.text.strip()
+                             for repo in repo_items.findall('repo')]
 
         arch_items = root.find('archs')
         if arch_items is not None:
-            meta['archs'] = [ arch.text.strip()
-                             for arch in arch_items.findall('arch') ]
+            meta['archs'] = [arch.text.strip()
+                             for arch in arch_items.findall('arch')]
         id_item = root.find('id')
         if id_item is not None:
             meta['id'] = id_item.text.strip()
@@ -397,7 +397,7 @@ class RepoParser(object):
         fname = self.fetch(buildconf_url)
         if fname:
             release, _buildid = meta['id'].split('_')
-            release = release.replace('-','')
+            release = release.replace('-', '')
             target_conf = os.path.join(os.path.dirname(fname),
                                        '%s.conf' % release)
             os.rename(fname, target_conf)
@@ -539,7 +539,7 @@ class SearchConfAction(argparse.Action):
         try:
             repo = RpmGitRepository(value)
             workdir = repo.path
-        except GitRepositoryError, err:
+        except GitRepositoryError:
             pass
 
         read_localconf(workdir)

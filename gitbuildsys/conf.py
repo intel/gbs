@@ -161,7 +161,7 @@ class BrainConfigParser(SafeConfigParser):
             return
 
         with open(self._fpname, 'w') as fptr:
-            buf = ''.join([ line for line in self._flines if line is not None ])
+            buf = ''.join([line for line in self._flines if line is not None ])
             fptr.write(buf)
 
 

@@ -58,7 +58,7 @@ class GbsHelpFormatter(RawDescriptionHelpFormatter):
             if subcomm:
                 match = re.match("[ ]+([^ ]+)[ ]+(.+)", line)
                 if match:
-                    name, help_text  = match.group(1), match.group(2)
+                    name, help_text = match.group(1), match.group(2)
                     alias = self._aliases.get(name) or ''
                     if alias:
                         alias = "(%s)" % alias

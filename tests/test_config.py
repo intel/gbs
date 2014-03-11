@@ -151,7 +151,8 @@ class ConfigGettingTest(unittest.TestCase):
     @Fixture(home='home1.ini')
     def test_addconf(self):
         '''value can be inherit from two levels'''
-        self.add_conf(os.path.join(FILE_DIRNAME, 'testdata', 'ini', 'project1.ini'))
+        self.add_conf(os.path.join(FILE_DIRNAME, 'testdata', 'ini',\
+                                   'project1.ini'))
         self.assertEqual('homev2', self.get('section', 'home_only_key'))
 
 

@@ -76,7 +76,7 @@ def track_export_branches(repo, args):
 
     # track upstream/pristine-tar branch
     for branch in [upstream_branch, 'pristine-tar']:
-        if not repo.has_branch(branch ) and branch in remote_branches:
+        if not repo.has_branch(branch) and branch in remote_branches:
             log.info('tracking branch: %s -> %s' % (remote_branches[branch],
                                                     branch))
             repo.create_branch(branch, remote_branches[branch])
@@ -244,7 +244,7 @@ def main(args):
     else:
         mkdir_p(outdir)
 
-    tmpdir     = configmgr.get('tmpdir', 'general')
+    tmpdir = configmgr.get('tmpdir', 'general')
     tempd = utils.Temp(prefix=os.path.join(tmpdir, '.gbs_export_'), \
                        directory=True)
     export_dir = tempd.path
