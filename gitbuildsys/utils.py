@@ -531,6 +531,11 @@ class SearchConfAction(argparse.Action):
     """
     def __call__(self, parser, namespace, value, option_string=None):
         workdir = value
+
+        if not os.path.exists(workdir):
+            raise GbsError("specified package dir %s does not exist" \
+                           % workdir)
+
         try:
             repo = RpmGitRepository(value)
             workdir = repo.path
