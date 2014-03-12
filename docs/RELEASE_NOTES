@@ -10,9 +10,12 @@ Release notes for gbs 0.21
     * two sub-packages added for jenkins job, which are gbs-jenkins-jobs for
       jenkins master and gbs-jenkins-scripts for jenkins build nodes
     * [build] support --package-list and --package-from-file to select pacakges
-    * [build] enhance exception caused by proxy
-    * [export]clean untracked upstream/pristine-tar branches when export done
+    * [build] enhance exception error message caused by proxy
     * [doc] man page of gbs has been added again.
+    * bug fix:
+      - fix export failed if packaging dir is symblic
+      - fix binfmt handlers register issue if exist one was broken
+      - fix upstream/pristine-tar branches in-consistency issue
 
 - dependencies update:
     * depanneur >= 0.12
