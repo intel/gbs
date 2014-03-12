@@ -1,4 +1,4 @@
-gbs (0.21~rc1) unstable; urgency=high
+gbs (0.21) unstable; urgency=high
   * upgrade to gbs v0.21, which contains the following bug fixing & features:
     * [jenkins-job] support two jenkins jobs for local build:
       - local full build jenkins job for build all packages and create images
