@@ -71,6 +71,8 @@ def main(args):
             params.append("--allow-same-version")
         if args.native:
             params.append("--native")
+        if args.orphan_packaging:
+            params.append("--orphan-packaging")
         if args.no_patch_import:
             params.append("--no-patch-import")
         ret = gbp_import_srpm(params)

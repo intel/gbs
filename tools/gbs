@@ -71,6 +71,10 @@ def import_parser(parser):
     group.add_argument('--native', action='store_true',
                        help='this is a dist native package, no separate '
                        'upstream')
+    group.add_argument('--orphan-packaging', action='store_true',
+                       help='create a git layout for separate packaging and '
+                            'development branches (only for non-native '
+                            'packages)')
     group.add_argument('--no-patch-import', action='store_true',
                        help='don\'t import patches automatically')
     group = parser.add_argument_group('only for importing upstream tar ball '
