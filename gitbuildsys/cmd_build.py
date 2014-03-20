@@ -358,6 +358,11 @@ def main(args):
     if args.spec:
         cmd += ['--spec=%s' % args.spec]
 
+    # Determine if we're on devel branch
+    orphan_packaging = configmgr.get('packaging_branch', 'orphan-devel')
+    if orphan_packaging:
+        cmd += ['--spec-commit=%s' % orphan_packaging]
+
     log.debug("running command: %s" % ' '.join(cmd))
     retcode = os.system(' '.join(cmd))
     if retcode != 0:
