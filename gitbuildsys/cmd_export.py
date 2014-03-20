@@ -135,7 +135,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
             "--git-tmp-dir=%s" % tmp_dir,
             "--git-packaging-dir=%s" % packaging_dir,
             "--git-spec-file=%s" % spec,
-            "--git-export=%s" % commit,
+            "--git-pq-branch=development/%(branch)s/%(upstreamversion)s",
             "--git-upstream-branch=%s" % upstream_branch,
             "--git-upstream-tag=%s" % upstream_tag,
             "--git-spec-vcs-tag=%s#%%(commit)s" % reponame]
@@ -148,15 +148,34 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
         argv.append("--git-verbose")
     if is_native_pkg(repo, args) or args.no_patch_export:
         argv.extend(["--git-no-patch-export",
+                     "--git-export=%s" % commit,
                      "--git-upstream-tree=%s" % commit])
     else:
-        argv.extend(["--git-patch-export",
-                     "--git-patch-export-compress=100k",
-                     "--git-patch-export-squash-until=%s" %
-                        squash_patches_until,
-                     "--git-patch-export-ignore-path=^(%s/.*|.gbs.conf)" %
-                        packaging_dir,
-                    ])
+        # Check if the revision seems to be of an orphan development branch
+        is_orphan = False
+        export_commitish = 'HEAD' if commit == 'WC.UNTRACKED' else commit
+        try:
+            repo.get_merge_base(export_commitish, upstream_branch)
+        except GitRepositoryError:
+            is_orphan = True
+        # Development branch in orphan packaging model is identified in the conf
+        orphan_packaging = configmgr.get('packaging_branch', 'orphan-devel')
+
+        if not is_orphan:
+            argv.extend(["--git-patch-export",
+                         "--git-patch-export-compress=100k",
+                         "--git-patch-export-squash-until=%s" %
+                            squash_patches_until,
+                         "--git-patch-export-ignore-path=^(%s/.*|.gbs.conf)" %
+                            packaging_dir,
+                        ])
+
+            if orphan_packaging:
+                argv.extend(["--git-export=%s" % orphan_packaging,
+                             "--git-patch-export-rev=%s" % commit])
+            else:
+                argv.extend(["--git-export=%s" % commit])
+
         if repo.has_branch("pristine-tar"):
             argv.extend(["--git-pristine-tar"])
 
@@ -229,9 +248,11 @@ def main(args):
         commit = 'WC.UNTRACKED'
     else:
         commit = 'HEAD'
+    orphan_packaging = configmgr.get('packaging_branch', 'orphan-devel')
+    spec_commit_id = orphan_packaging if orphan_packaging else commit
     packaging_dir = get_packaging_dir(args)
     main_spec, rest_specs = utils.guess_spec(workdir, packaging_dir,
-                                             args.spec, commit)
+                                             args.spec, spec_commit_id)
 
     if args.outdir:
         outdir = args.outdir
