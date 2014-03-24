@@ -133,18 +133,19 @@ class BrainConfigParser(SafeConfigParser):
             if last_section_line is not None:
                 self._flines.insert(last_section_line + 1, new_line)
             else:
-                raise NoSectionError(section)
+                self._flines.insert(lineno + 1, '\n')
+                self._flines.insert(lineno + 2, '[%s]\n' % section)
+                self._flines.insert(lineno + 3, new_line)
 
     def set_into_file(self, section, option, value, replace_opt=None):
         """When set new value, need to update the readin file lines,
         which can be saved back to file later.
         """
-        try:
-            SafeConfigParser.set(self, section, option, value)
-            if replace_opt:
-                SafeConfigParser.remove_option(self, section, replace_opt)
-        except NoSectionError, err:
-            raise errors.ConfigError(str(err))
+        if not self.has_section(section):
+            self.add_section(section)
+        SafeConfigParser.set(self, section, option, value)
+        if replace_opt:
+            SafeConfigParser.remove_option(self, section, replace_opt)
 
         # If the code reach here, it means the section and key are ok
         try:
