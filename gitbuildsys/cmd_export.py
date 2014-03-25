@@ -91,7 +91,7 @@ def untrack_export_branches(repo, branches):
         repo.delete_branch(branch)
 
 def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
-                           force_native=False, create_tarball=True):
+                           create_tarball=True):
     """
     Construct the cmdline argument list for git-buildpackage export
     """
@@ -146,7 +146,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
         argv.append("--git-no-create-orig")
     if args.debug:
         argv.append("--git-verbose")
-    if force_native or is_native_pkg(repo, args) or args.no_patch_export:
+    if is_native_pkg(repo, args) or args.no_patch_export:
         argv.extend(["--git-no-patch-export",
                      "--git-upstream-tree=%s" % commit])
     else:
