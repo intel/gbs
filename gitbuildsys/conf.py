@@ -79,6 +79,7 @@ class BrainConfigParser(SafeConfigParser):
         new_line_written = False
         last_section_line = None
 
+        lineno = -1
         for lineno in range(len(self._flines)):
             line = self._flines[lineno]
             # We might have 'None' lines because of earlier updates
@@ -133,7 +134,8 @@ class BrainConfigParser(SafeConfigParser):
             if last_section_line is not None:
                 self._flines.insert(last_section_line + 1, new_line)
             else:
-                self._flines.insert(lineno + 1, '\n')
+                if lineno >= 0:
+                    self._flines.insert(lineno + 1, '\n')
                 self._flines.insert(lineno + 2, '[%s]\n' % section)
                 self._flines.insert(lineno + 3, new_line)
 
