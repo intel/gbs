@@ -642,13 +642,18 @@ def glob_in_rev(git_path, pattern, commit_id):
     return fnmatch.filter(output.splitlines(), pattern)
 
 
+def get_editor_cmd():
+    """Determine the preferred text editor command"""
+    from gitbuildsys.conf import configmgr
+    return configmgr.get('editor') or os.getenv('EDITOR') or 'vi'
+
+
 def edit(initial_content=None):
     """
     Launch an editor to get input from user.
     Returns: content of user input.
     """
-    from gitbuildsys.conf import configmgr
-    editor = configmgr.get('editor') or os.getenv('EDITOR') or 'vi'
+    editor = get_editor_cmd()
 
     temp = TempCopy(initial_content)
     subprocess.call('%s %s' % (editor, temp.name), shell=True)

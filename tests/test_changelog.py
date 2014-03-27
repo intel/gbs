@@ -26,7 +26,7 @@ import imp
 import datetime
 import time
 
-from nose.tools import eq_, raises
+from nose.tools import eq_, ok_, assert_raises, raises
 
 from gbp.git.repository import GitRepository
 
@@ -34,6 +34,16 @@ from gitbuildsys.errors import GbsError
 
 GBS = imp.load_source("gbs", "./tools/gbs").main
 ENV = {}
+
+TEST_SPEC_CONTENT="""
+Name:           test
+Version:        1.0
+Release:        0
+License:        GPL-2.0
+Summary:        Test spec file
+%description
+Test spec file for changelog testing
+"""
 
 def set_editor(editor):
     '''set editor'''
@@ -89,15 +99,20 @@ class TestChangelog(unittest.TestCase):
         # [Re]create packaging/test.spec
         shutil.rmtree('packaging', ignore_errors=True)
         os.mkdir('packaging')
-        open("packaging/test.spec", "w").close()
+        with open("packaging/test.spec", "w") as spec_fp:
+            spec_fp.write(TEST_SPEC_CONTENT)
 
-        set_editor("sleep 1 && touch")
+        set_editor("touch")
 
     def test_new_changes(self):
         """Test generating new .changes."""
-        eq_(GBS(argv=["gbs", "changelog"]), None)
+        with assert_raises(GbsError):
+            eq_(GBS(argv=["gbs", "changelog"]), None)
+        ok_(not os.path.exists(self.changes))
+
+        eq_(GBS(argv=["gbs", "changelog", "--since=HEAD~2"]), None)
         eq_(open(self.changes).read(),
-            "* %s %s <%s> %s\n- change 3\n- change 2\n- change 1\n\n" % \
+            "* %s %s <%s> %s\n- change 2\n- change 3\n\n" % \
             (ENV["date"], ENV["name"], ENV["email"], ENV["commits"][0][:7]))
 
     def test_new_changes_with_content(self):
@@ -116,7 +131,7 @@ class TestChangelog(unittest.TestCase):
             changes.write(init)
 
         eq_(GBS(argv=["gbs", "changelog"]), None)
-        expected = "* %s %s <%s> %s\n- change 3\n- change 2\n\n" % \
+        expected = "* %s %s <%s> %s\n- change 2\n- change 3\n\n" % \
                    (ENV["date"], ENV["name"], ENV["email"],
                     ENV["commits"][0][:7])
         eq_(open(self.changes).read(), expected+init)
@@ -132,7 +147,7 @@ class TestChangelog(unittest.TestCase):
     def test_not_updated():
         """Test normal exit when changelog is not updated."""
         set_editor("true")
-        eq_(GBS(argv=["gbs ", "changelog"]), None)
+        eq_(GBS(argv=["gbs ", "changelog", "-m", "new entry"]), None)
 
     @staticmethod
     @raises(GbsError)

@@ -19,84 +19,16 @@
 """Implementation of subcmd: changelog
 """
 
-import os
-import datetime
 import glob
 
-from gitbuildsys.utils import guess_spec, edit_file
+from gitbuildsys.utils import guess_spec, get_editor_cmd
 from gitbuildsys.cmd_export import get_packaging_dir
 from gitbuildsys.errors import GbsError
 from gitbuildsys.log import LOGGER as log
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
+from gbp.scripts.rpm_changelog import main as gbp_rpm_ch
 
-
-
-def get_all_entries(changesfile, new_entries):
-    """return all entries including old in changesfile and new_entries"""
-    lines = ["%s%s" % (line, os.linesep) for line in new_entries]
-    lines.append(os.linesep)
-
-    if os.path.exists(changesfile):
-        with open(changesfile) as chlog:
-            lines.extend(chlog.readlines())
-    return ''.join(lines)
-
-
-def get_latest_rev(changesfile):
-    """Get latest git revision from the changelog."""
-    if os.path.exists(changesfile):
-        with open(changesfile) as chlog:
-            line = chlog.readline()
-            return line.strip().split(" ")[-1].split("@")[-1]
-    return ''
-
-def get_version(git_repo, commit):
-    """
-    Construct version from commit using rev-parse.
-    Set version to <tag>@<sha1> or <sha1> if tag is not found.
-    """
-    version = git_repo.rev_parse(commit, short=7)
-    try:
-        version = "%s@%s" % (git_repo.find_tag(commit), version)
-    except GitRepositoryError:
-        pass
-
-    return version
-
-def make_log_entries(commits, git_repo):
-    """Make changelog entries from the set of git commits."""
-    entries = []
-    # Add header
-    author = git_repo.get_author_info()
-    entries.append("* %s %s <%s> %s" % \
-                   (datetime.datetime.now().strftime("%a %b %d %Y"),
-                    author.name, author.email, get_version(git_repo,
-                                                           commits[0])))
-    for commit in commits:
-        commit_info = git_repo.get_commit_info(commit)
-        entries.append("- %s" % commit_info["subject"])
-    return entries
-
-def get_first_commit(repo, changes, since):
-    """
-    Get first commit considering since parameter and latest
-    git revision mentioned in .changes file.
-    """
-    if since:
-        first = since
-    else:
-        first = get_latest_rev(changes)
-
-    if first:
-        try:
-            return repo.rev_parse(first)
-        except GitRepositoryError:
-            if since:
-                raise GbsError("Invalid commit: %s" % (first))
-            else:
-                raise GbsError("Can't find last commit ID in the log, "\
-                               "please specify it by '--since'")
 
 
 def main(args):
@@ -108,43 +40,36 @@ def main(args):
         raise GbsError(str(err))
 
     packaging_dir = get_packaging_dir(args)
+    specfile = guess_spec(repo.path, packaging_dir, args.spec)[0]
     changes_file_list = glob.glob("%s/%s/*.changes" % (repo.path,
                                                        packaging_dir))
-
-    if args.spec or not changes_file_list:
-        # Create .changes file with the same name as a spec
-        specfile = os.path.basename(guess_spec(repo.path,
-                                               packaging_dir, args.spec)[0])
-        fn_changes = os.path.splitext(specfile)[0] + ".changes"
-        fn_changes = os.path.join(repo.path, packaging_dir, fn_changes)
-    else:
+    if changes_file_list:
         fn_changes = changes_file_list[0]
         if len(changes_file_list) > 1:
             log.warning("Found more than one changes files, %s is taken "
                            % (changes_file_list[0]))
+    else:
+        fn_changes = 'CHANGES'
 
-    # get the commit start from the args.since
-    commitid_since = get_first_commit(repo, fn_changes, args.since)
-
-    commits = repo.get_commits(commitid_since, 'HEAD')
-    if not commits:
-        raise GbsError("Nothing found between %s and HEAD" % commitid_since)
-
+    gbp_args = ['dummy argv[0]',
+                '--color-scheme=magenta:green:yellow:red',
+                '--ignore-branch',
+                '--changelog-revision=%(tagname)s',
+                '--spawn-editor=always',
+                '--git-author',
+                '--packaging-dir=%s' % packaging_dir,
+                '--spec-file=%s' % specfile,
+                '--changelog-file=%s' % fn_changes,
+                '--editor-cmd=%s' % get_editor_cmd(),
+                ]
+    if args.since:
+        gbp_args.append('--since=%s' % args.since)
     if args.message:
-        author = repo.get_author_info()
-        lines = ["- %s" % line for line in args.message.split(os.linesep) \
-                               if line.strip()]
-        new_entries = ["* %s %s <%s> %s" % \
-                       (datetime.datetime.now().strftime("%a %b %d %Y"),
-                        author.name, author.email,
-                        get_version(repo, commits[0]))]
-        new_entries.extend(lines)
-    else:
-        new_entries = make_log_entries(commits, repo)
+        gbp_args.append('--message=%s' % args.message)
 
-    content = get_all_entries(fn_changes, new_entries)
-    if edit_file(fn_changes, content):
-        log.info("Change log has been updated.")
+    ret = gbp_rpm_ch(gbp_args)
+    if ret:
+        raise GbsError("Change log has not been updated")
     else:
-        log.info("Change log has not been updated")
+        log.info("Change log has been updated.")
 
