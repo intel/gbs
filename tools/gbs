@@ -507,6 +507,10 @@ def devel_parser(parser):
                         help="upstream tag format, '${upstreamversion}' is "
                         'expanded to the version in the spec file. '
                         "E.g. 'v${upstreamversion}'")
+    parser.add_argument('--retain-history', action='store_true',
+                        help='Preserve as much of the git history as possible '
+                        'in the conversion, i.e. create one commit per commit. '
+                        'Only relevant for the convert action.')
     parser.add_argument('action', choices=['start', 'export', 'drop', 'switch',
                         'convert'],
                         help='Action to take')

@@ -56,6 +56,8 @@ def compose_gbp_args(repo, tmp_dir, spec, args):
             "--patch-export-ignore-path=^(%s/.*|.gbs.conf)" % packaging_dir]
     if args.debug:
         argv.append("--verbose")
+    if args.retain_history:
+        argv.append("--retain-history")
 
     return argv
 
