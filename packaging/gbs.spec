@@ -33,7 +33,6 @@ Requires:   %{name}-api = %{version}-%{release}
 Requires:   %{name}-export = %{version}-%{release}
 Requires:   %{name}-remotebuild = %{version}-%{release}
 
-BuildRequires:  python-devel
 BuildRequires:  python-docutils
 BuildRoot:  %{_tmppath}/%{name}-%{version}-build
 
