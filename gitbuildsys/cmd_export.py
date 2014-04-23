@@ -127,6 +127,7 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
 
     packaging_dir = get_packaging_dir(args)
     # Now, start constructing the argument list
+    export_rev = commit
     argv = ["argv[0] placeholder",
             "--git-color-scheme=magenta:green:yellow:red",
             "--git-ignore-new",
@@ -148,7 +149,6 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
         argv.append("--git-verbose")
     if is_native_pkg(repo, args) or args.no_patch_export:
         argv.extend(["--git-no-patch-export",
-                     "--git-export=%s" % commit,
                      "--git-upstream-tree=%s" % commit])
     else:
         # Check if the revision seems to be of an orphan development branch
@@ -171,13 +171,13 @@ def create_gbp_export_args(repo, commit, export_dir, tmp_dir, spec, args,
                         ])
 
             if orphan_packaging:
-                argv.extend(["--git-export=%s" % orphan_packaging,
-                             "--git-patch-export-rev=%s" % commit])
-            else:
-                argv.extend(["--git-export=%s" % commit])
+                export_rev = orphan_packaging
+                argv.extend(["--git-patch-export-rev=%s" % commit])
 
         if repo.has_branch("pristine-tar"):
             argv.extend(["--git-pristine-tar"])
+
+    argv.append("--git-export=%s" % export_rev)
 
     if 'source_rpm' in args and args.source_rpm:
         argv.extend(['--git-builder=rpmbuild',
