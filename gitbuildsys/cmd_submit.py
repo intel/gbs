@@ -22,6 +22,7 @@ import os
 import re
 import time
 
+from gitbuildsys.conf import configmgr
 from gitbuildsys.utils import edit
 from gitbuildsys.errors import GbsError
 from gitbuildsys.log import LOGGER as log
@@ -73,6 +74,13 @@ def main(args):
     """gbs submit entry point."""
 
     workdir = args.gitdir
+
+    orphan_packaging = configmgr.get('packaging_branch', 'orphan-devel')
+    if orphan_packaging and args.commit == 'HEAD':
+        log.error("You seem to be submitting a development branch of an "
+            "(orphan) packaging branch. Please export your changes to the "
+            "packaging branch with 'gbs devel export' and submit from there.")
+        raise GbsError("Refusing to submit from devel branch")
 
     message = args.msg
     if message is None:
