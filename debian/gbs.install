@@ -3,6 +3,7 @@ usr/lib/python*/*packages/gitbuildsys/cmd_changelog.py
 usr/lib/python*/*packages/gitbuildsys/cmd_chroot.py
 usr/lib/python*/*packages/gitbuildsys/cmd_clone.py
 usr/lib/python*/*packages/gitbuildsys/cmd_createimage.py
+usr/lib/python*/*packages/gitbuildsys/cmd_devel.py
 usr/lib/python*/*packages/gitbuildsys/cmd_import.py
 usr/lib/python*/*packages/gitbuildsys/cmd_pull.py
 usr/lib/python*/*packages/gitbuildsys/cmd_submit.py
