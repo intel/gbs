@@ -236,20 +236,40 @@ General concepts
 From the package maintenance point of view, we can divide the packages into two categories:
 
 - **Native**:  packages where we/you/Tizen is the upstream and controls the source code repository. An example in the context of Tizen could be power-manager. For native packages, we control the versioning and releasing, so package maintenance is simpler. We can release a new version basically whenever we want.
-- **Non-native(or upstream)**: packages for which we/you/Tizen is not the upstream. For example, the Linux kernel or zlib. For these packages, we need to follow the releasing process and schedule of the upstream project. For example, from a developer and legal point of view, it is very beneficial to clearly track the local modifications (that is, separate upstream and local changes) both in the source code repository and on the packaging level.
+- **Non-native (or upstream)**: packages for which we/you/Tizen is not the upstream. For example, the Linux kernel or zlib. For these packages, we need to follow the releasing process and schedule of the upstream project. For example, from a developer and legal point of view, it is very beneficial to clearly track the local modifications (that is, separate upstream and local changes) both in the source code repository and on the packaging level.
 
 
 Also GBS divides packages into these two categories. GBS determines a package as non-native, if the git repository has an `upstream` branch. The actual name of the upstream branch can be configured using the 'upstream_branch' in option in the .gbs.conf file or with `--upstream-branch` command line option.
 
 GBS build, remotebuild, and export commands behave differently for native and non-native packages. Namely, the preparation of the packaging files for building differs.
 
+GBS currently supports two different maintenance models for non-native packages: one with packaging and source code in the same branch and one with separate packaging and development branches.
+
 **GBS and native packages**
 
-GBS simply creates a monolithic source tarball from the HEAD of the current branch. Packaging files, from the packaging directory, are copied as is. No patch generation is done. This is the 'old' model GBS has used for all packages until now.
+GBS simply creates a monolithic source tarball from the HEAD of the current branch. Packaging files, from the packaging directory, are copied as is. No patch generation is done.
 
-**GBS and non-native packages**
+The Git repository layout looks like this:
 
-For non-native packages, GBS applies the new maintenance model. It tries to create a (real) upstream source tarball, generate patches from the local changes, and update the spec file accordingly.
+::
+
+            v1.0    v2.0
+              |       |
+  o---A---B---C---D---E   master
+
+**GBS and non-native packages: joint-packaging, i.e. packaging and development in the same branch**
+
+In the `joint-packaging` model packaging data (spec file etc) is kept in the same branch with the source code:
+
+::
+
+                F---G---H   master (packaging + code changes)
+               /
+  o---A---B---C---D---E     upstream
+              |       |
+            v1.0    v2.0
+
+GBS tries to create a (real) upstream source tarball, auto-generate patches from the local changes, and auto-update the spec file accordingly.
 The logic is the following:
 
 - Generate patches
@@ -265,6 +285,39 @@ The logic is the following:
 - If source tarball or patch generation fails GBS reverts back to the old method (that is, treats the package as native), creating just one monolithic tarball without patch generation.
 
 You shouldn't have any pre-existing patches in the packaging directory or spec file. Otherwise, GBS refuses to create patches. Please see `Advanced usage/Manually maintained patches` section for manually maintained patches.
+
+
+**GBS and non-native packages: orphan-packaging, i.e. separate packaging and development branches**
+
+In the `orphan-packaging` model packaging data is kept in a separate (orphan) branch with no
+source code or common history with the code development branch(es):
+
+::
+
+  o---I---J---K---L         master (packaging)
+
+                F---G---H   development/master/1.0 (local source code changes)
+               /
+  o---A---B---C---D---E     upstream
+              |       |
+            v1.0    v2.0
+
+All packaging data, including patches are stored in the packaging branch.
+Development branch only contains upstream sources - with no packaging data.
+The gbs `devel` command assists in working with the separate branches.
+
+Developers work on the development branch, making changes to the source code.
+When the package maintainer wants to release a new version of the package,
+he/she exports changes (with gbs `devel` one patch per commit) from the
+development branch to the packaging branch, commits the changes, updates
+changelog and submits a new version.
+
+When building/exporting the package GBS creates a real upstream source tarball
+(similar to the joint-packaging model). Patches are auto-generated (and spec
+file auto-modified) when working on the development branch. When working on the
+packaging branch the packaging files are exported as is with no modifications.
+
+
 
 Building using upstream tarball and patch generation
 ----------------------------------------------------
@@ -385,8 +438,8 @@ However, if you track a remote upstream repository directly, you need to commit 
    origin
    pristine-tar
 
-Converting existing repository to the new model
------------------------------------------------
+Converting existing repository to a non-native package
+------------------------------------------------------
 
 1. You need an `upstream branch`
 
@@ -396,6 +449,9 @@ Converting existing repository to the new model
 2. Recommended: If you're tracking the upstream git directly, you may want to do 'pristine-tar commit <tarball> <upstream-tag>'
 3. Rebase your current development branch on the correct upstream version (that is, rebase on the upstream tag)
 4. Remove all local patches: apply and commit them on top of your development branch and then remove the patches from the packaging directory and preferably from the spec file, too.
+5. Optionally, if you want to maintain the package using the `orphan-packaging`
+   model, you can create the packaging and development branches using the `gbs
+   devel convert` command.
 
 
 Advanced usage
@@ -518,6 +574,8 @@ GBS provides several subcommands, including:
 - `gbs export  </documentation/reference/git-build-system/usage/gbs-export>`_: export files and prepare for building package, the spec file defines the format of tarball
 
 - `gbs changelog  </documentation/reference/git-build-system/usage/gbs-changelog>`_: update the changelog file with git commits message
+
+- `gbs devel  </documentation/reference/git-build-system/usage/gbs-devel>`_: manage developmet branches and patches in packaging branch
 
 GBS clone
 ---------
@@ -1485,6 +1543,222 @@ Examples:
  * Wed May 30 2012 xxxx <xxxx@example.com> 2.0.14@5c5f459
  - cleanup specfile for packaging
  * Wed May 30 2012 - xxxx <xxxx@example.com> - 2.0.10
+
+
+GBS devel
+---------
+
+The `devel` subcommand is used in managing development branch(es) and exporting
+patches to the an oprhan packaging branch. The `devel` subcommand is mostly
+designed for package maintainers who are responsible for maintaining the
+packaging branch (in the "orphan packaging branch" model). It has several
+actions:
+1. `start` for creating a development branch
+2. `export` for exporting patches from a development branch to a packaging branch
+3. `drop` for removing a development branch
+4. `switch` for switching between packaging branch and development branch
+5. `convert` for converting a package the "orphan packaging branch" model
+
+Each upstream version will have a dedicated development branch, e.g.
+`development/master/1.0` for upstream version 1.0.
+
+For quick help on using the `devel` subcommand, use this command:
+`gbs devel --help`
+
+::
+
+$ gbs devel --help
+
+devel start: create a development branch
+````````````````````````````````````````
+
+The `start` action is used for creating a development branch. It takes the
+upstream version as a base and applies all patches from the packaging branch on
+top of that. In addition to this it imports the .gbs.conf from the packaging
+branch. Before using `gbs devel` start you should have an orphan packaging
+branch that contains all local changes as patches, in addition to the other
+packaging files.
+
+Example:
+
+::
+
+ $ git branch
+ * tizen
+   upstream
+ $ gbs devel start
+ info: Using 'packaging/dbus.spec' from 'working copy'
+ info: Switching to branch 'development/tizen/1.0'
+ info: Importing additional file(s) from branch 'tizen' into 'development/tizen/1.0'
+ info: Trying to apply patches from branch 'tizen' onto '159fdbf680d2dcdd5f80568c3305e93114caddfa'
+ info: Patches listed in 'dbus.spec' imported on 'development/tizen/1.0'
+ info: Updating local .gbs.conf
+ info: Committing local .gbs.conf to git
+ $ git branch
+ * development/tizen/1.0
+   tizen
+   upstream
+
+The upstream version is embedded in the development branch name. Thus, when
+doing a version bump, one should create a new development branch with `gbs
+devel start`.
+
+
+devel export: export patches to the packaging branch
+````````````````````````````````````````````````````
+
+The `export` action is used for managing patches in the packaging branch. It
+generates patches (one-per-commit) from the development branch and updates the
+spec file accordingly. It doesn't automatically commit the changes though -
+the package maintainer needs to verify the changes and commit them manually.
+
+Example:
+
+::
+
+ $ git branch
+ * development/tizen/1.1
+   upstream
+   tizen
+ $ gbs devel export
+ info: Exporting patches to packaging branch
+ info: On branch 'development/tizen/1.1', switching to 'tizen'
+ info: Generating patches from git (6450890aa002b0868537ee50cc1aea177fdcc941..development/tizen/1.1)
+ # On branch tizen
+ # Changes not staged for commit:
+ #   (use "git add/rm <file>..." to update what will be committed)
+ #   (use "git checkout -- <file>..." to discard changes in working directory)
+ #
+ #   modified:   packaging/gbp-test.spec
+ #
+ # Untracked files:
+ #   (use "git add <file>..." to include in what will be committed)
+ #
+ #   packaging/0004-New-commit.patch
+ no changes added to commit (use "git add" and/or "git commit -a")
+
+
+devel switch: switch between development and packaging branches
+```````````````````````````````````````````````````````````````
+
+The `switch` action is a simple helper for moving between the packaging and development branches.
+
+Example:
+
+::
+
+ $ git branch
+   development/tizen/1.1
+ * tizen
+   upstream
+ $ gbs devel switch
+ info: Switching to branch 'development/tizen/1.1'
+ $ git branch
+ * development/tizen/1.1
+   tizen
+   upstream
+ $ gbs devel switch
+ info: Switching to branch 'tizen'
+ $ git branch
+   development/tizen/1.1
+ * tizen
+   upstream
+
+
+devel drop: delete the development branch
+`````````````````````````````````````````
+
+The `drop` action is a helper for removing the development branch.  You must be
+on the packaging branch to delete the development branch. Note that it only
+removes the development branch that the current (upstream) version points to,
+e.g. if you have development/tizen/1.0 and development/tizen/2.0 only the
+latter will be removed (assuming that the current version is 2.0).
+
+Example:
+
+::
+
+ $ git branch
+   development/tizen/1.1
+ * tizen
+   upstream
+ $ gbs devel drop
+ info: Dropped branch 'development/tizen/1.1'.
+ $ git branch
+ * tizen
+   upstream
+
+
+
+devel convert: convert a package for orphan-packaging model
+```````````````````````````````````````````````````````````
+
+The `convert` action is designed for converting a package from the
+joint-packaging maintenance model and git-layout to the orphan-packaging model.
+It takes the content of the packaging directory, auto-generates patches and
+puts these into a new orphan packaging branch. Thus, it basically contains the
+output of `gbs export` minus the source code tarball.
+
+With the `--retain-history` option gbs tries to preserve the history of the
+local changes. Basically, for each commit in the old (joint-packaging) branch a
+corresponding commit in the new orphan packaging branch is created.
+
+Example:
+
+::
+
+ $ git branch
+ * tizen
+   upstream
+ $ gbs devel convert
+ info: Converting package to orphan-packaging git layout
+ info: Importing packaging files from branch 'tizen' to 'tizen-orphan'
+ info: Generating patches from git (04e9d5867181807acae3b89f8ebc1f517c246933..d2ab912babf1ee161004b041ca2bd70f3ff7de0c)
+ info: Package successfully converted to orphan-packaging.
+ info: You're now on the new 'tizen-orphan' packaging branch (the old packaging branch 'tizen' was left intact).
+ info: Please check all files and test building the package!
+ info: You can now create the development branch with 'gbs devel start'
+ $ git branch
+   tizen
+ * tizen-orphan
+   upstream
+
+The `convert` action only create the orphan packaging branch. Thus, you need to
+create the development branch with `gbs devel start`.
+
+
+an example workflow:
+````````````````````
+
+An indicative example workflow:
+
+::
+
+ $ # maintainer: create upstream branch and packaging branch (initial packaging)
+ ...
+ $ # maintainer: push packaging and upstream branches (and tags) to Git/Gerrit
+ $ git push --tags origin upstream master
+ $ # maintainer: start development branch
+ $ gbs devel start
+ $ # maintainer: push development branch to Git/Gerrit
+ $ git push origin development/master/1.0
+ $ # developer: clone package
+ $ gbs clone git://review.tizen.org/example.git
+ $ # developer: modify code, test, commit on development branch
+ $ ...
+ $ gbs build
+ $ # developer: push changes for review
+ $ git push origin development/master/1.0:refs/for/development/master/1.0
+ $ # maintainer: after review, merge changes in Gerrit
+ $ # maintainer: generate patches, update packaging/release branch
+ $ gbs devel export
+ $ git add .
+ $ git commit -m"New change"
+ $ # maintainer: push packaging branch for review
+ $ git push master:refs/for/master
+ $ # maintainer: once merged, submit for integration
+ $ gbs submit
+
 
 FAQ
 ===
