@@ -202,6 +202,11 @@ obs = obs.tizen
 #Comma separated list of repositories
 repos = repo.tizen_latest
 #repos = repo.tizen_main, repo.tizen_base
+#Build config for gbs build
+#buildconf = <patch/to/build-config-file>
+#Comma separated list of additional packages be excluded building
+#exclude_packages = libtool,gettext
+
 
 [obs.tizen]
 #OBS API URL pointing to a remote OBS.
@@ -485,6 +490,7 @@ class Profile(object):
         self.obs = None
         self.buildroot = None
         self.buildconf = None
+        self.exclude_packages = []
 
     def add_repo(self, repoconf):
         '''add a repo to repo list of the profile'''
@@ -643,6 +649,12 @@ class BizConfigManager(ConfigMgr):
             profile.buildconf = os.path.expanduser(self._interpolate(
                                                    self.get_optional_item(name,
                                                    'buildconf')))
+        if self.get_optional_item(name, 'exclude_packages'):
+            exclude_val = self.get_optional_item(name, 'exclude_packages')
+            for pkg in exclude_val.split(','):
+                if pkg.strip():
+                    profile.exclude_packages.append(pkg.strip());
+
         return profile
 
     def _parse_build_repos(self):

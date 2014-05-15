@@ -305,6 +305,13 @@ def main(args):
     sanitized_profile_name = re.sub("[^a-zA-Z0-9:._-]", "_", profile.name)
     build_root = build_root % {'tmpdir': TMPDIR,
                                'profile': sanitized_profile_name}
+    if profile.exclude_packages:
+        log.info('the following packages have been excluded build from gbs '
+                 'config:\n   %s' % '\n   '.join(profile.exclude_packages))
+        if args.exclude:
+            args.exclude += ',' + ','.join(profile.exclude_packages)
+        else:
+            args.exclude = ','.join(profile.exclude_packages)
     os.environ['TIZEN_BUILD_ROOT'] = os.path.abspath(build_root)
 
     # get virtual env from system env first
