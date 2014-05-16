@@ -64,6 +64,8 @@ def main(args):
                 ]
     if args.since:
         gbp_args.append('--since=%s' % args.since)
+    if args.all:
+        gbp_args.append('--all')
     if args.message:
         gbp_args.append('--message=%s' % args.message)
 

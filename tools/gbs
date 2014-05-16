@@ -405,6 +405,8 @@ def changelog_parser(parser):
                         'name that GBS will find it in packaging dir')
     parser.add_argument('-s', '--since',
                         help='commit to start from')
+    parser.add_argument('-a', '--all', action='store_true',
+                        help='use all commits from history')
     parser.add_argument('-m', '--message',
                         help='use given message as the changelog entry')
     parser.add_argument('--packaging-dir',
