@@ -217,21 +217,18 @@ Here's an example:
     buildconf=${work_dir}/tizen.conf
     buildroot=${tmpdir}/profile.tizen/
 
-Upstream tarball and patch-generation support
-=============================================
+Package maintenance models
+==========================
 
-This section describes how to manage packages more properly with GBS. "More properly" here meaning, if we (Tizen) are not the upstream of the package:
+This section describes how to properly manage packages with GBS. "Properly"
+here meaning, if we (Tizen) are not the upstream of the package:
 
 - the source archive of the package (orig tarball) contains pristine upstream sources, not polluted with any local changes
 - local changes are presented as a series of patches, applied on top of the (pristine) orig archive
 
-Starting from version 0.11, GBS fully supports this package maintenance model.
 
 Native and non-native packages
 ------------------------------
-
-General concepts
-````````````````
 
 From the package maintenance point of view, we can divide the packages into two categories:
 
@@ -245,7 +242,8 @@ GBS build, remotebuild, and export commands behave differently for native and no
 
 GBS currently supports two different maintenance models for non-native packages: one with packaging and source code in the same branch and one with separate packaging and development branches.
 
-**GBS and native packages**
+GBS and native packages
+```````````````````````
 
 GBS simply creates a monolithic source tarball from the HEAD of the current branch. Packaging files, from the packaging directory, are copied as is. No patch generation is done.
 
@@ -257,7 +255,8 @@ The Git repository layout looks like this:
               |       |
   o---A---B---C---D---E   master
 
-**GBS and non-native packages: joint-packaging, i.e. packaging and development in the same branch**
+GBS and non-native packages: joint-packaging, i.e. packaging and development in the same branch
+```````````````````````````````````````````````````````````````````````````````````````````````
 
 In the `joint-packaging` model packaging data (spec file etc) is kept in the same branch with the source code:
 
@@ -287,7 +286,8 @@ The logic is the following:
 You shouldn't have any pre-existing patches in the packaging directory or spec file. Otherwise, GBS refuses to create patches. Please see `Advanced usage/Manually maintained patches` section for manually maintained patches.
 
 
-**GBS and non-native packages: orphan-packaging, i.e. separate packaging and development branches**
+GBS and non-native packages: orphan-packaging, i.e. separate packaging and development branches
+```````````````````````````````````````````````````````````````````````````````````````````````
 
 In the `orphan-packaging` model packaging data is kept in a separate (orphan) branch with no
 source code or common history with the code development branch(es):
@@ -319,10 +319,12 @@ packaging branch the packaging files are exported as is with no modifications.
 
 
 
-Building using upstream tarball and patch generation
-----------------------------------------------------
+Building non-native package in the joint-packaging model
+--------------------------------------------------------
 
-This is pretty straightforward and easy to use. To enable upstream source tarball and patch generation you should:
+This is pretty straightforward and easy to use. For GBS to see the package
+as non-native (i.e. enable upstream source tarball and patch generation) you
+should:
 
 1. have `upstream branch` in the git repository, with untouched upstream sources
 
@@ -336,7 +338,7 @@ Additionally, you may have:
 
 5. `pristine-tar branch` in the git repository for generating the upstream tarball with the pristine-tar tool
 
-You can do development just like before. Just edit/commit/build on your development branch. GBS handles the tarball and patch generation, plus updating the spec file. Running gbs should look something like this (using gbs export as an example here for the shorted output):
+Doing development is easy: Just edit/commit/build on your development branch. GBS handles the tarball and patch generation, plus updating the spec file. Running gbs should look something like this (using gbs export as an example here for the shorted output):
 
 ::
 
@@ -358,6 +360,35 @@ Reasons for the upstream tarball and/or patch generation failure may be e.g.
   * tag format is configured incorrectly
 
 - current branch is not a descendant of the upstream version that it claims to be derived from
+
+
+Building non-native package in the orphan-packaging model
+---------------------------------------------------------
+
+In order to use the orphan-packaging model you should:
+
+1. have `upstream branch` in the git repository, with untouched upstream sources
+
+2. have `upstream tag` format configured correctly in the package specific .gbs.conf, default is upstream/${upstreamversion}
+
+3. Have an orphan `packaging branch` that only contains packaging files, including patches
+
+4. Have a `development branch` which is all patches applied on top of the upstream version
+
+Again, additionally, you may have:
+
+5. `pristine-tar branch` in the git repository for generating the upstream tarball with the pristine-tar tool
+
+Code development is done on the `development branch`: just edit/commit/build
+similarly to the joint-packaging model. However, all packaging changes are done
+in the `packaging branch`. And most importantly, submissions (i.e. relesing to
+integration) are done from the `packaging branch`. Before submitting, the
+package maintainer creates patches from from the new changes in the
+`development branch` and commits these to the `packaging branch`. See the **GBS
+devel** section below for detailed instructions how to manage packaging and
+development branches with the *gbs devel* command.
+
+
 
 Managing upstream sources
 -------------------------
