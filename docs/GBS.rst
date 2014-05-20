@@ -217,8 +217,8 @@ Here's an example:
     buildconf=${work_dir}/tizen.conf
     buildroot=${tmpdir}/profile.tizen/
 
-Package maintenance models
-==========================
+Maintenance Models Supported by GBS
+===================================
 
 This section describes how to properly manage packages with GBS. "Properly"
 here meaning, if we (Tizen) are not the upstream of the package:
