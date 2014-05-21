@@ -4,6 +4,7 @@ Release notes for gbs 0.22
 - Release Date: 2014-05
 
 - New feature and enhancements added:
+    * new distributions support: Ubuntu 14.04 and Debian 7.0
     * orphan-packaging development model (experimental)
       - implement 'devel' subcommand for  orphan-packaging development model
       - 'gbs devel' subcommand contains 'start', 'export', 'switch' and
@@ -19,9 +20,9 @@ Release notes for gbs 0.22
     * fix Pylint warning
 
 - dependencies update:
-    * depanneur >= 0.12
+    * depanneur >= 0.13
     * build >= 20131112
-    * git-buildpackage >= 0.6.8-tizen20140306
+    * git-buildpackage >= 0.6.8-tizen20140521
 
 
 Release notes for gbs 0.21

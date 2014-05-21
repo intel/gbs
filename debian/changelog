@@ -16,7 +16,7 @@ gbs (0.22~rc1) unstable; urgency=high
     * update dependencies:
       - depanneur >= 0.13
       - build >= 20131112
-      - git-buildpackage >= 0.6.8-tizen20140306
+      - git-buildpackage >= 0.6.8-tizen20140521
 
  -- Qiang Zhang <qiang.z.zhang@intel.com>  Wed, 21 May 2014 10:56:15 +0800
 
