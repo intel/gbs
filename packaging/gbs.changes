@@ -1,4 +1,19 @@
-* Tue Mar 11 2014 Qiang Zhang <qiang.z.zhang@intel.com> - 0.21
+* Wed May 21 2014 Zhang Qiang <qiang.z.zhang@intel.com> 0.22
+  * orphan-packaging development model (experimental)
+    - implement 'devel' subcommand for  orphan-packaging development model
+    - 'gbs devel' subcommand contains 'start', 'export', 'switch' and
+      'convert' actions.
+    - updated export/build import subcommands to support new
+      orphan-packaging development model
+  * conf:
+    - make it possible to add new sections
+    - make it possible to update an empty conf file
+    - support new profile key 'exclude_packages'
+  * changelog: utilize rpm-ch from git-buildpackage
+  * build: add group metadata to local repodata if package-groups.rpm exists
+  * fix Pylint warning
+
+* Tue Mar 11 2014 Qiang Zhang <qiang.z.zhang@intel.com> 0.21
   * [jenkins-job] support two jenkins jobs for local build:
     - local full build jenkins job for build all packages and create images
     - build specified packages list and create images
@@ -10,7 +25,6 @@
     - depanneur >= 0.12
     - build >= 20131112
     - git-buildpackage >= 0.6.8-tizen20140306
-
 
 * Tue Dec 10 2013 Qiang Zhang <qiang.z.zhang@intel.com> - 0.20
   * [build] attempt to bypass HTTP caches when fetching repomd.xml

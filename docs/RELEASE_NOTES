@@ -1,3 +1,29 @@
+Release notes for gbs 0.22
+==========================
+
+- Release Date: 2014-05
+
+- New feature and enhancements added:
+    * orphan-packaging development model (experimental)
+      - implement 'devel' subcommand for  orphan-packaging development model
+      - 'gbs devel' subcommand contains 'start', 'export', 'switch' and
+        'convert' actions.
+      - updated export/build import subcommands to support new
+        orphan-packaging development model
+    * conf:
+      - make it possible to add new sections
+      - make it possible to update an empty conf file
+      - support new profile key 'exclude_packages'
+    * changelog: utilize rpm-ch from git-buildpackage
+    * build: add group metadata to local repodata if package-groups.rpm exists
+    * fix Pylint warning
+
+- dependencies update:
+    * depanneur >= 0.12
+    * build >= 20131112
+    * git-buildpackage >= 0.6.8-tizen20140306
+
+
 Release notes for gbs 0.21
 ==========================
 

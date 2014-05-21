@@ -1,3 +1,25 @@
+gbs (0.22~rc1) unstable; urgency=high
+  * upgrade to gbs v0.22, which contains the following bug fixing & features:
+    * orphan-packaging development model (experimental)
+      - implement 'devel' subcommand for  orphan-packaging development model
+      - 'gbs devel' subcommand contains 'start', 'export', 'switch' and
+        'convert' actions.
+      - updated export/build import subcommands to support new
+        orphan-packaging development model
+    * conf:
+      - make it possible to add new sections
+      - make it possible to update an empty conf file
+      - support new profile key 'exclude_packages'
+    * changelog: utilize rpm-ch from git-buildpackage
+    * build: add group metadata to local repodata if package-groups.rpm exists
+    * fix Pylint warning
+    * update dependencies:
+      - depanneur >= 0.13
+      - build >= 20131112
+      - git-buildpackage >= 0.6.8-tizen20140306
+
+ -- Qiang Zhang <qiang.z.zhang@intel.com>  Wed, 21 May 2014 10:56:15 +0800
+
 gbs (0.21) unstable; urgency=high
   * upgrade to gbs v0.21, which contains the following bug fixing & features:
     * [jenkins-job] support two jenkins jobs for local build:
