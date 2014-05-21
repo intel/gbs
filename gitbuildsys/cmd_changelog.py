@@ -27,7 +27,7 @@ from gitbuildsys.errors import GbsError
 from gitbuildsys.log import LOGGER as log
 
 from gbp.rpm.git import GitRepositoryError, RpmGitRepository
-from gbp.scripts.rpm_changelog import main as gbp_rpm_ch
+from gbp.scripts.rpm_ch import main as gbp_rpm_ch
 
 
 
