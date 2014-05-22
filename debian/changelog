@@ -1,4 +1,4 @@
-gbs (0.22~rc1) unstable; urgency=high
+gbs (0.22) unstable; urgency=high
   * upgrade to gbs v0.22, which contains the following bug fixing & features:
     * orphan-packaging development model (experimental)
       - implement 'devel' subcommand for  orphan-packaging development model
